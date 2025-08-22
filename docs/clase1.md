@@ -59,9 +59,9 @@ agregar, cambiar y borrar alumnos en la tabla alumnos.
 Este usuario no necesita crear objetos de la base ni poder eliminar tablas
 ni otros objetos.
 
-[^2] Anderson, R. (2020). Distributed systems. In *Security engineering: A guide to building dependable distributed systems* (3rd ed., Cap 6). Wiley.
+[^2]: Anderson, R. (2020). Distributed systems. In *Security engineering: A guide to building dependable distributed systems* (3rd ed., Cap 6). Wiley.
 
-[^3] https://www.postgresql.org/docs/current/sql-createuser.html
+[^3]: https://www.postgresql.org/docs/current/sql-createuser.html
 
 ## 2. Hello World con Node.js y Postgres
 
@@ -89,13 +89,13 @@ En este caso la usabilidad estamos delegando la responsabilidad de no subir nunc
 Otra manera de decirlo es preguntarse todo el tiempo ¿qué puede salir mal? como lo hace [^6]
 
 
-[^4] En https://12factor.net/es/config se recomienda guardar la configuración en el entorno
+[^4]: En https://12factor.net/es/config se recomienda guardar la configuración en el entorno
 
-[^5] Se llaman secretos no solo a las contraseñas sino a cualquier otra información de configuración
+[^5]: Se llaman secretos no solo a las contraseñas sino a cualquier otra información de configuración
 que en manos de un atacante podrían facilitarle acceder a recursos que deberían estar protegidos.
 Son ejemplos: tokens de acceso, cadenas de conexión, direcciones físicas, puertos y otras.
 
-[^6] Shostack, A. (2014). *Threat modeling: Designing for security*. John Wiley & Sons.
+[^6]: Shostack, A. (2014). *Threat modeling: Designing for security*. John Wiley & Sons.
 
 ## 3. Prueba de almacentamiento
 
