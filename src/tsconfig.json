@@ -8,14 +8,14 @@
       "DOM.Iterable",
       "ESNext.Promise"
     ],
-    "module": "ESNext",                    // Sistema de módulos
-    "moduleResolution": "node",            // Resolución de módulos estilo Node.js
+    "module": "NodeNext",                    // Sistema de módulos
+    "moduleResolution": "NodeNext",            // Resolución de módulos estilo Node.js
     "allowJs": true,                       // Permitir compilar archivos JavaScript
     "checkJs": true,                       // Verificar tipos en archivos JavaScript
     "jsx": "react-jsx",                    // Soporte para JSX (ajustar según necesidad)
 
     /* Configuración de tipos */
-    "types": [],                           // Tipos globales a incluir
+    "types": ["node"],                           // Tipos globales a incluir
     "typeRoots": ["./node_modules/@types", "./types"], // Rutas para buscar tipos
 
     /* Configuración de emisión */

@@ -63,7 +63,7 @@ async function generarCertificadoParaAlumno(pathPlantilla, alumno){
 
 async function principal(){
     const clientDb = new Client()
-    const filePath = `recursos/alumnos.csv`;
+    const filePath = `../recursos/alumnos.csv`;
     await clientDb.connect()
     var {dataLines: listaDeAlumnosCompleta, columns: columnas} = await leerYParsearCsv(filePath)
     await refrescarTablaAlumnos(clientDb, listaDeAlumnosCompleta, columnas);
