@@ -1,5 +1,5 @@
 import { Client } from 'pg'
-import { readFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 
 async function leerYParsearCsv(filePath){
     const contents = await readFile(filePath, { encoding: 'utf8' });
@@ -37,9 +37,28 @@ async function obtenerPrimerAlumnoQueNecesitaCertificado(clientDb){
     }
 }
 
+function pasarAStringODarErrorComoCorresponda(value){
+    var result = value == null ? '' :
+            typeof value == "string" ? value :
+            value instanceof Date ? value.toDateString() :
+            null;
+    if (result == null){
+        throw new Error('No se puede convertir a string el valor: ' + value);
+    }
+    return result;
+}
 
-async function generarCertificadoParaAlumno(clientDb, alumno){
-    console.log('alumno', alumno);
+
+async function generarCertificadoParaAlumno(pathPlantilla, alumno){
+    let certificado = await readFile(pathPlantilla, { encoding: 'utf8' });
+    for (const [key, value] of Object.entries(alumno)) {
+        certificado = certificado.replace(
+            `[#${key}]`,
+            pasarAStringODarErrorComoCorresponda(value)
+        );
+    }
+    await writeFile(`recursos/certificado-para-imprimir.html`, certificado, 'utf-8');
+    console.log('certificado impreso para alumno', alumno.lu);
 }
 
 async function principal(){
@@ -52,7 +71,7 @@ async function principal(){
     if (alumno == null){
         console.log('No hay alumnos que necesiten certificado');
     } else {
-        await generarCertificadoParaAlumno(clientDb, alumno);
+        await generarCertificadoParaAlumno(`recursos/plantilla-certificado.html`, alumno);
     }
     await clientDb.end()
 }
