@@ -9,8 +9,9 @@ async function leerYParsearCsv(filePath){
     return {dataLines, columns};
 }
 
-async function refrescarTablaAlumnos(clientDb, listaDeAlumnosCompleta, columnas){
-    await clientDb.query("DELETE FROM aida.alumnos");
+async function refrescarTablaAlumnos(clientDb, filepath){
+    var {dataLines: listaDeAlumnosCompleta, columns: columnas} = await leerYParsearCsv(filepath);
+
     for (const line of listaDeAlumnosCompleta) {
         const values = line.split(',');
         const query = `
@@ -18,8 +19,12 @@ async function refrescarTablaAlumnos(clientDb, listaDeAlumnosCompleta, columnas)
                 (${values.map((value) => value == '' ? 'null' : `'` + value + `'`).join(', ')})
         `;
         console.log(query)
-        const res = await clientDb.query(query)
-        console.log(res.command, res.rowCount)
+        try {
+            const res = await clientDb.query(query)
+            console.log(res.command, res.rowCount)
+        } catch (e) {
+            console.error('Error al insertar alumno:', e.message, '\nlu: ', values[0]);
+        }
     }
 }
 
@@ -36,7 +41,12 @@ async function obtenerPrimerAlumnoQueNecesitaCertificado(clientDb){
         return null;
     }
 }
-
+async function generarCertificadosSegunFechaEnTramite(clientDb, fecha){
+    // buscar todos los alumnos que tengan titulo_en_tramite = parametro
+    // for alumno in alumnos_con_fecha{
+    //   generarCertificadoParaAlumno(alumno)
+    // }
+}
 
 async function generarCertificadoParaAlumno(clientDb, alumno){
     console.log('alumno', alumno);
@@ -44,16 +54,29 @@ async function generarCertificadoParaAlumno(clientDb, alumno){
 
 async function principal(){
     const clientDb = new Client()
-    const filePath = `../recursos/alumnos.csv`;
     await clientDb.connect()
-    var {dataLines: listaDeAlumnosCompleta, columns: columnas} = await leerYParsearCsv(filePath)
-    await refrescarTablaAlumnos(clientDb, listaDeAlumnosCompleta, columnas);
+
+    const comando = process.argv[process.argv.length-2];
+    const parametro = process.argv[process.argv.length-1];
+
+    if (comando == '--archivo'){
+        await refrescarTablaAlumnos(clientDb, parametro);
+        process.exit(1);
+    } else if (comando == '--fecha'){
+        await generarCertificadosSegunFechaEnTramite(clientDb, parametro);
+        process.exit(1);
+    } else {
+        console.log('Uso: node cli.js --archivo <ruta-al-archivo-csv>')
+        process.exit(1);
+    }
+
     var alumno = await obtenerPrimerAlumnoQueNecesitaCertificado(clientDb);
     if (alumno == null){
         console.log('No hay alumnos que necesiten certificado');
     } else {
         await generarCertificadoParaAlumno(clientDb, alumno);
     }
+
     await clientDb.end()
 }
 
