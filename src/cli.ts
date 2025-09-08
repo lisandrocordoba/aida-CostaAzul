@@ -103,7 +103,7 @@ async function generarCertificadoParaAlumno(pathPlantilla, alumno){
             pasarAStringODarErrorComoCorresponda(value)
         );
     }
-    await writeFile(`certificados/certificado-${alumno.nombres}.html`, certificado, 'utf-8');
+    await writeFile(`local-certificados/certificado-${alumno.nombres}.html`, certificado, 'utf-8');
     console.log('certificado impreso para alumno', alumno.nombres);
 }
 
