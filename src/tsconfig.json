@@ -8,21 +8,21 @@
       "DOM.Iterable",
       "ESNext.Promise"
     ],
-    "module": "NodeNext",                    // Sistema de módulos
-    "moduleResolution": "NodeNext",            // Resolución de módulos estilo Node.js
+    "module": "ESNext",                    // Sistema de módulos
+    "moduleResolution": "node",            // Resolución de módulos estilo Node.js
     "allowJs": true,                       // Permitir compilar archivos JavaScript
     "checkJs": true,                       // Verificar tipos en archivos JavaScript
     "jsx": "react-jsx",                    // Soporte para JSX (ajustar según necesidad)
 
     /* Configuración de tipos */
-    "types": ["node"],                           // Tipos globales a incluir
+    "types": [],                           // Tipos globales a incluir
     "typeRoots": ["./node_modules/@types", "./types"], // Rutas para buscar tipos
 
     /* Configuración de emisión */
     "declaration": true,                   // Generar archivos .d.ts
     "declarationMap": true,                // Generar source maps para .d.ts
     "sourceMap": true,                     // Generar source maps
-    "outDir": "./dist",                    // Directorio de salida
+    "outDir": "../dist",                    // Directorio de salida
     "removeComments": false,               // Mantener comentarios
     "noEmit": false,                       // Permitir emisión de archivos
     "importHelpers": true,                 // Importar helpers de tslib
@@ -76,10 +76,7 @@
 
   /* Incluir y excluir archivos */
   "include": [
-    "src/**/*",
-    "tests/**/*",
-    "types/**/*",
-    "*.d.ts"
+    "."
   ],
 
   "exclude": [

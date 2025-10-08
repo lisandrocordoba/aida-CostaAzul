@@ -1,10 +1,23 @@
 {
+  "name": "aida",
+  "version": "0.4.1",
   "type": "module",
   "dependencies": {
+    "express": "^5.1.0",
     "pg": "^8.16.3"
   },
   "devDependencies": {
-    "@types/node": "^24.3.0",
-    "typescript": "^5.9.2"
+    "@types/express": "^5.0.3",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^24.3.1",
+    "@types/pg": "^8.15.5",
+    "typescript": "^5.9.2",
+    "mocha": "^11.7.2"
+  },
+  "scripts":{
+    "prepare": "tsc -p src/tsconfig.json",
+    "servidor": "npm run prepare && node dist/servidor",
+    "test": "tsc -p test/tsconfig.json && mocha -r ./test/setup.js --reporter spec --bail --check-leaks dist-test/test/test.js",
+    "x-test": "mocha --reporter spec --bail --check-leaks test/test.ts"
   }
 }
