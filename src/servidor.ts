@@ -293,7 +293,9 @@ app.put('/app/tablaAlumnos/:lu', async (req, res) => {
 });
 
 app.post('/api/v0/auth/register', async (req, res) => {
-    auth.crearUsuario(req.body.username, req.body.password, req.body.nombre, req.body.mail);
+    console.log("entra");
+    const { username, password, nombre, email } = req.body;
+    auth.crearUsuario(clientDb, username, password, nombre, email);
     res.status(201).send('Usuario creado');
 });
 
