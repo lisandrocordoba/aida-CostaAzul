@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>AIDA - Menú</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background-color: #f9f9f9;
+    margin: 0;
+    padding: 0;
+  }
+
+  header {
+    background-color: #4CAF50;
+    color: white;
+    padding: 20px 30px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+
+  main {
+    max-width: 600px;
+    margin: 40px auto;
+    padding: 0 20px;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: 2em;
+  }
+
+  .menu-card {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+
+  .menu-card p {
+    margin: 10px 0;
+  }
+
+  .menu-card a {
+    display: inline-block;
+    text-decoration: none;
+    color: #4CAF50;
+    font-weight: bold;
+    padding: 10px 15px;
+    border: 2px solid #4CAF50;
+    border-radius: 4px;
+    transition: all 0.2s;
+  }
+
+  .menu-card a:hover {
+    background-color: #4CAF50;
+    color: white;
+  }
+
+  footer {
+    text-align: center;
+    margin: 60px 0 20px;
+    color: #777;
+    font-size: 0.9em;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>AIDA</h1>
+</header>
+
+<main>
+  <div class="menu-card">
+    <p><a href="/app/lu">Imprimir certificado por LU</a></p>
+    <p><a href="/app/fecha">Imprimir certificado por fecha de trámite</a></p>
+    <p><a href="/app/archivo">Subir .csv con novedades de alumnos</a></p>
+    <p><a href="/app/alumnos">Ver alumnos</a></p>
+  </div>
+</main>
+
+<footer>
+  &copy; 2025 AIDA
+</footer>
+
+</body>
+</html>

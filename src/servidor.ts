@@ -30,26 +30,8 @@ app.get('/ask', (req, res) => {
     res.send(htmlResponse);
 })
 
-// Servidor del frontend:
-const HTML_MENU=
-`<!doctype html>
-<html>
-    <head>
-        <meta charset="utf8">
-    </head>
-    <body>
-        <h1>AIDA</h1>
-        <p>menu</p>
-        <p><a href="/app/lu">Imprimir certificado por LU</a></p>
-        <p><a href="/app/fecha">Imprimir certificado por fecha de trámite</a></p>
-        <p><a href="/app/archivo">Subir .csv con novedades de alumnos</a></p>
-        <p><a href="/ask?p=np">¿Es P = NP?</a></p>
-        <p><a href="/app/alumnos">Ver alumnos</a></p>
-    </body>
-</html>
-`;
-
-app.get('/app/menu', (_, res) => {
+app.get('/app/menu', async (_, res) => {
+    let HTML_MENU = await readFile('recursos/menu.html', { encoding: 'utf8' });
     res.send(HTML_MENU)
 })
 
