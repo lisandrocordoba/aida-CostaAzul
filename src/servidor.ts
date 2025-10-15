@@ -2,6 +2,7 @@ import express from "express";
 import * as aida from "./aida.js";
 import * as fechas from "./fechas.js";
 import * as csv from "./csv.js";
+import * as auth from "./auth.js";
 
 const app = express()
 const port = 3000
@@ -289,6 +290,11 @@ app.put('/app/tablaAlumnos/:lu', async (req, res) => {
     const valores = Object.values(req.body) as string[];
     await aida.actualizarAlumno(lu, columnas, valores, clientDb);
     res.status(200).send('Alumno actualizado');
+});
+
+app.post('/api/v0/auth/register', async (req, res) => {
+    auth.crearUsuario(req.body.username, req.body.password, req.body.nombre, req.body.mail);
+    res.status(201).send('Usuario creado');
 });
 
 app.listen(port, () => {
