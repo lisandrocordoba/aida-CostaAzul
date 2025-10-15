@@ -1,7 +1,7 @@
 ## Lo mismo que el .bat, pero para LINUX
 
 export PGUSER=aida_admin
-export PGPASSWORD=cambiar_esta_clave
+export PGPASSWORD="cambiar_esta_clave"
 export PGHOST=localhost
 export PGPORT=5432
 export PGDATABASE=aida_db

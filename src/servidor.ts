@@ -233,11 +233,13 @@ app.get('/api/v0/lu/:lu', async (req, res) => {
     var alumnos = await aida.obtenerAlumnoQueNecesitaCertificado(clientDb, {lu: req.params.lu});
     if (alumnos.length == 0){
         console.log('No hay alumnos que necesiten certificado para el lu', req.params.lu);
+        res.status(404).send("El alumno no necesita certificado o no existe.");
+    } else {
+        for (const alumno of alumnos) {
+            certificadoHTML = await aida.generarHTMLcertificadoParaAlumno(`recursos/plantilla-certificado.html`, alumno);
+        }
+        res.status(200).send(certificadoHTML);
     }
-    for (const alumno of alumnos) {
-        certificadoHTML = await aida.generarHTMLcertificadoParaAlumno(`recursos/plantilla-certificado.html`, alumno);
-    }
-    res.status(200).send(certificadoHTML);
 })
 
 app.get('/api/v0/fecha/:fecha', async (req, res) => {
