@@ -30,26 +30,8 @@ app.get('/ask', (req, res) => {
     res.send(htmlResponse);
 })
 
-// Servidor del frontend:
-const HTML_MENU=
-`<!doctype html>
-<html>
-    <head>
-        <meta charset="utf8">
-    </head>
-    <body>
-        <h1>AIDA</h1>
-        <p>menu</p>
-        <p><a href="/app/lu">Imprimir certificado por LU</a></p>
-        <p><a href="/app/fecha">Imprimir certificado por fecha de trámite</a></p>
-        <p><a href="/app/archivo">Subir .csv con novedades de alumnos</a></p>
-        <p><a href="/ask?p=np">¿Es P = NP?</a></p>
-        <p><a href="/app/alumnos">Ver alumnos</a></p>
-    </body>
-</html>
-`;
-
-app.get('/app/menu', (_, res) => {
+app.get('/app/menu', async (_, res) => {
+    let HTML_MENU = await readFile('recursos/menu.html', { encoding: 'utf8' });
     res.send(HTML_MENU)
 })
 
@@ -233,11 +215,13 @@ app.get('/api/v0/lu/:lu', async (req, res) => {
     var alumnos = await aida.obtenerAlumnoQueNecesitaCertificado(clientDb, {lu: req.params.lu});
     if (alumnos.length == 0){
         console.log('No hay alumnos que necesiten certificado para el lu', req.params.lu);
+        res.status(404).send("El alumno no necesita certificado o no existe.");
+    } else {
+        for (const alumno of alumnos) {
+            certificadoHTML = await aida.generarHTMLcertificadoParaAlumno(`recursos/plantilla-certificado.html`, alumno);
+        }
+        res.status(200).send(certificadoHTML);
     }
-    for (const alumno of alumnos) {
-        certificadoHTML = await aida.generarHTMLcertificadoParaAlumno(`recursos/plantilla-certificado.html`, alumno);
-    }
-    res.status(200).send(certificadoHTML);
 })
 
 app.get('/api/v0/fecha/:fecha', async (req, res) => {
@@ -249,11 +233,13 @@ app.get('/api/v0/fecha/:fecha', async (req, res) => {
     var alumnos = await aida.obtenerAlumnoQueNecesitaCertificado(clientDb, {fecha: fecha});
     if (alumnos.length == 0){
         console.log('No hay alumnos que necesiten certificado para la fecha', fecha);
-    }
-    for (const alumno of alumnos) {
+        res.status(404).send('No hay alumnos que necesiten certificado para la fecha');
+    } else {
+        for (const alumno of alumnos) {
         certificadoHTML = await aida.generarHTMLcertificadoParaAlumno(`recursos/plantilla-certificado.html`, alumno);
+      }
+      res.status(200).send(certificadoHTML);
     }
-    res.status(200).send(certificadoHTML);
 })
 
 app.patch('/api/v0/alumnos', async (req, res) => {
