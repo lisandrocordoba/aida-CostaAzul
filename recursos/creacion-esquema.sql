@@ -11,5 +11,17 @@ create table aida.alumnos (
     titulo_en_tramite date,
     egreso date
 );
+create table aida.usuarios (
+    id serial primary key,
+    username text unique not null,
+    password_hash text not null,
+    nombre text,
+    email text unique,
+    activo boolean not null default true
+);
 
 grant select, insert, update, delete on aida.alumnos to aida_admin;
+grant select, insert, update, delete on aida.usuarios to aida_admin;
+GRANT USAGE, SELECT, UPDATE ON SEQUENCE aida.usuarios_id_seq to aida_admin;
+
+
