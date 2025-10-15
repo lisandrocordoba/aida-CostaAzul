@@ -3,18 +3,22 @@
   "version": "0.4.1",
   "type": "module",
   "dependencies": {
+    "bcrypt": "^6.0.0",
     "express": "^5.1.0",
+    "express-session": "^1.18.2",
     "pg": "^8.16.3"
   },
   "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
     "@types/express": "^5.0.3",
+    "@types/express-session": "^1.18.2",
     "@types/mocha": "^10.0.10",
     "@types/node": "^24.3.1",
     "@types/pg": "^8.15.5",
-    "typescript": "^5.9.2",
-    "mocha": "^11.7.2"
+    "mocha": "^11.7.2",
+    "typescript": "^5.9.2"
   },
-  "scripts":{
+  "scripts": {
     "prepare": "tsc -p src/tsconfig.json",
     "servidor": "npm run prepare && node dist/servidor",
     "test": "tsc -p test/tsconfig.json && mocha -r ./test/setup.js --reporter spec --bail --check-leaks dist-test/test/test.js",
