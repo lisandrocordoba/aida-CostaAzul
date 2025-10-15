@@ -22,10 +22,11 @@ CREATE TABLE aida.usuarios (
     password_hash TEXT NOT NULL,
     nombre TEXT,
     email TEXT,
-); 
+    activo BOOLEAN DEFAULT TRUE
+);
 ```
 
-### Crear a un usuario 
+### Crear a un usuario
 
 ```
 curl -X POST http://localhost:<PORT>/api/v0/auth/register \
@@ -33,7 +34,7 @@ curl -X POST http://localhost:<PORT>/api/v0/auth/register \
   -d '{"username":"admin","password":"admin123","nombre":"Administrador","email":"admin@aida.com"}'
 ```
 
-### Instalar nuevas dependencias/ paquetes en el proyecto 
+### Instalar nuevas dependencias/ paquetes en el proyecto
 
 - bcrypt: Para hashear y verificar contraseñas de forma segura
 - express-session: Para manejar sesiones de usuario
@@ -67,11 +68,11 @@ crearUsuario(client, username, password, nombre?, email?): Crea un nuevo usuario
 ```
 import session, { SessionData } from 'express-session';
 import { autenticarUsuario, crearUsuario, Usuario } from './auth.js';
-import { Request, Response, NextFunction } from "express"; 
+import { Request, Response, NextFunction } from "express";
 import * as fs from 'fs'; // si no lo tenés
 ```
 
-2. Extender los tipos de sesión 
+2. Extender los tipos de sesión
 ```
 declare module 'express-session' {
     interface SessionData {
@@ -98,7 +99,7 @@ app.use(session({
 
 
 */
-Aca arriba se esta usando un Middleware del paquete express-session. 
+Aca arriba se esta usando un Middleware del paquete express-session.
 
 Este middleware crea una Cookie con un identificador único en base a el secreto que configurado. Guarda en el servidor la información asociada a esa sesión (por ejemplo, quién está logueado). Permite que entre requests, el servidor recuerde datos del mismo usuario.
 
@@ -127,7 +128,7 @@ function requireAuthAPI(req: Request, res: Response, next: NextFunction) {
 
 
 */
-Aca arriba se estan implementando dos funciones nuevas que van a tener la funcion de ser  Middlewares. 
+Aca arriba se estan implementando dos funciones nuevas que van a tener la funcion de ser  Middlewares.
 
 Estos chequean si en la request se esta enviando session.usuario en la Cookie.
 /*
@@ -153,7 +154,7 @@ app.post('/api/v0/auth/login', express.json(), async (req, res) => {
 
 // API de logout
 app.post('/api/v0/auth/logout', (req, res) => {
-     ... 
+     ...
 });
 
 
@@ -164,7 +165,7 @@ app.post('/api/v0/auth/register', express.json(), async (req, res) => {
 ```
 
 ### Agregar la pagina HTML para el login
-- 
+-
 
 ### Proteger rutas existentes
 
