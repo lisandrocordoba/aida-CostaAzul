@@ -251,11 +251,13 @@ app.get('/api/v0/fecha/:fecha', async (req, res) => {
     var alumnos = await aida.obtenerAlumnoQueNecesitaCertificado(clientDb, {fecha: fecha});
     if (alumnos.length == 0){
         console.log('No hay alumnos que necesiten certificado para la fecha', fecha);
-    }
-    for (const alumno of alumnos) {
+        res.status(404).send('No hay alumnos que necesiten certificado para la fecha');
+    } else {
+        for (const alumno of alumnos) {
         certificadoHTML = await aida.generarHTMLcertificadoParaAlumno(`recursos/plantilla-certificado.html`, alumno);
+      }
+      res.status(200).send(certificadoHTML);
     }
-    res.status(200).send(certificadoHTML);
 })
 
 app.patch('/api/v0/alumnos', async (req, res) => {
