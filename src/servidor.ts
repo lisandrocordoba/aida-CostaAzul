@@ -49,7 +49,7 @@ function requireAuth(req: Request, res: Response, next: NextFunction) {
       res.redirect('/app/login');
   }
 }
-/*
+
 // Middleware de autenticación para el backend
 function requireAuthAPI(req: Request, res: Response, next: NextFunction) {
   if (req.session.usuario) {
@@ -57,7 +57,7 @@ function requireAuthAPI(req: Request, res: Response, next: NextFunction) {
   } else {
       res.status(401).json({ error: 'No autenticado' });
   }
-}*/
+}
 
 // endpoint de prueba
 app.get('/ask', (req, res) => {
@@ -96,12 +96,12 @@ app.post('/api/v0/auth/login', express.json(), async (req, res) => {
 
 // Tenemos que hacer que el boton se agregue solo si el usuario esta loggueado.
 // API de logout
-app.post('/api/v0/auth/logout', (req, res) => {
+app.post('/api/v0/auth/logout', requireAuthAPI, (req, res) => {
   req.session.destroy(err => {
     console.log("estoy aca")
     if (err) return res.status(500).json({ error: 'Error al cerrar sesión' });
     res.clearCookie('connect.sid', { path: '/' });
-    res.json({ message: 'Sesión cerrada exitosamente' });
+    res.redirect('/app/login');
     return;
   });
 });
@@ -114,7 +114,7 @@ app.post('/api/v0/auth/register', async (req, res) => {
 });
 
 // FRONTEND
-app.get('/app/menu', async (_, res) => {
+app.get('/app/menu', requireAuth, async (_, res) => {
     let HTML_MENU = await readFile('views/menu.html', { encoding: 'utf8' });
     res.send(HTML_MENU)
 })
@@ -141,7 +141,7 @@ const HTML_LU=
 </html>
 `;
 
-app.get('/app/lu', (_, res) => {
+app.get('/app/lu', requireAuth, (_, res) => {
     res.send(HTML_LU)
 })
 
@@ -167,7 +167,7 @@ const HTML_FECHA=
 </html>
 `;
 
-app.get('/app/fecha', (_, res) => {
+app.get('/app/fecha', requireAuth, (_, res) => {
     res.send(HTML_FECHA)
 })
 
@@ -218,7 +218,7 @@ const HTML_ARCHIVO=
 </html>
 `;
 
-app.get('/app/archivo', (_, res) => {
+app.get('/app/archivo', requireAuth, (_, res) => {
     res.send(HTML_ARCHIVO)
 })
 
@@ -284,19 +284,20 @@ const HTML_ARCHIVO_JSON=
 </html>
 `;
 
-app.get('/app/archivo-json', (_, res) => {
+//esta ruta la estamos usando?
+app.get('/app/archivo-json', requireAuth, (_, res) => {
     res.send(HTML_ARCHIVO_JSON)
 })
 
 
 // API DEL BACKEND
-var NO_IMPLEMENTADO='<code>ERROR 404 </code> <h1> No implementado aún ⚒<h1>';
+//var NO_IMPLEMENTADO='<code>ERROR 404 </code> <h1> No implementado aún ⚒<h1>';
 
-app.get('/api/v0/lu/:lu', async (req, res) => {
+app.get('/api/v0/lu/:lu', requireAuth, async (req, res) => {
     console.log(req.params, req.query, req.body);
 
     let certificadoHTML;
-    var alumnos = await aida.obtenerAlumnoQueNecesitaCertificado(clientDb, {lu: req.params.lu});
+    var alumnos = await aida.obtenerAlumnoQueNecesitaCertificado(clientDb, {lu: req.params.lu!});
     if (alumnos.length == 0){
         console.log('No hay alumnos que necesiten certificado para el lu', req.params.lu);
         res.status(404).send("El alumno no necesita certificado o no existe.");
@@ -308,11 +309,11 @@ app.get('/api/v0/lu/:lu', async (req, res) => {
     }
 })
 
-app.get('/api/v0/fecha/:fecha', async (req, res) => {
+app.get('/api/v0/fecha/:fecha', requireAuth, async (req, res) => {
     console.log(req.params, req.query, req.body);
 
     let certificadoHTML;
-    const fecha = fechas.deCualquierTexto(req.params.fecha);
+    const fecha = fechas.deCualquierTexto(req.params.fecha!);
 
     var alumnos = await aida.obtenerAlumnoQueNecesitaCertificado(clientDb, {fecha: fecha});
     if (alumnos.length == 0){
@@ -326,13 +327,14 @@ app.get('/api/v0/fecha/:fecha', async (req, res) => {
     }
 })
 
-app.patch('/api/v0/alumnos', async (req, res) => {
+// Actualizar la tabla de alumnos a partir de un CSV
+app.patch('/api/v0/alumnos', requireAuthAPI, async (req, res) => {
     console.log(req.params, req.query, req.body);
 
     var {dataLines: listaDeAlumnosCompleta, columns: columnas} = await csv.parsearCSV(req.body);
     await aida.refrescarTablaAlumnos(clientDb, listaDeAlumnosCompleta, columnas);
 
-    res.status(200).send(NO_IMPLEMENTADO);
+    res.status(200).send('Tabla de alumnos actualizada');
 
 })
 
@@ -341,7 +343,8 @@ app.get('/app/alumnos', requireAuth, async (_, res) => {
   res.status(200).send(plantillaTablaAlumnos);
 })
 
-app.get('/app/tablaAlumnos', async (_, res) => {
+// esto no tendria que ser api/v0/ ??
+app.get('/app/tablaAlumnos', requireAuthAPI, async (_, res) => {
 
     //hago select tabla alumnos
     var alumnos = await aida.obtenerTodosAlumnos(clientDb);
@@ -352,7 +355,8 @@ app.get('/app/tablaAlumnos', async (_, res) => {
 
 })
 
-app.post('/app/tablaAlumnos', async (req, res) => {
+// esto no tendria que ser api/v0/ ??
+app.post('/app/tablaAlumnos', requireAuthAPI, async (req, res) => {
     const columnas = Object.keys(req.body);
     const valores = Object.values(req.body) as string[];
     await aida.agregarAlumno(columnas, valores, clientDb);
@@ -361,17 +365,18 @@ app.post('/app/tablaAlumnos', async (req, res) => {
     console.log(req.body);
 });
 
-app.delete('/app/tablaAlumnos/:lu', async (req, res) => {
+// esto no tendria que ser api/v0/ ??
+app.delete('/app/tablaAlumnos/:lu', requireAuthAPI, async (req, res) => {
     const lu = req.params.lu;
     await clientDb.query(`DELETE FROM aida.alumnos WHERE lu = $1`, [lu]);
     res.status(200).send('Alumno eliminado');
 });
 
-app.put('/app/tablaAlumnos/:lu', async (req, res) => {
+app.put('/app/tablaAlumnos/:lu', requireAuthAPI, async (req, res) => {
     const lu = req.params.lu;
     const columnas = Object.keys(req.body);
     const valores = Object.values(req.body) as string[];
-    await aida.actualizarAlumno(lu, columnas, valores, clientDb);
+    await aida.actualizarAlumno(lu!, columnas, valores, clientDb);
     res.status(200).send('Alumno actualizado');
 });
 
