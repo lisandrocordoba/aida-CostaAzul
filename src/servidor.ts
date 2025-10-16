@@ -2,7 +2,19 @@ import express from "express";
 import * as aida from "./aida.js";
 import * as fechas from "./fechas.js";
 import * as csv from "./csv.js";
-import * as auth from "./auth.js";
+
+//Imports autenticacion
+import session/*, { SessionData }*/ from 'express-session';
+import { autenticarUsuario, crearUsuario, Usuario } from './auth.js';
+import { Request, Response, NextFunction } from "express";
+import * as fs from 'fs';
+
+// Extendemos los tipos de sesion
+declare module 'express-session' {
+  interface SessionData {
+      usuario?: Usuario;
+  }
+}
 
 const app = express()
 const port = 3000
@@ -17,6 +29,35 @@ app.use(express.urlencoded({ extended: true, limit: '10mb'  })); // para poder l
 app.use(express.text({ type: 'text/csv', limit: '10mb' })); // para poder leer el body como texto plano
 
 
+//Agregamos el middleware de session
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'cambiar_este_secreto_en_produccion', //usar variable de entorno en produccion?
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+      secure: false,
+      httpOnly: true,
+      maxAge: 1000 * 60 * 60 * 24 // 1 día
+  }
+}));
+
+// Middleware de autenticación para el frontend
+function requireAuth(req: Request, res: Response, next: NextFunction) {
+  if (req.session.usuario) {
+      next();
+  } else {
+      res.redirect('/app/login');
+  }
+}
+/*
+// Middleware de autenticación para el backend
+function requireAuthAPI(req: Request, res: Response, next: NextFunction) {
+  if (req.session.usuario) {
+      next();
+  } else {
+      res.status(401).json({ error: 'No autenticado' });
+  }
+}*/
 
 // endpoint de prueba
 app.get('/ask', (req, res) => {
@@ -31,8 +72,50 @@ app.get('/ask', (req, res) => {
     res.send(htmlResponse);
 })
 
+// Endpoints de Autenticacion
+// Página de login
+app.get('/app/login', (req, res) => {
+  if (req.session.usuario) {
+      return res.redirect('/app/menu');
+  }
+  const loginHtml = fs.readFileSync('views/login.html', 'utf8');
+  res.send(loginHtml);
+});
+
+// API de login
+app.post('/api/v0/auth/login', express.json(), async (req, res) => {
+  const { username, password } = req.body;
+  const usuario = await autenticarUsuario(clientDb, username, password);
+  if (usuario) {
+      req.session.usuario = usuario;
+      res.json({ message: 'Autenticación exitosa' });
+  } else {
+      res.status(401).json({ error: 'Credenciales inválidas' });
+  }
+});
+
+// Tenemos que hacer que el boton se agregue solo si el usuario esta loggueado.
+// API de logout
+app.post('/api/v0/auth/logout', (req, res) => {
+  req.session.destroy(err => {
+    console.log("estoy aca")
+    if (err) return res.status(500).json({ error: 'Error al cerrar sesión' });
+    res.clearCookie('connect.sid', { path: '/' });
+    res.json({ message: 'Sesión cerrada exitosamente' });
+    return;
+  });
+});
+
+app.post('/api/v0/auth/register', async (req, res) => {
+  console.log("entra");
+  const { username, password, nombre, email } = req.body;
+  crearUsuario(clientDb, username, password, nombre, email);
+  res.status(201).send('Usuario creado');
+});
+
+// FRONTEND
 app.get('/app/menu', async (_, res) => {
-    let HTML_MENU = await readFile('recursos/menu.html', { encoding: 'utf8' });
+    let HTML_MENU = await readFile('views/menu.html', { encoding: 'utf8' });
     res.send(HTML_MENU)
 })
 
@@ -219,7 +302,7 @@ app.get('/api/v0/lu/:lu', async (req, res) => {
         res.status(404).send("El alumno no necesita certificado o no existe.");
     } else {
         for (const alumno of alumnos) {
-            certificadoHTML = await aida.generarHTMLcertificadoParaAlumno(`recursos/plantilla-certificado.html`, alumno);
+            certificadoHTML = await aida.generarHTMLcertificadoParaAlumno(`views/plantilla-certificado.html`, alumno);
         }
         res.status(200).send(certificadoHTML);
     }
@@ -237,7 +320,7 @@ app.get('/api/v0/fecha/:fecha', async (req, res) => {
         res.status(404).send('No hay alumnos que necesiten certificado para la fecha');
     } else {
         for (const alumno of alumnos) {
-        certificadoHTML = await aida.generarHTMLcertificadoParaAlumno(`recursos/plantilla-certificado.html`, alumno);
+        certificadoHTML = await aida.generarHTMLcertificadoParaAlumno(`views/plantilla-certificado.html`, alumno);
       }
       res.status(200).send(certificadoHTML);
     }
@@ -253,8 +336,8 @@ app.patch('/api/v0/alumnos', async (req, res) => {
 
 })
 
-app.get('/app/alumnos', async (_, res) => {
-  let plantillaTablaAlumnos = await readFile('recursos/plantilla-tabla-alumnos.html', { encoding: 'utf8' });
+app.get('/app/alumnos', requireAuth, async (_, res) => {
+  let plantillaTablaAlumnos = await readFile('views/plantilla-tabla-alumnos.html', { encoding: 'utf8' });
   res.status(200).send(plantillaTablaAlumnos);
 })
 
@@ -290,13 +373,6 @@ app.put('/app/tablaAlumnos/:lu', async (req, res) => {
     const valores = Object.values(req.body) as string[];
     await aida.actualizarAlumno(lu, columnas, valores, clientDb);
     res.status(200).send('Alumno actualizado');
-});
-
-app.post('/api/v0/auth/register', async (req, res) => {
-    console.log("entra");
-    const { username, password, nombre, email } = req.body;
-    auth.crearUsuario(clientDb, username, password, nombre, email);
-    res.status(201).send('Usuario creado');
 });
 
 app.listen(port, () => {

@@ -88,9 +88,24 @@
 </head>
 <body>
 
-<header>
-  <h1>AIDA</h1>
-</header>
+  <header>
+    <h1>AIDA</h1>
+    <form id="logoutForm" action="/api/v0/auth/logout" method="POST" style="display:inline; margin-left:20px;">
+      <button type="submit" style="
+        background-color: #c62828;
+        color: white;
+        border: none;
+        padding: 10px 18px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: background-color 0.2s;
+      " onmouseover="this.style.backgroundColor='#b71c1c'" onmouseout="this.style.backgroundColor='#c62828'">
+        Logout
+      </button>
+    </form>
+  </header>
+
 
 <main>
   <div class="menu-grid">
