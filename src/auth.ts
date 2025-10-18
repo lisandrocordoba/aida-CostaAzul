@@ -56,11 +56,11 @@ export async function autenticarUsuario(
             return null;
         }
 
-        // Actualizar último acceso
+        /* Actualizar último acceso
         await client.query(
             'UPDATE aida.usuarios SET ultimo_acceso = CURRENT_TIMESTAMP WHERE id = $1',
             [user.id]
-        );
+        );*/
 
         return {
             id: user.id,
