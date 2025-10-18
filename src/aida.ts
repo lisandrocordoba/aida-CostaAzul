@@ -113,6 +113,15 @@ export async function generarCertificadoAlumnoFecha(clientDb:Client, fechaEnText
     return generarCertificadoAlumno(clientDb, {fecha})
 }
 
+export async function obtenerTodasLasCursadas(clientDb: Client): Promise<Record<string, (DatoAtomico)>[]> {
+    const sql = `SELECT * FROM aida.cursadas`;
+    const res = await clientDb.query(sql);
+    return res.rows;
+}
+
+
+
+
 export const operacionesAida: DefinicionesDeOperaciones = [
     {operacion: 'prueba-primero', cantidadArgumentos: 0, accion: generarCertificadoAlumnoPrueba},
     {operacion: 'archivo'       , cantidadArgumentos: 1, accion: cargarNovedadesAlumnosDesdeCsv},

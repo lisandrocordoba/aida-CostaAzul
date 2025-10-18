@@ -380,15 +380,21 @@ app.put('/app/tablaAlumnos/:lu', requireAuthAPI, async (req, res) => {
     res.status(200).send('Alumno actualizado');
 });
 
+app.get('/app/cursadas', requireAuth, async (_, res) => {
+  let plantillaTablaCursadas = await readFile('views/plantilla-tabla-cursadas.html', { encoding: 'utf8' });
+  res.status(200).send(plantillaTablaCursadas);
+})
+
 app.get('/app/tablaCursadas', requireAuthAPI, async (_, res) => {
     //hago select tabla cursadas
-    var cursadas = await aida.obtenerTodosCursadas(clientDb);
+    var cursadas = await aida.obtenerTodasLasCursadas(clientDb);
     //pasar a json
     var jsonCursadas = JSON.stringify(cursadas);
     //devolver al frontend
     res.status(200).send(jsonCursadas);
-
 });
+
+
 
 app.listen(port, () => {
     console.log(`Example app listening on port http://localhost:${port}/app/menu`)
