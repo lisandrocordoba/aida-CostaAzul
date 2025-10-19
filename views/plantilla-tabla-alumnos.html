@@ -16,13 +16,14 @@
 </head>
 <body onload="cargarAlumnos()">
   <h2>Listado de Alumnos</h2>
+  <!-- Obs: tabla acoplada al esquema, los encabezados deberian generarse dinámicamente -->
   <table id="tabla-alumnos">
     <thead>
       <tr>
         <th>LU</th>
         <th>Apellido</th>
         <th>Nombres</th>
-        <th>Título</th>
+        <th>Carrera</th>
         <th>Título en trámite</th>
         <th>Egreso</th>
         <th>Acción</th>
@@ -92,13 +93,13 @@
       const lu = document.getElementById("new-lu").value.trim();
       const apellido = document.getElementById("new-apellido").value.trim();
       const nombres = document.getElementById("new-nombres").value.trim();
-      const titulo = document.getElementById("new-titulo").value.trim();
+      const id_carrera = document.getElementById("new-titulo").value.trim();
       const titulo_en_tramite = document.getElementById("new-tramite").value || null;
       const egreso = document.getElementById("new-egreso").value || null;
 
       if (!lu) return alert("LU es obligatorio");
 
-      const alumno = { lu, apellido, nombres, titulo, titulo_en_tramite, egreso };
+      const alumno = { lu, apellido, nombres, id_carrera, titulo_en_tramite, egreso };
 
       try {
         const res = await fetch("/app/tablaAlumnos", {
@@ -113,6 +114,8 @@
       }
     }
 
+    // FUNCIONA, PERO HAY QUE CAMBIAR NOMBRE DE LOS CAMPOS
+    // PARA ALINEARLO CON EL NUEVO ESQUEMA DE ALUMNO
     function empezarEditar(lu) {
       if (editandoLU) return; // ya hay una fila en edición
       editandoLU = lu;
@@ -154,11 +157,11 @@
 
       const apellido = document.getElementById("edit-apellido").value.trim();
       const nombres = document.getElementById("edit-nombres").value.trim();
-      const titulo = document.getElementById("edit-titulo").value.trim();
+      const id_carrera = document.getElementById("edit-titulo").value.trim();
       const titulo_en_tramite = document.getElementById("edit-tramite").value || null;
       const egreso = document.getElementById("edit-egreso").value || null;
 
-      const alumno = { lu, apellido, nombres, titulo, titulo_en_tramite, egreso };
+      const alumno = { lu, apellido, nombres, id_carrera, titulo_en_tramite, egreso };
 
       try {
         const res = await fetch(`/app/tablaAlumnos/${encodeURIComponent(lu)}`, {

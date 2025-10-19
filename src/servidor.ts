@@ -171,7 +171,7 @@ app.get('/app/fecha', requireAuth, (_, res) => {
     res.send(HTML_FECHA)
 })
 
-const HTML_ARCHIVO=
+/*const HTML_ARCHIVO=
 `<!DOCTYPE html>
 <html lang="es">
 <head>
@@ -217,9 +217,11 @@ const HTML_ARCHIVO=
 </body>
 </html>
 `;
-
-app.get('/app/archivo', requireAuth, (_, res) => {
-    res.send(HTML_ARCHIVO)
+*/
+app.get('/app/archivo', requireAuth, async (_, res) => {
+    let plantilla_carga_csv = await readFile('views/plantilla-carga-csv.html', { encoding: 'utf8' });
+    res.send(plantilla_carga_csv)
+    //res.send(HTML_ARCHIVO)
 })
 
 const HTML_ARCHIVO_JSON=
@@ -331,7 +333,7 @@ app.get('/api/v0/fecha/:fecha', requireAuth, async (req, res) => {
 app.patch('/api/v0/alumnos', requireAuthAPI, async (req, res) => {
     console.log(req.params, req.query, req.body);
 
-    var {dataLines: listaDeAlumnosCompleta, columns: columnas} = await csv.parsearCSV(req.body);
+    var {dataLines: listaDeAlumnosCompleta, columns: columnas} = await csv.parsearCSV(req.body.csvText);
     await aida.refrescarTablaAlumnos(clientDb, listaDeAlumnosCompleta, columnas);
 
     res.status(200).send('Tabla de alumnos actualizada');
@@ -372,6 +374,8 @@ app.delete('/app/tablaAlumnos/:lu', requireAuthAPI, async (req, res) => {
     res.status(200).send('Alumno eliminado');
 });
 
+// PENSAR COMO QUEREMOS LIMITAR CAMBIOS
+// EJEMPLO: ES POSIBLE QUE UN ALUMNO TENGA TITULO EN TRAMITE Y SE LE CAMBIE LA CARRERA
 app.put('/app/tablaAlumnos/:lu', requireAuthAPI, async (req, res) => {
     const lu = req.params.lu;
     const columnas = Object.keys(req.body);
@@ -393,6 +397,60 @@ app.get('/app/tablaCursadas', requireAuthAPI, async (_, res) => {
     //devolver al frontend
     res.status(200).send(jsonCursadas);
 });
+
+// Ruta agrega cursada con su nota a la tabla cursadas
+// IMPORTANTE: si es la última materia, un trigger en la db ingresa la fecha de título en trámite.
+app.post('/app/tablaCursadas', requireAuthAPI, async (req, res) => {
+  try {
+      const columnas = Object.keys(req.body);
+      const valores = Object.values(req.body);
+      await aida.agregarCursada(columnas, valores as string[], clientDb);
+
+      res.status(200).send('Cursada agregada');
+      console.log('Cursada agregada:', req.body);
+  } catch (err) {
+      console.error('Error al agregar cursada:', err);
+      res.status(500).send('Error al agregar la cursada');
+  }
+});
+
+// Esta ruta carga una carrera con su plan de estudios a la base de datos a partir de un CSV
+app.patch('/api/v0/plan_estudios', requireAuthAPI, async (req, res) => {
+  try {
+      const { csvText, careerName } = req.body;
+
+      if (!csvText || !careerName) {
+          res.status(400).send('Faltan csvText o careerName');
+      }
+
+      // Agregar carrera
+      const carreraId = await aida.agregarCarrera(careerName.trim(), clientDb);
+
+      // Parsear CSV con materias
+      const { dataLines, columns } = csv.parsearCSV(csvText);
+
+      // Validar estructura del CSV: una sola columna llamada "materias"
+      if (columns.length !== 1 || columns[0]!.toLowerCase() !== 'materias') {
+          res.status(400).send('CSV inválido: se espera columna "materias"');
+      }
+
+      // Procesar cada materia
+      for (const line of dataLines) {
+          const materiaNombre = line[0]!.trim();
+          if (!materiaNombre) continue;
+
+          const materiaId = await aida.agregarMateria(materiaNombre, clientDb);
+
+          await aida.agregarMateriaACarrera(carreraId, materiaId, clientDb);
+      }
+
+      res.status(200).send(`Carrera "${careerName}" y materias asociadas procesadas correctamente.`);
+  } catch (err) {
+      console.error(err);
+      res.status(500).send(String(err));
+  }
+});
+
 
 
 
