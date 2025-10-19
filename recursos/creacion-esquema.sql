@@ -59,8 +59,12 @@ grant select, insert, update, delete on aida.alumnos to aida_admin;
 grant select, insert, update, delete on aida.usuarios to aida_admin;
 GRANT USAGE, SELECT, UPDATE ON SEQUENCE aida.usuarios_id_seq to aida_admin;
 grant select, insert, update, delete on aida.carreras to aida_admin;
+GRANT USAGE, SELECT, UPDATE ON SEQUENCE aida.carreras_id_seq to aida_admin;
 grant select, insert, update, delete on aida.materias to aida_admin;
+GRANT USAGE, SELECT, UPDATE ON SEQUENCE aida.materias_id_seq to aida_admin;
 grant select, insert, update, delete on aida.materiasEnCarrera to aida_admin;
+/*GRANT USAGE, SELECT, UPDATE ON SEQUENCE aida.materiasEnCarrera_id_seq to aida_admin;*/
 grant select, insert, update, delete on aida.cursadas to aida_admin;
+/*GRANT USAGE, SELECT, UPDATE ON SEQUENCE aida.cursadas_id_seq to aida_admin;*/
 /* grant select, insert, update, delete on aida.alumnosEnCarrera to aida_admin; */
 
