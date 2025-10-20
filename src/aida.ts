@@ -8,13 +8,31 @@ import { DatoAtomico, datoATexto, sqlLiteral } from "./tipos-atomicos.js"
 import { leerYParsearCsv } from "./csv.js"
 import { DefinicionesDeOperaciones } from "./orquestador.js";
 
-
+//QUEREMOS MANTENER LA FUNCIONALIDAD DE BORRAR ALUMNOS?
 export async function refrescarTablaAlumnos(clientDb: Client, listaDeAlumnosCompleta:string[][], columnas:string[]){
     await clientDb.query("DELETE FROM aida.alumnos");
     for (const values of listaDeAlumnosCompleta) {
         await agregarAlumno(columnas, values, clientDb);
     }
 }
+
+export async function refrescarTablaCursadas(
+    clientDb: Client,
+    listaDeCursadasCompleta: string[][],
+    columnas: string[]
+): Promise<void> {
+
+    for (const values of listaDeCursadasCompleta) {
+        const query = `
+            INSERT INTO aida.cursadas (${columnas.join(', ')}) VALUES
+                (${values.map((value) => value == '' ? 'null' : sqlLiteral(value))})
+        `;
+        await clientDb.query(query);
+    }
+
+    console.log('Tabla de cursadas actualizada');
+}
+
 
 export async function actualizarAlumno(lu: string, columnas: string[], valores: string[], clientDb: Client) {
     const setClause = columnas.map((columna, index) => `${columna} = ${valores[index] == '' ? 'null' : sqlLiteral(valores[index]!)}`).join(', ');

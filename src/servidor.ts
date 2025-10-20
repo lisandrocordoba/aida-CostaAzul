@@ -414,7 +414,7 @@ app.post('/app/tablaCursadas', requireAuthAPI, async (req, res) => {
   }
 });
 
-// Esta ruta carga una carrera con su plan de estudios a la base de datos a partir de un CSV
+// Carrera con su plan de estudios a la base de datos a partir de un CSV
 app.patch('/api/v0/plan_estudios', requireAuthAPI, async (req, res) => {
   try {
       const { csvText, careerName } = req.body;
@@ -450,6 +450,17 @@ app.patch('/api/v0/plan_estudios', requireAuthAPI, async (req, res) => {
       res.status(500).send(String(err));
   }
 });
+
+// Actualiza la tabla de cursadas a partir de un CSV
+app.patch('/api/v0/cursadas', requireAuthAPI, async (req, res) => {
+  console.log(req.params, req.query, req.body);
+
+  var {dataLines: listaDeCursadasCompleta, columns: columnas} = await csv.parsearCSV(req.body.csvText);
+  await aida.refrescarTablaCursadas(clientDb, listaDeCursadasCompleta, columnas);
+
+  res.status(200).send('Tabla de cursadas actualizada');
+});
+
 
 
 

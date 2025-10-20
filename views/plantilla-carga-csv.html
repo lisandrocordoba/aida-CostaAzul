@@ -16,9 +16,9 @@
     <option value="">-- Elegí una opción --</option>
     <option value="alumnos">Alumnos</option>
     <option value="plan_estudios">Plan de Estudios</option>
+    <option value="cursadas">Cursadas</option>
   </select>
 
-  <!-- Formulario genérico -->
   <div id="formContainer" class="form-section">
     <form id="uploadForm">
       <div id="extraFields"></div>
@@ -42,7 +42,6 @@
         return;
       }
 
-      // Campos específicos según el tipo
       if (type === 'plan_estudios') {
         extraFields.innerHTML = `
           <label for="careerName">Nombre de la carrera:</label><br>
@@ -67,10 +66,8 @@
         return;
       }
 
-      // Read CSV as text
       const text = await file.text();
-
-      let bodyData = { csvText: text }; // send CSV content as property
+      const payload = { csvText: text };
 
       let endpoint = '';
 
@@ -82,21 +79,24 @@
           alert('Por favor ingresá el nombre de la carrera.');
           return;
         }
+        payload.careerName = careerName;
         endpoint = '../api/v0/plan_estudios';
-        bodyData.careerName = careerName;
+      } else if (type === 'cursadas') {
+        endpoint = '../api/v0/cursadas';
       }
 
       try {
         const response = await fetch(endpoint, {
-          method: 'PATCH', // change to PATCH to match your endpoint
+          method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(bodyData)
+          body: JSON.stringify(payload)
         });
 
         if (response.ok) {
           alert('Datos enviados correctamente.');
         } else {
-          alert('Error al enviar los datos.');
+          const msg = await response.text();
+          alert('Error al enviar los datos: ' + msg);
         }
       } catch (error) {
         console.error('Error en la solicitud:', error);
