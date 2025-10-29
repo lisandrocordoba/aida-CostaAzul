@@ -40,6 +40,12 @@ export async function actualizarAlumno(lu: string, columnas: string[], valores: 
     await clientDb.query(query);
 }
 
+export async function actualizarCursada(lu: string, columnas: string[], valores: string[], clientDb: Client) {
+    const setClause = columnas.map((columna, index) => `${columna} = ${valores[index] == '' ? 'null' : sqlLiteral(valores[index]!)}`).join(', ');
+    const query = `UPDATE aida.cursadas SET ${setClause} WHERE alumno_lu = ${sqlLiteral(lu)}`;
+    await clientDb.query(query);
+}
+
 export async function agregarAlumno(columnas: string[], values: string[], clientDb: Client) {
     const query = `
             INSERT INTO aida.alumnos (${columnas.join(', ')}) VALUES
