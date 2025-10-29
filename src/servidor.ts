@@ -21,7 +21,16 @@ const port = 3000
 
 import { Client } from 'pg'
 import { readFile } from "fs/promises";
-const clientDb = new Client()
+
+// Leemos la variable de ambiente IS_DEVELOPMENT para saber que db levantar
+let clientDb;
+if (process.env.IS_DEVELOPMENT === 'true') {
+    clientDb = new Client();
+} else {
+    clientDb = new Client({
+        connectionString: process.env.DATABASE_URL
+    });
+}
 clientDb.connect()
 
 app.use(express.json({ limit: '10mb' })); // para poder leer el body
