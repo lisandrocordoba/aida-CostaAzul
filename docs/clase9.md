@@ -49,7 +49,7 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO aida_user;
 
 1.  Crear un nuevo Usuario para que pueda logearse
 
-    curl -X POST http://localhost:5000/api/v0/auth/register \
+    curl -X POST http://localhost:3000/api/v0/auth/register \
     -H "Content-Type: application/json" \
     -d '{"username":"admin","password":"admin123","nombre":"Administrador","email":"admin@aida.com"}'
     {"success":true,"usuario":{"username":"admin","nombre":"Administrador"}}%
