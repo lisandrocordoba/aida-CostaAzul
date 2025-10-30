@@ -390,6 +390,7 @@ app.put('/app/tablaAlumnos/:lu', requireAuthAPI, async (req, res) => {
     const columnas = Object.keys(req.body);
     const valores = Object.values(req.body) as string[];
     await aida.actualizarAlumno(lu!, columnas, valores, clientDb);
+    console.log(valores);
     res.status(200).send('Alumno actualizado');
 });
 
@@ -421,6 +422,22 @@ app.post('/app/tablaCursadas', requireAuthAPI, async (req, res) => {
       console.error('Error al agregar cursada:', err);
       res.status(500).send('Error al agregar la cursada');
   }
+});
+
+// Edita tabla de cursadas
+app.put('/app/tablaCursadas/:lu', requireAuthAPI, async (req, res) => {
+  const lu = req.params.lu;
+  const columnas = Object.keys(req.body);
+  const valores = Object.values(req.body) as string[];
+  console.log(valores);
+  await aida.actualizarCursada(lu!, columnas, valores, clientDb);
+  res.status(200).send('Cursada actualizada');
+});
+
+app.delete('/app/tablaCursadas/:lu', requireAuthAPI, async (req, res) => {
+  const lu = req.params.lu;
+  await clientDb.query(`DELETE FROM aida.cursadas WHERE alumno_lu = $1 AND materia_id = $2 AND anio = $3 AND cuatrimestre = $4`, [lu]);
+  res.status(200).send('Cursada eliminado');
 });
 
 // Carrera con su plan de estudios a la base de datos a partir de un CSV

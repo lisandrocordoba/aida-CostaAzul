@@ -16,6 +16,8 @@ BEGIN
     END IF;
 
     -- Contar cuántas materias son requeridas para esa carrera
+    -- Asumimos: cantidad de materias en la carrera = cant de materias requeridas
+    -- Es decir: no hay optativas, materias que ya no se dictan, etc.
     SELECT COUNT(*) INTO v_cant_materias_requeridas
     FROM aida.materiasEnCarrera
     WHERE carrera_id = v_id_carrera;

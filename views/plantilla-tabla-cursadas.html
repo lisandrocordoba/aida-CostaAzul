@@ -133,17 +133,17 @@
       cNota.innerHTML = `<input id="edit-nota" type="number" value="${escapeAttr(val.nota)}" />`;
 
       cAcc.innerHTML = `
-        <button onclick="confirmarEditar('${val.alumno_lu}', ${val.materia_id}, ${val.anio}, ${val.cuatrimestre})">Confirmar</button>
+        <button onclick="confirmarEditar('${val.alumno_lu}', '${val.materia_id}', '${val.anio}', '${val.cuatrimestre}')">Confirmar</button>
         <button onclick="cancelarEditar()">Cancelar</button>
       `;
     }
 
     async function confirmarEditar(alumno_lu, materia_id, anio, cuatrimestre) {
-      const nota = document.getElementById("edit-nota").value ? parseInt(document.getElementById("edit-nota").value) : null;
+      const nota = document.getElementById("edit-nota").value ? document.getElementById("edit-nota").value : null;
       const cursada = { alumno_lu, materia_id, anio, cuatrimestre, nota };
 
       try {
-        const res = await fetch(`/app/tablaCursadas/${encodeURIComponent(alumno_lu)}/${materia_id}/${anio}/${cuatrimestre}`, {
+        const res = await fetch(`/app/tablaCursadas/${encodeURIComponent(alumno_lu)}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(cursada)
