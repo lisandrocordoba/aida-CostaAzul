@@ -425,9 +425,9 @@ app.put('/app/tablaCursadas/:lu', requireAuthAPI, async (req, res) => {
   res.status(200).send('Cursada actualizada');
 });
 
-app.delete('/app/tablaCursadas/:lu', requireAuthAPI, async (req, res) => {
-  const lu = req.params.lu;
-  await clientDb.query(`DELETE FROM aida.cursadas WHERE alumno_lu = $1 AND materia_id = $2 AND anio = $3 AND cuatrimestre = $4`, [lu]);
+app.delete('/app/tablaCursadas/:lu/:materia_id/:anio/:cuatrimestre', requireAuthAPI, async (req, res) => {
+  const { lu, materia_id, anio, cuatrimestre } = req.params;
+  await clientDb.query(`DELETE FROM aida.cursadas WHERE alumno_lu = $1 AND materia_id = $2 AND anio = $3 AND cuatrimestre = $4`, [lu, materia_id, anio, cuatrimestre]);
   res.status(200).send('Cursada eliminado');
 });
 
