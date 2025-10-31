@@ -8,4 +8,4 @@ mkdir .\local-intercambio
 mkdir .\local-intercambio\entrada
 mkdir .\local-intercambio\salida
 set DATABASE_URL=postgresql://postgres.lsxpwnjiifditcemmbfo:aida@aws-1-us-east-1.pooler.supabase.com:6543/postgres
-set IS_DEVELOPMENT=false
+set IS_DEVELOPMENT=true
