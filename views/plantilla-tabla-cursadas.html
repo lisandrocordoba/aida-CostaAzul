@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Listado de Cursadas</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 30px; background-color: #f9f9f9; }
+    table { border-collapse: collapse; width: 100%; background: white; box-shadow: 0px 2px 6px rgba(0,0,0,0.1); }
+    th, td { border: 1px solid #ddd; padding: 10px 12px; text-align: left; }
+    th { background-color: #4CAF50; color: white; }
+    tr:nth-child(even) { background-color: #f2f2f2; }
+    tr:hover { background-color: #e1f5fe; }
+    input { width: 100%; box-sizing: border-box; padding: 6px; }
+    button { padding: 6px 10px; }
+  </style>
+</head>
+<body onload="cargarCursadas()">
+  <h2>Listado de Cursadas</h2>
+  <table id="tabla-cursadas">
+    <thead>
+      <tr>
+        <th>Alumno LU</th>
+        <th>ID Materia</th>
+        <th>Año</th>
+        <th>Cuatrimestre</th>
+        <th>Nota</th>
+        <th>Acción</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Filas dinámicas + última fila para agregar -->
+    </tbody>
+  </table>
+
+  <script>
+    let editandoClave = null;
+
+    async function cargarCursadas() {
+      try {
+        const response = await fetch("/app/tablaCursadas", {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        });
+        if (!response.ok) throw new Error("Error al cargar: " + response.status);
+
+        const cursadas = await response.json();
+        const tbody = document.querySelector("#tabla-cursadas tbody");
+        tbody.innerHTML = "";
+
+        cursadas.forEach(c => {
+          const fila = document.createElement("tr");
+          const key = `${c.alumno_lu}_${c.materia_id}_${c.anio}_${c.cuatrimestre}`;
+          fila.dataset.key = key;
+          fila.innerHTML = `
+            <td>${c.alumno_lu}</td>
+            <td>${c.materia_id}</td>
+            <td>${c.anio}</td>
+            <td>${c.cuatrimestre}</td>
+            <td>${c.nota ?? ""}</td>
+            <td>
+              <button onclick="empezarEditar('${key}')" ${editandoClave ? "disabled" : ""}>Editar</button>
+              <button onclick="borrarCursada('${c.alumno_lu}', ${c.materia_id}, ${c.anio}, ${c.cuatrimestre})" ${editandoClave ? "disabled" : ""}>Eliminar</button>
+            </td>
+          `;
+          tbody.appendChild(fila);
+        });
+
+        agregarFilaDeAlta(tbody);
+      } catch (error) {
+        console.error("No se pudo cargar la lista de cursadas:", error);
+      }
+    }
+
+    function agregarFilaDeAlta(tbody) {
+      const filaAlta = document.createElement("tr");
+      filaAlta.id = "fila-alta";
+      filaAlta.innerHTML = `
+        <td><input id="new-lu" placeholder="1600/17" /></td>
+        <td><input id="new-materia" type="number" placeholder="ID Materia" /></td>
+        <td><input id="new-anio" type="number" placeholder="Año" /></td>
+        <td><input id="new-cuatrimestre" type="number" placeholder="1 o 2" /></td>
+        <td><input id="new-nota" type="number" placeholder="Nota" /></td>
+        <td><button onclick="crearCursada()" ${editandoClave ? "disabled" : ""}>Agregar</button></td>
+      `;
+      tbody.appendChild(filaAlta);
+    }
+
+    async function crearCursada() {
+      const alumno_lu = document.getElementById("new-lu").value.trim();
+      const materia_id = parseInt(document.getElementById("new-materia").value);
+      const anio = parseInt(document.getElementById("new-anio").value);
+      const cuatrimestre = parseInt(document.getElementById("new-cuatrimestre").value);
+      const nota = document.getElementById("new-nota").value ? parseInt(document.getElementById("new-nota").value) : null;
+
+      if (!alumno_lu || !materia_id || !anio || !cuatrimestre)
+        return alert("LU, materia, año y cuatrimestre son obligatorios");
+
+      const cursada = { alumno_lu, materia_id, anio, cuatrimestre, nota };
+
+      try {
+        const res = await fetch("/app/tablaCursadas", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(cursada)
+        });
+        if (!res.ok) throw new Error("Error al crear: " + res.status);
+        await cargarCursadas();
+      } catch (e) {
+        alert("No se pudo agregar la cursada: " + e.message);
+      }
+    }
+
+    function empezarEditar(key) {
+      if (editandoClave) return;
+      editandoClave = key;
+
+      const fila = document.querySelector(`tr[data-key="${CSS.escape(key)}"]`);
+      if (!fila) return;
+
+      const [cLU, cMat, cAnio, cCuatr, cNota, cAcc] = fila.querySelectorAll("td");
+      const val = {
+        alumno_lu: cLU.textContent.trim(),
+        materia_id: cMat.textContent.trim(),
+        anio: cAnio.textContent.trim(),
+        cuatrimestre: cCuatr.textContent.trim(),
+        nota: cNota.textContent.trim()
+      };
+
+      cLU.innerHTML = `<input value="${escapeAttr(val.alumno_lu)}" disabled />`;
+      cMat.innerHTML = `<input value="${escapeAttr(val.materia_id)}" disabled />`;
+      cAnio.innerHTML = `<input value="${escapeAttr(val.anio)}" disabled />`;
+      cCuatr.innerHTML = `<input value="${escapeAttr(val.cuatrimestre)}" disabled />`;
+      cNota.innerHTML = `<input id="edit-nota" type="number" value="${escapeAttr(val.nota)}" />`;
+
+      cAcc.innerHTML = `
+        <button onclick="confirmarEditar('${val.alumno_lu}', '${val.materia_id}', '${val.anio}', '${val.cuatrimestre}')">Confirmar</button>
+        <button onclick="cancelarEditar()">Cancelar</button>
+      `;
+    }
+
+    async function confirmarEditar(alumno_lu, materia_id, anio, cuatrimestre) {
+      const nota = document.getElementById("edit-nota").value ? document.getElementById("edit-nota").value : null;
+      const cursada = { alumno_lu, materia_id, anio, cuatrimestre, nota };
+
+      try {
+        const res = await fetch(`/app/tablaCursadas/${encodeURIComponent(alumno_lu)}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(cursada)
+        });
+        if (!res.ok) throw new Error("Error al actualizar: " + res.status);
+        editandoClave = null;
+        await cargarCursadas();
+      } catch (e) {
+        alert("No se pudo actualizar: " + e.message);
+      }
+    }
+
+    function cancelarEditar() {
+      editandoClave = null;
+      cargarCursadas();
+    }
+
+    async function borrarCursada(alumno_lu, materia_id, anio, cuatrimestre) {
+      if (!confirm(`¿Eliminar cursada de ${alumno_lu} - Materia ${materia_id}?`)) return;
+      try {
+        const res = await fetch(`/app/tablaCursadas/${encodeURIComponent(alumno_lu)}/${materia_id}/${anio}/${cuatrimestre}`, {
+          method: "DELETE"
+        });
+        if (!res.ok) throw new Error("Error al eliminar: " + res.status);
+        await cargarCursadas();
+      } catch (e) {
+        alert("No se pudo eliminar: " + e.message);
+      }
+    }
+
+    function escapeAttr(s) {
+      return String(s).replace(/["'&<>]/g, m => ({
+        '"': '&quot;', "'": '&#39;', "&": '&amp;', "<": '&lt;', ">": '&gt;'
+      }[m]));
+    }
+  </script>
+</body>
+</html>

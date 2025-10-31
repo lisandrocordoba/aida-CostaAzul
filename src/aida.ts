@@ -8,7 +8,7 @@ import { DatoAtomico, datoATexto, sqlLiteral } from "./tipos-atomicos.js"
 import { leerYParsearCsv } from "./csv.js"
 import { DefinicionesDeOperaciones } from "./orquestador.js";
 
-
+//QUEREMOS MANTENER LA FUNCIONALIDAD DE BORRAR ALUMNOS?
 export async function refrescarTablaAlumnos(clientDb: Client, listaDeAlumnosCompleta:string[][], columnas:string[]){
     await clientDb.query("DELETE FROM aida.alumnos");
     for (const values of listaDeAlumnosCompleta) {
@@ -16,9 +16,33 @@ export async function refrescarTablaAlumnos(clientDb: Client, listaDeAlumnosComp
     }
 }
 
+export async function refrescarTablaCursadas(
+    clientDb: Client,
+    listaDeCursadasCompleta: string[][],
+    columnas: string[]
+): Promise<void> {
+
+    for (const values of listaDeCursadasCompleta) {
+        const query = `
+            INSERT INTO aida.cursadas (${columnas.join(', ')}) VALUES
+                (${values.map((value) => value == '' ? 'null' : sqlLiteral(value))})
+        `;
+        await clientDb.query(query);
+    }
+
+    console.log('Tabla de cursadas actualizada');
+}
+
+
 export async function actualizarAlumno(lu: string, columnas: string[], valores: string[], clientDb: Client) {
     const setClause = columnas.map((columna, index) => `${columna} = ${valores[index] == '' ? 'null' : sqlLiteral(valores[index]!)}`).join(', ');
     const query = `UPDATE aida.alumnos SET ${setClause} WHERE lu = ${sqlLiteral(lu)}`;
+    await clientDb.query(query);
+}
+
+export async function actualizarCursada(lu: string, columnas: string[], valores: string[], clientDb: Client) {
+    const setClause = columnas.map((columna, index) => `${columna} = ${valores[index] == '' ? 'null' : sqlLiteral(valores[index]!)}`).join(', ');
+    const query = `UPDATE aida.cursadas SET ${setClause} WHERE alumno_lu = ${sqlLiteral(lu)}`;
     await clientDb.query(query);
 }
 
@@ -33,7 +57,8 @@ export async function agregarAlumno(columnas: string[], values: string[], client
 }
 
 export async function obtenerTodosAlumnos(clientDb: Client): Promise<Record<string, (DatoAtomico)>[]> {
-    const sql = `SELECT * FROM aida.alumnos`;
+    const sql = `select lu, apellido, nombres, c.nombre as titulo, titulo_en_tramite, egreso
+	                from aida.alumnos a join aida.carreras c on a.id_carrera = c.id`;
     const res = await clientDb.query(sql);
     return res.rows;
 }
@@ -111,6 +136,74 @@ export async function generarCertificadoAlumnoLu(clientDb:Client, lu:string){
 export async function generarCertificadoAlumnoFecha(clientDb:Client, fechaEnTexto:string){
     const fecha = Fechas.deCualquierTexto(fechaEnTexto)
     return generarCertificadoAlumno(clientDb, {fecha})
+}
+
+export async function obtenerTodasLasCursadas(clientDb: Client): Promise<Record<string, (DatoAtomico)>[]> {
+    const sql = `SELECT * FROM aida.cursadas`;
+    const res = await clientDb.query(sql);
+    return res.rows;
+}
+
+export async function agregarCursada(columnas: string[], valores: string[], clientDb: Client) {
+    const columnasSQL = columnas.map(c => `"${c}"`).join(', ');
+    const placeholders = columnas.map((_, i) => `$${i + 1}`).join(', ');
+    const query = `
+        INSERT INTO aida.cursadas (${columnasSQL})
+        VALUES (${placeholders});
+    `;
+    await clientDb.query(query, valores);
+}
+
+export async function agregarCarrera(nombre: string, clientDb: Client): Promise<number> {
+    const existing = await clientDb.query<{ id: number }>(`
+        SELECT id FROM aida.carreras WHERE nombre = ${sqlLiteral(nombre)}
+    `);
+
+    if (existing.rows.length > 0) {
+        throw new Error(`La carrera "${nombre}" ya existe en la base de datos`);
+    }
+
+    const res = await clientDb.query<{ id: number }>(`
+        INSERT INTO aida.carreras (nombre)
+        VALUES (${sqlLiteral(nombre)})
+        RETURNING id
+    `);
+
+    return res.rows[0]!.id;
+}
+
+export async function agregarMateria(nombre: string, clientDb: Client): Promise<number> {
+    const existing = await clientDb.query<{ id: number }>(`
+        SELECT id FROM aida.materias WHERE nombre = ${sqlLiteral(nombre)}
+    `);
+
+    if (existing.rows.length > 0) {
+        throw new Error(`La materia "${nombre}" ya existe en la base de datos`);
+    }
+
+    const res = await clientDb.query<{ id: number }>(`
+        INSERT INTO aida.materias (nombre)
+        VALUES (${sqlLiteral(nombre)})
+        RETURNING id
+    `);
+
+    return res.rows[0]!.id;
+}
+
+export async function agregarMateriaACarrera(carreraId: number, materiaId: number, clientDb: Client): Promise<void> {
+    const existing = await clientDb.query<{ exists: boolean }>(`
+        SELECT 1 FROM aida.materiasEnCarrera
+        WHERE carrera_id = ${carreraId} AND materia_id = ${materiaId}
+    `);
+
+    if (existing.rows.length > 0) {
+        throw new Error(`La materia con ID ${materiaId} ya está asociada a la carrera con ID ${carreraId}`);
+    }
+
+    await clientDb.query(`
+        INSERT INTO aida.materiasEnCarrera (carrera_id, materia_id)
+        VALUES (${carreraId}, ${materiaId})
+    `);
 }
 
 export const operacionesAida: DefinicionesDeOperaciones = [
