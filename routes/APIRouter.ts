@@ -1,6 +1,6 @@
 import express from "express";
 import * as aida from "../src/aida.js";
-import * as fechas from "../src/fechas.js";
+//import * as fechas from "../src/fechas.js";
 import * as csv from "../src/csv.js";
 
 //Imports autenticacion
@@ -16,7 +16,7 @@ declare module 'express-session' {
 }
 
 import { Client } from 'pg'
-import { readFile } from "fs/promises";
+//import { readFile } from "fs/promises";
 
 // Leemos la variable de ambiente IS_DEVELOPMENT para saber que db levantar
 let clientDb;
@@ -74,7 +74,7 @@ APIRouter.post('/auth/login', express.json(), async (req, res) => {
 
 // Tenemos que hacer que el boton se agregue solo si el usuario esta loggueado.
 // API de logout
-APIRouter.post('/auth/logout', requireAuthAPI, (req, res) => {
+APIRouter.post('/auth/logout', (req, res) => {
   req.session.destroy(err => {
     console.log("estoy aca")
     if (err) return res.status(500).json({ error: 'Error al cerrar sesión' });
@@ -95,53 +95,7 @@ APIRouter.post('/auth/register', async (req, res) => {
 // API DEL BACKEND
 //var NO_IMPLEMENTADO='<code>ERROR 404 </code> <h1> No implementado aún ⚒<h1>';
 
-APIRouter.get('/lu/:lu', requireAuthAPI, async (req, res) => {
-    console.log(req.params, req.query, req.body);
-
-    let certificadoHTML;
-    var alumnos = await aida.obtenerAlumnoQueNecesitaCertificado(clientDb, {lu: req.params.lu!});
-    if (alumnos.length == 0){
-        console.log('No hay alumnos que necesiten certificado para el lu', req.params.lu);
-        res.status(404).send("El alumno no necesita certificado o no existe.");
-    } else {
-        for (const alumno of alumnos) {
-            certificadoHTML = await aida.generarHTMLcertificadoParaAlumno(`views/plantilla-certificado.html`, alumno);
-        }
-        res.status(200).send(certificadoHTML);
-    }
-})
-
-APIRouter.get('/fecha/:fecha', requireAuthAPI, async (req, res) => {
-    console.log(req.params, req.query, req.body);
-
-    let certificadoHTML;
-    const fecha = fechas.deCualquierTexto(req.params.fecha!);
-
-    var alumnos = await aida.obtenerAlumnoQueNecesitaCertificado(clientDb, {fecha: fecha});
-    if (alumnos.length == 0){
-        console.log('No hay alumnos que necesiten certificado para la fecha', fecha);
-        res.status(404).send('No hay alumnos que necesiten certificado para la fecha');
-    } else {
-        for (const alumno of alumnos) {
-        certificadoHTML = await aida.generarHTMLcertificadoParaAlumno(`views/plantilla-certificado.html`, alumno);
-      }
-      res.status(200).send(certificadoHTML);
-    }
-})
-
-// Actualizar la tabla de alumnos a partir de un CSV
-APIRouter.patch('/alumnos', requireAuthAPI, async (req, res) => {
-    console.log(req.params, req.query, req.body);
-
-    var {dataLines: listaDeAlumnosCompleta, columns: columnas} = await csv.parsearCSV(req.body.csvText);
-    await aida.refrescarTablaAlumnos(clientDb, listaDeAlumnosCompleta, columnas);
-
-    res.status(200).send('Tabla de alumnos actualizada');
-
-})
-
-// esto no tendria que ser api/v0/ ??
-APIRouter.get('/tablaAlumnos', requireAuthAPI, async (_, res) => {
+APIRouter.get('/alumnos', async (_, res) => {
 
     //hago select tabla alumnos
     var alumnos = await aida.obtenerTodosAlumnos(clientDb);
@@ -152,8 +106,7 @@ APIRouter.get('/tablaAlumnos', requireAuthAPI, async (_, res) => {
 
 })
 
-// esto no tendria que ser api/v0/ ??
-APIRouter.post('/tablaAlumnos', requireAuthAPI, async (req, res) => {
+APIRouter.post('/alumnos', async (req, res) => {
     const columnas = Object.keys(req.body);
     const valores = Object.values(req.body) as string[];
     await aida.agregarAlumno(columnas, valores, clientDb);
@@ -162,16 +115,9 @@ APIRouter.post('/tablaAlumnos', requireAuthAPI, async (req, res) => {
     console.log(req.body);
 });
 
-// esto no tendria que ser api/v0/ ??
-APIRouter.delete('/tablaAlumnos/:lu', requireAuthAPI, async (req, res) => {
-    const lu = req.params.lu;
-    await clientDb.query(`DELETE FROM aida.alumnos WHERE lu = $1`, [lu]);
-    res.status(200).send('Alumno eliminado');
-});
-
 // PENSAR COMO QUEREMOS LIMITAR CAMBIOS
 // EJEMPLO: ES POSIBLE QUE UN ALUMNO TENGA TITULO EN TRAMITE Y SE LE CAMBIE LA CARRERA
-APIRouter.put('/tablaAlumnos/:lu', requireAuthAPI, async (req, res) => {
+APIRouter.put('/alumnos/:lu', async (req, res) => {
     const lu = req.params.lu;
     const columnas = Object.keys(req.body);
     const valores = Object.values(req.body) as string[];
@@ -180,12 +126,27 @@ APIRouter.put('/tablaAlumnos/:lu', requireAuthAPI, async (req, res) => {
     res.status(200).send('Alumno actualizado');
 });
 
-APIRouter.get('/cursadas', requireAuthAPI, async (_, res) => {
-  let plantillaTablaCursadas = await readFile('views/plantilla-tabla-cursadas.html', { encoding: 'utf8' });
-  res.status(200).send(plantillaTablaCursadas);
+// esto no tendria que ser api/v0/ ??
+APIRouter.delete('/alumnos/:lu', async (req, res) => {
+    const lu = req.params.lu;
+    await clientDb.query(`DELETE FROM aida.alumnos WHERE lu = $1`, [lu]);
+    res.status(200).send('Alumno eliminado');
+});
+
+// Actualizar la tabla de alumnos a partir de un CSV
+APIRouter.patch('/alumnos', async (req, res) => {
+    console.log(req.params, req.query, req.body);
+
+    var {dataLines: listaDeAlumnosCompleta, columns: columnas} = await csv.parsearCSV(req.body.csvText);
+    await aida.refrescarTablaAlumnos(clientDb, listaDeAlumnosCompleta, columnas);
+
+    res.status(200).send('Tabla de alumnos actualizada');
+
 })
 
-APIRouter.get('/tablaCursadas', requireAuthAPI, async (_, res) => {
+//RUTAS DE CURSADAS
+
+APIRouter.get('/cursadas', async (_, res) => {
     //hago select tabla cursadas
     var cursadas = await aida.obtenerTodasLasCursadas(clientDb);
     //pasar a json
@@ -196,12 +157,13 @@ APIRouter.get('/tablaCursadas', requireAuthAPI, async (_, res) => {
 
 // Ruta agrega cursada con su nota a la tabla cursadas
 // IMPORTANTE: si es la última materia, un trigger en la db ingresa la fecha de título en trámite.
-APIRouter.post('/tablaCursadas', requireAuthAPI, async (req, res) => {
+APIRouter.post('/cursadas', async (req, res) => {
   try {
       const columnas = Object.keys(req.body);
       const valores = Object.values(req.body);
       await aida.agregarCursada(columnas, valores as string[], clientDb);
 
+      //Deberia devolver JSON
       res.status(200).send('Cursada agregada');
       console.log('Cursada agregada:', req.body);
   } catch (err) {
@@ -211,7 +173,7 @@ APIRouter.post('/tablaCursadas', requireAuthAPI, async (req, res) => {
 });
 
 // Edita tabla de cursadas
-APIRouter.put('/tablaCursadas/:lu', requireAuthAPI, async (req, res) => {
+APIRouter.put('/cursadas/:lu', async (req, res) => {
   const lu = req.params.lu;
   const columnas = Object.keys(req.body);
   const valores = Object.values(req.body) as string[];
@@ -220,14 +182,25 @@ APIRouter.put('/tablaCursadas/:lu', requireAuthAPI, async (req, res) => {
   res.status(200).send('Cursada actualizada');
 });
 
-APIRouter.delete('/tablaCursadas/:lu/:materia_id/:anio/:cuatrimestre', requireAuthAPI, async (req, res) => {
+APIRouter.delete('/cursadas/:lu/:materia_id/:anio/:cuatrimestre', async (req, res) => {
   const { lu, materia_id, anio, cuatrimestre } = req.params;
   await clientDb.query(`DELETE FROM aida.cursadas WHERE alumno_lu = $1 AND materia_id = $2 AND anio = $3 AND cuatrimestre = $4`, [lu, materia_id, anio, cuatrimestre]);
   res.status(200).send('Cursada eliminado');
 });
 
+// Actualiza la tabla de cursadas a partir de un CSV
+APIRouter.patch('/cursadas', async (req, res) => {
+    console.log(req.params, req.query, req.body);
+
+    var {dataLines: listaDeCursadasCompleta, columns: columnas} = await csv.parsearCSV(req.body.csvText);
+    await aida.refrescarTablaCursadas(clientDb, listaDeCursadasCompleta, columnas);
+
+    res.status(200).send('Tabla de cursadas actualizada');
+  });
+
 // Carrera con su plan de estudios a la base de datos a partir de un CSV
-APIRouter.patch('/plan_estudios', requireAuthAPI, async (req, res) => {
+// Cambiar nombre de ruta a CARRERAS
+APIRouter.patch('/plan_estudios', async (req, res) => {
   try {
       const { csvText, careerName } = req.body;
 
@@ -263,14 +236,5 @@ APIRouter.patch('/plan_estudios', requireAuthAPI, async (req, res) => {
   }
 });
 
-// Actualiza la tabla de cursadas a partir de un CSV
-APIRouter.patch('/cursadas', requireAuthAPI, async (req, res) => {
-  console.log(req.params, req.query, req.body);
-
-  var {dataLines: listaDeCursadasCompleta, columns: columnas} = await csv.parsearCSV(req.body.csvText);
-  await aida.refrescarTablaCursadas(clientDb, listaDeCursadasCompleta, columnas);
-
-  res.status(200).send('Tabla de cursadas actualizada');
-});
 
 export default APIRouter;

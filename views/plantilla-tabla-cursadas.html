@@ -37,7 +37,7 @@
 
     async function cargarCursadas() {
       try {
-        const response = await fetch("/app/tablaCursadas", {
+        const response = await fetch("/api/v0/cursadas", {
           method: "GET",
           headers: { "Content-Type": "application/json" },
         });
