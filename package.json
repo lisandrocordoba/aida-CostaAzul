@@ -20,7 +20,7 @@
   },
   "scripts": {
     "prepare": "tsc -p src/tsconfig.json",
-    "servidor": "npm run prepare && node dist/servidor",
+    "servidor": "npm run prepare && node dist/servidor.js",
     "test": "tsc -p test/tsconfig.json && mocha -r ./test/setup.js --reporter spec --bail --check-leaks dist-test/test/test.js",
     "x-test": "mocha --reporter spec --bail --check-leaks test/test.ts"
   }

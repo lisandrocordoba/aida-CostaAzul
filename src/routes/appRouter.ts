@@ -1,8 +1,7 @@
 import * as express from 'express';
 
 //Imports autenticacion
-import session/*, { SessionData }*/ from 'express-session';
-import { Usuario } from '../src/auth.js';
+import { Usuario } from '../auth.js';
 import { Request, Response, NextFunction } from "express";
 import * as fs from 'fs';
 import { readFile } from 'fs/promises';
@@ -16,20 +15,6 @@ declare module 'express-session' {
 
 const appRouter = express.Router();
 
-// Aquí se pueden agregar middlewares específicos para las rutas de la aplicación
-// appRouter.use(someMiddleware);
-//Agregamos el middleware de session
-appRouter.use(session({
-  secret: process.env.SESSION_SECRET || 'cambiar_este_secreto_en_produccion', //usar variable de entorno en produccion?
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-      secure: false,
-      httpOnly: true,
-      maxAge: 1000 * 60 * 60 * 24 // 1 día
-  }
-}));
-
 // Middleware de autenticación para el frontend
 function requireAuth(req: Request, res: Response, next: NextFunction) {
   if (req.session.usuario) {
@@ -39,9 +24,6 @@ function requireAuth(req: Request, res: Response, next: NextFunction) {
   }
 }
 
-// Usamos el middleware requireAuth para proteger las rutas de la aplicación
-appRouter.use(requireAuth);
-
 // Definición de rutas de la aplicación
 appRouter.get('/login', (req, res) => {
   if (req.session.usuario) {
@@ -50,6 +32,9 @@ appRouter.get('/login', (req, res) => {
   const loginHtml = fs.readFileSync('views/login.html', 'utf8');
   res.send(loginHtml);
 });
+
+// Usamos el middleware requireAuth para proteger las rutas de la aplicación
+appRouter.use(requireAuth);
 
 appRouter.get('/menu', async (_, res) => {
     let HTML_MENU = await readFile('views/menu.html', { encoding: 'utf8' });

@@ -98,7 +98,7 @@
       const cursada = { alumno_lu, materia_id, anio, cuatrimestre, nota };
 
       try {
-        const res = await fetch("/app/tablaCursadas", {
+        const res = await fetch("/api/v0/cursadas", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(cursada)
@@ -143,7 +143,7 @@
       const cursada = { alumno_lu, materia_id, anio, cuatrimestre, nota };
 
       try {
-        const res = await fetch(`/app/tablaCursadas/${encodeURIComponent(alumno_lu)}`, {
+        const res = await fetch(`/api/v0/cursadas/${encodeURIComponent(alumno_lu)}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(cursada)
@@ -164,7 +164,7 @@
     async function borrarCursada(alumno_lu, materia_id, anio, cuatrimestre) {
       if (!confirm(`¿Eliminar cursada de ${alumno_lu} - Materia ${materia_id}?`)) return;
       try {
-        const res = await fetch(`/app/tablaCursadas/${encodeURIComponent(alumno_lu)}/${materia_id}/${anio}/${cuatrimestre}`, {
+        const res = await fetch(`/api/v0/cursadas/${encodeURIComponent(alumno_lu)}/${materia_id}/${anio}/${cuatrimestre}`, {
           method: "DELETE"
         });
         if (!res.ok) throw new Error("Error al eliminar: " + res.status);

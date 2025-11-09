@@ -1,11 +1,10 @@
 import express from "express";
-import * as aida from "../src/aida.js";
+import * as aida from "../aida.js";
 //import * as fechas from "../src/fechas.js";
-import * as csv from "../src/csv.js";
+import * as csv from "../csv.js";
 
 //Imports autenticacion
-import session/*, { SessionData }*/ from 'express-session';
-import { autenticarUsuario, crearUsuario, Usuario } from '../src/auth.js';
+import { autenticarUsuario, crearUsuario, Usuario } from '../auth.js';
 import { Request, Response, NextFunction } from "express";
 
 // Extendemos los tipos de sesion
@@ -31,19 +30,6 @@ clientDb.connect()
 
 const APIRouter = express.Router();
 
-//Agregamos el middleware de session
-APIRouter.use(session({
-  secret: process.env.SESSION_SECRET || 'cambiar_este_secreto_en_produccion', //usar variable de entorno en produccion?
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-      secure: false,
-      httpOnly: true,
-      maxAge: 1000 * 60 * 60 * 24 // 1 día
-  }
-}));
-
-
 // Middleware de autenticación para el backend
 function requireAuthAPI(req: Request, res: Response, next: NextFunction) {
   if (req.session.usuario) {
@@ -52,12 +38,6 @@ function requireAuthAPI(req: Request, res: Response, next: NextFunction) {
       res.status(401).json({ error: 'No autenticado' });
   }
 }
-
-// Usamos el middleware requireAuthAPI para proteger las rutas de la API
-APIRouter.use(requireAuthAPI);
-
-
-
 
 // Definición de rutas de la API
 // API de login
@@ -71,6 +51,9 @@ APIRouter.post('/auth/login', express.json(), async (req, res) => {
       res.status(401).json({ error: 'Credenciales inválidas' });
   }
 });
+
+// Usamos el middleware requireAuthAPI para proteger las rutas de la API
+APIRouter.use(requireAuthAPI);
 
 // Tenemos que hacer que el boton se agregue solo si el usuario esta loggueado.
 // API de logout

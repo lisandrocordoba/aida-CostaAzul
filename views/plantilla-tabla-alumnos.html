@@ -39,7 +39,7 @@
 
     async function cargarAlumnos() {
       try {
-        const response = await fetch("/app/tablaAlumnos", {
+        const response = await fetch("/api/v0/alumnos", {
           method: "GET",
           headers: { "Content-Type": "application/json" },
         });
@@ -102,7 +102,7 @@
       const alumno = { lu, apellido, nombres, id_carrera, titulo_en_tramite, egreso };
 
       try {
-        const res = await fetch("/app/tablaAlumnos", {
+        const res = await fetch("/api/v0/alumnos", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(alumno)
@@ -164,7 +164,7 @@
       const alumno = { lu, apellido, nombres, id_carrera, titulo_en_tramite, egreso };
 
       try {
-        const res = await fetch(`/app/tablaAlumnos/${encodeURIComponent(lu)}`, {
+        const res = await fetch(`/api/v0/alumnos/${encodeURIComponent(lu)}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(alumno)
@@ -201,7 +201,7 @@
     async function borrarAlumno(lu) {
       if (!confirm("¿Eliminar alumno con LU " + lu + "?")) return;
       try {
-        const res = await fetch(`/app/tablaAlumnos/${encodeURIComponent(lu)}`, { method: "DELETE" });
+        const res = await fetch(`/api/v0/alumnos/${encodeURIComponent(lu)}`, { method: "DELETE" });
         if (!res.ok) throw new Error("Error al eliminar: " + res.status);
         await cargarAlumnos();
       } catch (e) {
