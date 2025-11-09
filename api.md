@@ -8,8 +8,8 @@
     │   ├── certificados/
     │   │   ├── certificados.js     // GET /app/certificados/lu/:lu // esto deberia hacer request a alumnos en el back
     │   │   │                       // GET /app/certificados/fecha/:fecha
-    │   │   ├── lu.js               // GET /app/certificados/lu   (HTML input form)
-    │   │   └── fecha.js            // GET /app/certificados/fecha (HTML input form)
+    │   │   ├── lu.js               // GET /app/certificados/lu
+    │   │   └── fecha.js            // GET /app/certificados/fecha
     │   │
     │   └── index.js                // mounts /app/* routers
     │
@@ -24,17 +24,17 @@
     │   │   │                      //   ├── POST /api/v0/alumnos
     │   │   │                      //   ├── PUT /api/v0/alumnos/:lu
     │   │   │                      //   ├── DELETE /api/v0/alumnos/:lu
-    │   │   │                      //   └── POST /api/v0/alumnos/batch (CSV bulk update)
+    │   │   │                      //   └── PATCH /api/v0/alumnos       // Adoptamos la semántica de que PATCH es con CSV
     │   │   ├── cursadas.js         // /api/v0/cursadas
     │   │   │                      //   ├── GET /api/v0/cursadas
     │   │   │                      //   ├── POST /api/v0/cursadas
     │   │   │                      //   ├── PUT /api/v0/cursadas/:lu/:materia_id/:anio/:cuatrimestre
     │   │   │                      //   ├── DELETE /api/v0/cursadas/:lu/:materia_id/:anio/:cuatrimestre
-    │   │   │                      //   └── PATCH /api/v0/cursadas // Adoptamos la semántica de que PATCH es con CSV
-    │   │   └── carreras.js         // /api/v0/carreras (was plan_estudios)
-    │   │                          //   └── POST /api/v0/carreras (upload CSV with materias)
+    │   │   │                      //   └── PATCH /api/v0/cursadas      // Adoptamos la semántica de que PATCH es con CSV
+    │   │   └── carreras.js         // /api/v0/carreras
+    │   │                          //   └── PATCH /api/v0/carreras      // Adoptamos la semántica de que PATCH es con CSV
     │   │
-    │   └── index.js
+    │   └── index.js                // mounts /api/* routers
     │
     └── index.js                    // mounts app/ and api/ routers
 
