@@ -8,7 +8,7 @@ import { Request, Response, NextFunction } from "express";
 import * as appControllers from '../controllers/appControllers.js';
 
 // Extendemos los tipos de sesion
-// No habría que hacerlo en un único lugar?
+// No habría que sacarlo a un archivo de tipos?
 declare module 'express-session' {
   interface SessionData {
       usuario?: Usuario;
