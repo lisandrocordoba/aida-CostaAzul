@@ -4,7 +4,8 @@ import * as csv from '../csv.js';
 import { autenticarUsuario, crearUsuario } from '../auth.js';
 import { Client } from 'pg';
 
-// DB client (module-scoped)
+// Cliente DB para el modulo
+// Pensar si conviene hacerlo en cada función
 let clientDb: Client;
 if (process.env.IS_DEVELOPMENT === 'true') {
     clientDb = new Client();
@@ -60,6 +61,8 @@ export async function addAlumnoController(req: Request, res: Response) {
   console.log(req.body);
 }
 
+// PENSAR COMO QUEREMOS LIMITAR CAMBIOS
+// EJEMPLO: ES POSIBLE QUE UN ALUMNO TENGA TITULO EN TRAMITE Y SE LE CAMBIE LA CARRERA
 export async function updateAlumnoController(req: Request, res: Response) {
   const lu = req.params.lu;
   const columnas = Object.keys(req.body);
@@ -88,6 +91,8 @@ export async function getCursadasController(_: Request, res: Response) {
   res.status(200).send(JSON.stringify(cursadas));
 }
 
+// IMPORTANTE: si es la última materia, un trigger en la db ingresa la fecha de título en trámite.
+// Deberia devolver JSON
 export async function addCursadaController(req: Request, res: Response) {
   try {
     const columnas = Object.keys(req.body);
@@ -134,15 +139,19 @@ export async function patchPlanEstudiosController(req: Request, res: Response) {
       res.status(400).send('Faltan csvText o careerName');
       return;
     }
-
+    // Agregar carrera
     const carreraId = await aida.agregarCarrera(careerName.trim(), clientDb);
+
+    // Parsear CSV con materias
     const { dataLines, columns } = csv.parsearCSV(csvText);
 
+    // Validar estructura del CSV: una sola columna llamada "materias"
     if (columns.length !== 1 || columns[0]!.toLowerCase() !== 'materias') {
       res.status(400).send('CSV inválido: se espera columna "materias"');
       return;
     }
 
+    // Procesar cada materia
     for (const line of dataLines) {
       const materiaNombre = line[0]!.trim();
       if (!materiaNombre) continue;

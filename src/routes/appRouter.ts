@@ -1,10 +1,5 @@
-import * as express from 'express';
-
-//Imports autenticacion
+import express, { Request, Response, NextFunction } from "express";
 import { Usuario } from '../auth.js';
-import { Request, Response, NextFunction } from "express";
-
-//Imports Controllers
 import * as appControllers from '../controllers/appControllers.js';
 
 // Extendemos los tipos de sesion
