@@ -3,10 +3,13 @@ import * as express from 'express';
 //Imports autenticacion
 import { Usuario } from '../auth.js';
 import { Request, Response, NextFunction } from "express";
-import * as fs from 'fs';
 import { readFile } from 'fs/promises';
 
+//Imports Controllers
+import * as appControllers from '../controllers/appControllers.js';
+
 // Extendemos los tipos de sesion
+// No habría que hacerlo en un único lugar?
 declare module 'express-session' {
   interface SessionData {
       usuario?: Usuario;
@@ -25,13 +28,7 @@ function requireAuth(req: Request, res: Response, next: NextFunction) {
 }
 
 // Definición de rutas de la aplicación
-appRouter.get('/login', (req, res) => {
-  if (req.session.usuario) {
-      return res.redirect('/app/menu');
-  }
-  const loginHtml = fs.readFileSync('views/login.html', 'utf8');
-  res.send(loginHtml);
-});
+appRouter.get('/login', appControllers.loginController);
 
 // Usamos el middleware requireAuth para proteger las rutas de la aplicación
 appRouter.use(requireAuth);

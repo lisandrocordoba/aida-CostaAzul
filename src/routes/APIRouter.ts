@@ -8,6 +8,7 @@ import { autenticarUsuario, crearUsuario, Usuario } from '../auth.js';
 import { Request, Response, NextFunction } from "express";
 
 // Extendemos los tipos de sesion
+// No habría que hacerlo en un único lugar?
 declare module 'express-session' {
   interface SessionData {
       usuario?: Usuario;
