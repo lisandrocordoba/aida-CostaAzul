@@ -3,7 +3,6 @@ import * as express from 'express';
 //Imports autenticacion
 import { Usuario } from '../auth.js';
 import { Request, Response, NextFunction } from "express";
-import { readFile } from 'fs/promises';
 
 //Imports Controllers
 import * as appControllers from '../controllers/appControllers.js';
@@ -27,42 +26,20 @@ function requireAuth(req: Request, res: Response, next: NextFunction) {
   }
 }
 
-// Definición de rutas de la aplicación
+// Ruta que no requiere autenticación
 appRouter.get('/login', appControllers.loginController);
 
 // Usamos el middleware requireAuth para proteger las rutas de la aplicación
 appRouter.use(requireAuth);
 
-appRouter.get('/menu', async (_, res) => {
-    let HTML_MENU = await readFile('views/menu.html', { encoding: 'utf8' });
-    res.send(HTML_MENU)
-})
+// Rutas que requieren autenticación
+appRouter.get('/menu', appControllers.menuController);
+appRouter.get('/alumnos', appControllers.alumnosController);
+appRouter.get('/cursadas', appControllers.cursadasController);
+appRouter.get('/archivo', appControllers.archivoController);
+appRouter.get('/certificados/lu', appControllers.certificadosLUController);
+appRouter.get('/certificados/fecha', appControllers.certificadosFechaController);
 
-appRouter.get('/alumnos', async (_, res) => {
-  let plantillaTablaAlumnos = await readFile('views/plantilla-tabla-alumnos.html', { encoding: 'utf8' });
-  res.status(200).send(plantillaTablaAlumnos);
-})
-
-appRouter.get('/cursadas', async (_, res) => {
-  let plantillaTablaCursadas = await readFile('views/plantilla-tabla-cursadas.html', { encoding: 'utf8' });
-  res.status(200).send(plantillaTablaCursadas);
-})
-
-appRouter.get('/archivo', async (_, res) => {
-  let plantilla_carga_csv = await readFile('views/plantilla-carga-csv.html', { encoding: 'utf8' });
-  res.send(plantilla_carga_csv)
-})
-
-//Rutas Generacion Certificado
-appRouter.get('/certificados/lu', async (_, res) => {
-  let HTML_LU = await readFile('views/obtener-certificado-LU.html', { encoding: 'utf8' });
-  res.send(HTML_LU);
-})
-
-appRouter.get('/certificados/fecha', async (_, res) => {
-  let HTML_FECHA = await readFile('views/obtener-certificado-fecha.html', 'utf8');
-  res.send(HTML_FECHA)
-})
 
 /*
 appRouter.get('/certificados/lu/:lu', async (req, res) => {
@@ -101,6 +78,5 @@ appRouter.get('/certificados/fecha/:fecha', async (req, res) => {
   }
 })
 */
-
 
 export default appRouter;
