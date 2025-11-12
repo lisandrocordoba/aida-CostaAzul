@@ -106,7 +106,7 @@ app.post('/api/v0/auth/login', express.json(), async (req: Request, res: Respons
 // Tenemos que hacer que el boton se agregue solo si el usuario esta loggueado.
 // API de logout
 app.post('/api/v0/auth/logout', requireAuthAPI, (req: Request, res: Response) => {
-  req.session.destroy(err => {
+  req.session.destroy((err: any) => {
     console.log("estoy aca")
     if (err) return res.status(500).json({ error: 'Error al cerrar sesión' });
     res.clearCookie('connect.sid', { path: '/' });
@@ -418,7 +418,7 @@ app.post('/app/tablaCursadas', requireAuthAPI, async (req: Request, res: Respons
 
       res.status(200).send('Cursada agregada');
       console.log('Cursada agregada:', req.body);
-  } catch (err) {
+  } catch (err: any) {
       console.error('Error al agregar cursada:', err);
       res.status(500).send('Error al agregar la cursada');
   }
@@ -471,7 +471,7 @@ app.patch('/api/v0/plan_estudios', requireAuthAPI, async (req: Request, res: Res
       }
 
       res.status(200).send(`Carrera "${careerName}" y materias asociadas procesadas correctamente.`);
-  } catch (err) {
+  } catch (err: any) {
       console.error(err);
       res.status(500).send(String(err));
   }
