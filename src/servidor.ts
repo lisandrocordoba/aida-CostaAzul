@@ -69,7 +69,7 @@ function requireAuthAPI(req: Request, res: Response, next: NextFunction) {
 }
 
 // endpoint de prueba
-app.get('/ask', (req, res) => {
+app.get('/ask', (req: Request, res: Response) => {
     var htmlResponse = '<!doctype html>\n<html>\n<head>\n<meta charset="utf8">\n</head>\n<body>';
     if (JSON.stringify(req.query).length > 2) {
         htmlResponse += '<div>Yes ' + JSON.stringify(req.query) + '</div>';
@@ -83,7 +83,7 @@ app.get('/ask', (req, res) => {
 
 // Endpoints de Autenticacion
 // Página de login
-app.get('/app/login', (req, res) => {
+app.get('/app/login', (req: Request, res: Response) => {
   if (req.session.usuario) {
       return res.redirect('/app/menu');
   }
@@ -92,7 +92,7 @@ app.get('/app/login', (req, res) => {
 });
 
 // API de login
-app.post('/api/v0/auth/login', express.json(), async (req, res) => {
+app.post('/api/v0/auth/login', express.json(), async (req: Request, res: Response) => {
   const { username, password } = req.body;
   const usuario = await autenticarUsuario(clientDb, username, password);
   if (usuario) {
@@ -105,7 +105,7 @@ app.post('/api/v0/auth/login', express.json(), async (req, res) => {
 
 // Tenemos que hacer que el boton se agregue solo si el usuario esta loggueado.
 // API de logout
-app.post('/api/v0/auth/logout', requireAuthAPI, (req, res) => {
+app.post('/api/v0/auth/logout', requireAuthAPI, (req: Request, res: Response) => {
   req.session.destroy(err => {
     console.log("estoy aca")
     if (err) return res.status(500).json({ error: 'Error al cerrar sesión' });
@@ -115,7 +115,7 @@ app.post('/api/v0/auth/logout', requireAuthAPI, (req, res) => {
   });
 });
 
-app.post('/api/v0/auth/register', async (req, res) => {
+app.post('/api/v0/auth/register', async (req: Request, res: Response) => {
   console.log("entra");
   const { username, password, nombre, email } = req.body;
   crearUsuario(clientDb, username, password, nombre, email);
@@ -123,7 +123,7 @@ app.post('/api/v0/auth/register', async (req, res) => {
 });
 
 // FRONTEND
-app.get('/app/menu', requireAuth, async (_, res) => {
+app.get('/app/menu', requireAuth, async (_: Request, res: Response) => {
     let HTML_MENU = await readFile('views/menu.html', { encoding: 'utf8' });
     res.send(HTML_MENU)
 })
@@ -150,7 +150,7 @@ const HTML_LU=
 </html>
 `;
 
-app.get('/app/lu', requireAuth, (_, res) => {
+app.get('/app/lu', requireAuth, (_: Request, res: Response) => {
     res.send(HTML_LU)
 })
 
@@ -176,7 +176,7 @@ const HTML_FECHA=
 </html>
 `;
 
-app.get('/app/fecha', requireAuth, (_, res) => {
+app.get('/app/fecha', requireAuth, (_: Request, res: Response) => {
     res.send(HTML_FECHA)
 })
 
@@ -227,7 +227,7 @@ app.get('/app/fecha', requireAuth, (_, res) => {
 </html>
 `;
 */
-app.get('/app/archivo', requireAuth, async (_, res) => {
+app.get('/app/archivo', requireAuth, async (_: Request, res: Response) => {
     let plantilla_carga_csv = await readFile('views/plantilla-carga-csv.html', { encoding: 'utf8' });
     res.send(plantilla_carga_csv)
     //res.send(HTML_ARCHIVO)
@@ -296,7 +296,7 @@ const HTML_ARCHIVO_JSON=
 `;
 
 //esta ruta la estamos usando?
-app.get('/app/archivo-json', requireAuth, (_, res) => {
+app.get('/app/archivo-json', requireAuth, (_: Request, res: Response) => {
     res.send(HTML_ARCHIVO_JSON)
 })
 
@@ -304,7 +304,7 @@ app.get('/app/archivo-json', requireAuth, (_, res) => {
 // API DEL BACKEND
 //var NO_IMPLEMENTADO='<code>ERROR 404 </code> <h1> No implementado aún ⚒<h1>';
 
-app.get('/api/v0/lu/:lu', requireAuth, async (req, res) => {
+app.get('/api/v0/lu/:lu', requireAuth, async (req: Request, res: Response) => {
     console.log(req.params, req.query, req.body);
 
     let certificadoHTML;
@@ -320,7 +320,7 @@ app.get('/api/v0/lu/:lu', requireAuth, async (req, res) => {
     }
 })
 
-app.get('/api/v0/fecha/:fecha', requireAuth, async (req, res) => {
+app.get('/api/v0/fecha/:fecha', requireAuth, async (req: Request, res: Response) => {
     console.log(req.params, req.query, req.body);
 
     let certificadoHTML;
@@ -339,7 +339,7 @@ app.get('/api/v0/fecha/:fecha', requireAuth, async (req, res) => {
 })
 
 // Actualizar la tabla de alumnos a partir de un CSV
-app.patch('/api/v0/alumnos', requireAuthAPI, async (req, res) => {
+app.patch('/api/v0/alumnos', requireAuthAPI, async (req: Request, res: Response) => {
     console.log(req.params, req.query, req.body);
 
     var {dataLines: listaDeAlumnosCompleta, columns: columnas} = await csv.parsearCSV(req.body.csvText);
@@ -349,13 +349,13 @@ app.patch('/api/v0/alumnos', requireAuthAPI, async (req, res) => {
 
 })
 
-app.get('/app/alumnos', requireAuth, async (_, res) => {
+app.get('/app/alumnos', requireAuth, async (_: Request, res: Response) => {
   let plantillaTablaAlumnos = await readFile('views/plantilla-tabla-alumnos.html', { encoding: 'utf8' });
   res.status(200).send(plantillaTablaAlumnos);
 })
 
 // esto no tendria que ser api/v0/ ??
-app.get('/app/tablaAlumnos', requireAuthAPI, async (_, res) => {
+app.get('/app/tablaAlumnos', requireAuthAPI, async (_: Request, res: Response) => {
 
     //hago select tabla alumnos
     var alumnos = await aida.obtenerTodosAlumnos(clientDb);
@@ -367,7 +367,7 @@ app.get('/app/tablaAlumnos', requireAuthAPI, async (_, res) => {
 })
 
 // esto no tendria que ser api/v0/ ??
-app.post('/app/tablaAlumnos', requireAuthAPI, async (req, res) => {
+app.post('/app/tablaAlumnos', requireAuthAPI, async (req: Request, res: Response) => {
     const columnas = Object.keys(req.body);
     const valores = Object.values(req.body) as string[];
     await aida.agregarAlumno(columnas, valores, clientDb);
@@ -377,7 +377,7 @@ app.post('/app/tablaAlumnos', requireAuthAPI, async (req, res) => {
 });
 
 // esto no tendria que ser api/v0/ ??
-app.delete('/app/tablaAlumnos/:lu', requireAuthAPI, async (req, res) => {
+app.delete('/app/tablaAlumnos/:lu', requireAuthAPI, async (req: Request, res: Response) => {
     const lu = req.params.lu;
     await clientDb.query(`DELETE FROM aida.alumnos WHERE lu = $1`, [lu]);
     res.status(200).send('Alumno eliminado');
@@ -385,7 +385,7 @@ app.delete('/app/tablaAlumnos/:lu', requireAuthAPI, async (req, res) => {
 
 // PENSAR COMO QUEREMOS LIMITAR CAMBIOS
 // EJEMPLO: ES POSIBLE QUE UN ALUMNO TENGA TITULO EN TRAMITE Y SE LE CAMBIE LA CARRERA
-app.put('/app/tablaAlumnos/:lu', requireAuthAPI, async (req, res) => {
+app.put('/app/tablaAlumnos/:lu', requireAuthAPI, async (req: Request, res: Response) => {
     const lu = req.params.lu;
     const columnas = Object.keys(req.body);
     const valores = Object.values(req.body) as string[];
@@ -394,12 +394,12 @@ app.put('/app/tablaAlumnos/:lu', requireAuthAPI, async (req, res) => {
     res.status(200).send('Alumno actualizado');
 });
 
-app.get('/app/cursadas', requireAuth, async (_, res) => {
+app.get('/app/cursadas', requireAuth, async (_: Request, res: Response) => {
   let plantillaTablaCursadas = await readFile('views/plantilla-tabla-cursadas.html', { encoding: 'utf8' });
   res.status(200).send(plantillaTablaCursadas);
 })
 
-app.get('/app/tablaCursadas', requireAuthAPI, async (_, res) => {
+app.get('/app/tablaCursadas', requireAuthAPI, async (_: Request, res: Response) => {
     //hago select tabla cursadas
     var cursadas = await aida.obtenerTodasLasCursadas(clientDb);
     //pasar a json
@@ -410,7 +410,7 @@ app.get('/app/tablaCursadas', requireAuthAPI, async (_, res) => {
 
 // Ruta agrega cursada con su nota a la tabla cursadas
 // IMPORTANTE: si es la última materia, un trigger en la db ingresa la fecha de título en trámite.
-app.post('/app/tablaCursadas', requireAuthAPI, async (req, res) => {
+app.post('/app/tablaCursadas', requireAuthAPI, async (req: Request, res: Response) => {
   try {
       const columnas = Object.keys(req.body);
       const valores = Object.values(req.body);
@@ -425,7 +425,7 @@ app.post('/app/tablaCursadas', requireAuthAPI, async (req, res) => {
 });
 
 // Edita tabla de cursadas
-app.put('/app/tablaCursadas/:lu', requireAuthAPI, async (req, res) => {
+app.put('/app/tablaCursadas/:lu', requireAuthAPI, async (req: Request, res: Response) => {
   const lu = req.params.lu;
   const columnas = Object.keys(req.body);
   const valores = Object.values(req.body) as string[];
@@ -434,14 +434,14 @@ app.put('/app/tablaCursadas/:lu', requireAuthAPI, async (req, res) => {
   res.status(200).send('Cursada actualizada');
 });
 
-app.delete('/app/tablaCursadas/:lu/:materia_id/:anio/:cuatrimestre', requireAuthAPI, async (req, res) => {
+app.delete('/app/tablaCursadas/:lu/:materia_id/:anio/:cuatrimestre', requireAuthAPI, async (req: Request, res: Response) => {
   const { lu, materia_id, anio, cuatrimestre } = req.params;
   await clientDb.query(`DELETE FROM aida.cursadas WHERE alumno_lu = $1 AND materia_id = $2 AND anio = $3 AND cuatrimestre = $4`, [lu, materia_id, anio, cuatrimestre]);
   res.status(200).send('Cursada eliminado');
 });
 
 // Carrera con su plan de estudios a la base de datos a partir de un CSV
-app.patch('/api/v0/plan_estudios', requireAuthAPI, async (req, res) => {
+app.patch('/api/v0/plan_estudios', requireAuthAPI, async (req: Request, res: Response) => {
   try {
       const { csvText, careerName } = req.body;
 
@@ -478,7 +478,7 @@ app.patch('/api/v0/plan_estudios', requireAuthAPI, async (req, res) => {
 });
 
 // Actualiza la tabla de cursadas a partir de un CSV
-app.patch('/api/v0/cursadas', requireAuthAPI, async (req, res) => {
+app.patch('/api/v0/cursadas', requireAuthAPI, async (req: Request, res: Response) => {
   console.log(req.params, req.query, req.body);
 
   var {dataLines: listaDeCursadasCompleta, columns: columnas} = await csv.parsearCSV(req.body.csvText);
