@@ -15,7 +15,7 @@
     "jsx": "react-jsx",                    // Soporte para JSX (ajustar según necesidad)
 
     /* Configuración de tipos */
-    "types": [],                           // Tipos globales a incluir
+    //"types": [],                           // Tipos globales a incluir
     "typeRoots": ["./node_modules/@types", "./types"], // Rutas para buscar tipos
 
     /* Configuración de emisión */
