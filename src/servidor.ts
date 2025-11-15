@@ -1,7 +1,9 @@
 import express from "express";
 import session/*, { SessionData }*/ from 'express-session';
-import { tableDefs, completeTableDefaults } from './applicationStructure.js'
+import { tableDefs } from './applicationStructure.js'
 import { tableRoutes } from './routes/routesFactory.js';
+
+import appRouter from './routes/appRouter.js';
 
 
 const app = express()
@@ -25,9 +27,9 @@ app.use(session({
 
 // Routes
 for (const tableDef of tableDefs) {
-  app.use('/api/'+ tableDef.name, tableRoutes(tableDef));
+  app.use('/api/v0/'+ tableDef.name, tableRoutes(tableDef));
 }
-
+app.use('/app', appRouter);
 
 app.listen(port, () => {
     console.log(`Example app listening on port http://localhost:${port}/app/menu`)

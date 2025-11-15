@@ -4,7 +4,7 @@ import { TableDef } from '../applicationStructure.js';
 
 export function controllers(tableDef: TableDef){
 
-    const tablename = tableDef.name;
+    const tablename = 'aida.'+tableDef.name;
     const allColnames = tableDef.columns.map(def => def.name);
     const {pk} = tableDef;
     const orderBy = tableDef.orderBy ?? pk
@@ -15,6 +15,7 @@ export function controllers(tableDef: TableDef){
 
     const getAllRecords = async (_req: Request, res: Response): Promise<void> => {
     try {
+        console.log(`SELECT ${allColnames} FROM ${tablename} ORDER BY ${orderBy ?? pk}`);
         const result = await pool.query(`SELECT ${allColnames} FROM ${tablename} ORDER BY ${orderBy ?? pk}`);
         res.json(result.rows);
     } catch (error) {
