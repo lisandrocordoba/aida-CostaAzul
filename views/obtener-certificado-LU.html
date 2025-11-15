@@ -1,0 +1,19 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf8">
+    </head>
+    <body>
+        <div>Obtener el certificado de título en trámite</div>
+        <div><label>Libreta Universitaria: <input name=lu></label></div>
+        <button id="btnEnviar">Pedir Certificado</button>
+        <script>
+            window.onload = function() {
+                document.getElementById("btnEnviar").onclick = function() {
+                    var lu = document.getElementsByName("lu")[0].value;
+                    window.location.href = "../api/v0/lu/" + encodeURIComponent(lu);
+                }
+            }
+        </script>
+    </body>
+</html>
