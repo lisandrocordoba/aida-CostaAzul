@@ -1,4 +1,4 @@
-import express /*,{ Request, Response, NextFunction }*/ from "express";
+import express, { Request, Response, NextFunction } from "express";
 import { Usuario } from '../auth.js';
 import * as appControllers from '../controllers/appControllers.js';
 
@@ -12,7 +12,7 @@ declare module 'express-session' {
 
 const appRouter = express.Router();
 
-/*
+
 // Middleware de autenticación para el frontend
 function requireAuth(req: Request, res: Response, next: NextFunction) {
   if (req.session.usuario) {
@@ -21,12 +21,12 @@ function requireAuth(req: Request, res: Response, next: NextFunction) {
       res.redirect('/app/login');
   }
 }
-*/
+
 // Ruta que no requiere autenticación
 appRouter.get('/login', appControllers.loginController);
 
 // Usamos el middleware requireAuth para proteger las rutas de la aplicación
-//appRouter.use(requireAuth);
+appRouter.use(requireAuth);
 
 // Rutas que requieren autenticación
 appRouter.get('/menu', appControllers.menuController);

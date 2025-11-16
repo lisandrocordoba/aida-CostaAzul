@@ -3,7 +3,7 @@ import { controllers } from '../controllers/controllerFactory.js';
 
 import { TableDef } from '../applicationStructure.js';
 
-export function tableRoutes(tableDef:TableDef) {
+export function createTableRouter(tableDef:TableDef) {
     const pkPath = tableDef.pk.map(column => `/:${column}`).join('')
     const router = Router();
     const {
