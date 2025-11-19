@@ -38,16 +38,22 @@ export interface ColumnDef {
     title?: string
     description?: string
 }
+export interface ForeignKeyDef {
+    column: ColumnName   // ASUMIMOS NO HAY fks COMPUESTAS
+    referencedColumn: ColumnName
+    referencesTable: TableName
+    referencesColumns: ColumnName[]
+}
 
 export interface TableDef {
     name: TableName
     columns: ColumnDef[]
-    pk: ColumnName[];
+    pk: ColumnName[]
+    fks: ForeignKeyDef[]
     title?: string
     orderBy?: ColumnName[]
     elementName?: string
 }
-
 
 const tableDefinitions: TableDef[] = [
   {
@@ -57,6 +63,7 @@ const tableDefinitions: TableDef[] = [
       { name: 'materia_id' as ColumnName, type: 'int', title: 'Id. Materia' },
     ],
     pk: ['carrera_id' as ColumnName, 'materia_id' as ColumnName],
+    fks: [],
     elementName: 'materiaEnCarrera'
   },
   {
@@ -70,6 +77,7 @@ const tableDefinitions: TableDef[] = [
       { name: 'egreso' as ColumnName, type: 'date' },
     ],
     pk: ['lu' as ColumnName],
+    fks: [],
     orderBy: ['apellido' as ColumnName, 'nombres' as ColumnName],
     elementName: 'alumno'
   },
@@ -83,6 +91,7 @@ const tableDefinitions: TableDef[] = [
       { name: 'nota' as ColumnName, type: 'int' },
     ],
     pk: ['alumno_lu' as ColumnName, 'materia_id' as ColumnName, 'anio' as ColumnName, 'cuatrimestre' as ColumnName],
+    fks: [{ column: 'alumno_lu', referencedColumn: 'lu', referencesTable: 'alumnos', referencesColumns: ['lu', 'nombres', 'apellido'] }],
     orderBy: ['anio' as ColumnName, 'cuatrimestre' as ColumnName],
     elementName: 'cursada'
   },
@@ -97,6 +106,7 @@ const tableDefinitions: TableDef[] = [
       { name: 'activo' as ColumnName, type: 'boolean' },
     ],
     pk: ['id' as ColumnName],
+    fks: [],
     orderBy: ['username' as ColumnName],
     elementName: 'usuario'
   }
