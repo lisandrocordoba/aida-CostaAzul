@@ -19,9 +19,9 @@ function requireAuthAPI(req: Request, res: Response, next: NextFunction) {
 
 // --- RUTAS DE AUTENTICACIÓN ---
 APIRouter.post('/auth/login', express.json(), apiControllers.loginAPIController);
+APIRouter.post('/auth/register', apiControllers.registerAPIController);
 APIRouter.use(requireAuthAPI);
 APIRouter.post('/auth/logout', apiControllers.logoutAPIController);
-APIRouter.post('/auth/register', apiControllers.registerAPIController);
 
 // --- RUTAS GENERICAS PARA CADA ENTIDAD ---
 for (const tableDef of tableDefs) {

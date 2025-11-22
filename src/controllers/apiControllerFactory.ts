@@ -45,13 +45,20 @@ export function controllers(tableDef: TableDef){
 
     const getRecord = async (req: Request, res: Response): Promise<void> => {
     try {
-        const result = await pool.query(`SELECT * FROM ${tablename} WHERE ${pkDolarCondition(1)}`, pkParams(req.params));
-
+        const select = allColnames.map(colname => mapColumn(colname)).flat();
+        let from = tablename;
+        if(fks.length > 0){
+            // Caso JOIN
+            from = `${from} ` + fks.map(fk => {
+                return `JOIN aida.${fk.referencesTable} ON ${tablename}.${fk.column} = aida.${fk.referencesTable}.${fk.referencedColumn}`;
+            }).join(' ');
+        }
+        console.log(`SELECT ${select} FROM ${from} WHERE ${pkDolarCondition(1)}`, pkParams(req.params));
+        const result = await pool.query(`SELECT ${select} FROM ${from} WHERE ${pkDolarCondition(1)}`, pkParams(req.params));
         if (result.rows.length === 0) {
         res.status(404).json({ error: `${elementName} no encontrado` });
         return;
         }
-
         res.json(result.rows[0]);
     } catch (error) {
         console.error(`Error al obtener ${elementName}:`, error);
