@@ -6,6 +6,6 @@ node_modules/
 local-*
 *-local.*
 *-local
-
+.env
 certificado-para-imprimir.html
 certificado-de-*-para-imprimir.html
