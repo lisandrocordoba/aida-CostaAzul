@@ -1,9 +1,9 @@
 import express from "express";
 import session/*, { SessionData }*/ from 'express-session';
 
-// Importamos el router de appRouter.js
 import appRouter from './routes/appRouter.js';
-import APIRouter from './routes/APIRouter.js';
+import APIRouter from "./routes/APIRouter.js";
+import generarPlantillasHTML from "./generarPlantillas.js"
 
 
 const app = express()
@@ -25,9 +25,12 @@ app.use(session({
     }
   }));
 
-// Usamos los routers
-app.use('/app', appRouter);
+// Generamos plantillas cuando arranca el servidor
+generarPlantillasHTML();
+
+// Routes
 app.use('/api/v0', APIRouter);
+app.use('/app', appRouter);
 
 app.listen(port, () => {
     console.log(`Example app listening on port http://localhost:${port}/app/menu`)

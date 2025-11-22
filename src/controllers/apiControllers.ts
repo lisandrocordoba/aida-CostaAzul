@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import * as aida from '../aida.js';
 import * as csv from '../csv.js';
+import * as fechas from '../fechas.js';
 import { autenticarUsuario, crearUsuario } from '../auth.js';
 import { Client } from 'pg';
 
@@ -166,3 +167,32 @@ export async function patchPlanEstudiosController(req: Request, res: Response) {
     res.status(500).send(String(err));
   }
 }
+
+// --- CERTIFICADOS ---
+export async function getCertificadosController(req: Request, res: Response) {
+  const { lu, fecha } = req.query;
+  var alumnos;
+  try{
+    if (lu) {
+      alumnos = await aida.obtenerAlumnoQueNecesitaCertificado(clientDb, { lu: lu as string });
+    } else if (fecha) {
+      alumnos = await aida.obtenerAlumnoQueNecesitaCertificado(clientDb, { fecha: fechas.deISO(fecha as string) });
+    } else {
+        res.status(400).send("Falta parámetro LU o Fecha");
+        return;
+    }
+    if (alumnos.length == 0) {
+      console.log(`No hay alumnos que necesiten certificado para el parametro `, lu ?? fecha);
+      res.status(404).send("El alumno no necesita certificado o no existe.");
+    } else {
+      let certificadoHTML;
+      for (const alumno of alumnos) {
+        console.log('Generando certificado para alumno:', alumno);
+        certificadoHTML = await aida.generarHTMLcertificadoParaAlumno(`views/plantilla-certificado.html`, alumno);
+      }
+      res.status(200).send(certificadoHTML);
+    }
+  } catch (error){
+    res.status(500).send("Error interno");
+  }
+};

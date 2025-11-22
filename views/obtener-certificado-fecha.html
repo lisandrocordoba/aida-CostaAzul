@@ -11,7 +11,7 @@
             window.onload = function() {
                 document.getElementById("btnEnviar").onclick = function() {
                     var fecha = document.getElementsByName("fecha")[0].value;
-                    window.location.href = "../api/v0/fecha/" + encodeURIComponent(fecha);
+                    window.location.href = "/api/v0/certificados?fecha=" + encodeURIComponent(fecha);
                 }
             }
         </script>
