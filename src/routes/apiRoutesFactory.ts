@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { controllers } from '../controllers/controllerFactory.js';
+import { controllers } from '../controllers/apiControllerFactory.js';
 
 import { TableDef } from '../applicationStructure.js';
 

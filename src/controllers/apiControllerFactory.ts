@@ -94,6 +94,7 @@ export function controllers(tableDef: TableDef){
 
     const deleteRecord = async (req: Request, res: Response): Promise<void> => {
     try {
+        console.log(`DELETE FROM ${tablename} WHERE ${pkDolarCondition(1)}`, pkParams(req.params));
         const result = await pool.query(
         `DELETE FROM ${tablename} WHERE ${pkDolarCondition(1)} RETURNING *`,
         pkParams(req.params)

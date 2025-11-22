@@ -2,7 +2,7 @@ import express from "express";
 import * as apiControllers from '../controllers/apiControllers.js';
 import { Request, Response, NextFunction } from "express";
 import { tableDefs } from "../applicationStructure.js";
-import { createTableRouter as createTableRouter } from "./routesFactory.js";
+import { createTableRouter as createTableRouter } from "./apiRoutesFactory.js";
 
 const APIRouter = express.Router();
 
@@ -37,4 +37,11 @@ APIRouter.patch('/cursadas', apiControllers.patchCursadasController);
 // --- PLAN DE ESTUDIOS ---
 APIRouter.patch('/plan_estudios', apiControllers.patchPlanEstudiosController);
 
+
+// --- RUTAS DE CERTIFICADOS ---
+APIRouter.get('/certificados/', apiControllers.getCertificadosController);
+
 export default APIRouter;
+
+
+

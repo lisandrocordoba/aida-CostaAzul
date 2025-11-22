@@ -11,7 +11,7 @@
             window.onload = function() {
                 document.getElementById("btnEnviar").onclick = function() {
                     var lu = document.getElementsByName("lu")[0].value;
-                    window.location.href = "../api/v0/lu/" + encodeURIComponent(lu);
+                    window.location.href = "/api/v0/certificados?lu=" + encodeURIComponent(lu);
                 }
             }
         </script>
