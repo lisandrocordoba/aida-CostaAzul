@@ -18,7 +18,7 @@ export function controllers(tableDef: TableDef){
     function mapColumn(colname: ColumnName): ColumnName[] {
         const fk = fks.find(fk => fk.column === colname);
         if(fk){
-            return fk.referencesColumns;    // Asumimos que no hay columnas con mismo nombre en distintas tablas
+            return [colname, ...fk.referencesColumns];    // Asumimos que no hay columnas con mismo nombre en distintas tablas
         } else {
             return [colname];
         }
@@ -80,6 +80,8 @@ export function controllers(tableDef: TableDef){
     }
     };
 
+
+    // No se puede cambiar carrera al alumno.
     const updateRecord = async (req: Request, res: Response): Promise<void> => {
     try {
         const result = await pool.query(

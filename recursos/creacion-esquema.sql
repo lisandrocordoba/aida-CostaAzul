@@ -28,8 +28,8 @@ create table aida.alumnos (
     egreso date
 );
 CREATE TABLE aida.cursadas (
-    alumno_lu text references aida.alumnos(lu) on delete cascade,
-    materia_id integer references aida.materias(id) on delete cascade,
+    alumno_lu text references aida.alumnos(lu) on delete cascade, -- si borramos un alumno queremos borrar todas sus cursadas
+    materia_id integer references aida.materias(id) on delete cascade, -- lo mismo con materia
     anio integer not null,
     cuatrimestre integer not null,
     nota integer,
