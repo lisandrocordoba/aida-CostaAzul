@@ -1,3 +1,0 @@
-PREGUNTAS CRUD genericos:
-- Los endpoints que requieren JOINS en vez de 1 sola tabla, que chota hacemos.
-- Generalizacion del front que onda? Generalizamos API pero no APP...
