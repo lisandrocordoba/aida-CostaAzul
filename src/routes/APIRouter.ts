@@ -39,7 +39,7 @@ APIRouter.patch('/plan_estudios', apiControllers.patchPlanEstudiosController);
 
 
 // --- RUTAS DE CERTIFICADOS ---
-APIRouter.get('/certificados/', apiControllers.getCertificadosController);
+APIRouter.get('/certificados', apiControllers.getCertificadosController);
 
 export default APIRouter;
 
