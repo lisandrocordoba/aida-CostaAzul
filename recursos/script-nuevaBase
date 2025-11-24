@@ -1,0 +1,129 @@
+-- ============================
+-- 1. USUARIOS
+-- ============================
+
+INSERT INTO aida.usuarios (username, password_hash, nombre, apellido, email)
+VALUES
+('ana123', 'hash1', 'Ana', 'Pérez', 'ana@example.com'),
+('juanito', 'hash2', 'Juan', 'Gómez', 'juan@example.com'),
+('maria88', 'hash3', 'María', 'López', 'maria@example.com'),
+('profe_luis', 'hash4', 'Luis', 'Martínez', 'luis@example.com'),
+('secre_rocio', 'hash5', 'Rocío', 'García', 'rocio@example.com');
+
+-- IDs generados:
+-- 1 Ana
+-- 2 Juan
+-- 3 María
+-- 4 Luis (Profesor)
+-- 5 Rocío (Secretaria)
+
+
+
+-- ============================
+-- 2. CARRERAS
+-- ============================
+
+INSERT INTO aida.carreras (nombre_carrera)
+VALUES
+('Ingeniería en Sistemas'),
+('Ciencias de la Computación'),
+('Matemática');
+
+-- IDs:
+-- 1 Ingenieria
+-- 2 Ciencias Compu
+-- 3 Matemática
+
+
+
+-- ============================
+-- 3. ALUMNOS (usa id_usuario)
+-- ============================
+
+INSERT INTO aida.alumnos (lu, id_usuario, id_carrera, titulo_en_tramite, egreso)
+VALUES
+('1602/339', 1, 2, '2024-03-10', NULL),
+('182/23',   2, 1, NULL, NULL),
+('1600/17',  3, 3, NULL, NULL);
+
+
+
+-- ============================
+-- 4. MATERIAS
+-- ============================
+
+INSERT INTO aida.materias (nombre_materia)
+VALUES
+('Introducción a la Programación'),
+('Algoritmos y Estructuras de Datos'),
+('Análisis Matemático I'),
+('Lógica y Computabilidad');
+
+-- IDs:
+-- 1 Intro Prog
+-- 2 Algoritmos
+-- 3 AM I
+-- 4 Lógica
+
+
+
+-- ============================
+-- 5. materiasEnCarrera
+-- ============================
+
+INSERT INTO aida.materiasEnCarrera (id_carrera, id_materia)
+VALUES
+(1, 1),
+(1, 2),
+(1, 3),
+(2, 1),
+(2, 4),
+(3, 3);
+
+
+
+-- ============================
+-- 6. PROFESORES
+-- ============================
+
+INSERT INTO aida.profesores (id_usuario)
+VALUES (4);  -- Usuario 4 = Luis Martínez
+
+-- Genera legajo = 1
+
+
+
+-- ============================
+-- 7. SECRETARIO
+-- ============================
+
+INSERT INTO aida.secretario (id_usuario)
+VALUES (5); -- Rocío García
+
+
+
+-- ============================
+-- 8. DICTA (relación profe ↔ materia)
+-- ============================
+
+INSERT INTO aida.dicta (legajo, id_materia)
+VALUES
+(1, 1),  -- Luis dicta Intro Prog
+(1, 2);  -- Luis dicta Algoritmos
+
+
+
+-- ============================
+-- 9. CURSADAS
+-- ============================
+
+INSERT INTO aida.cursadas (alumno_lu, id_materia, anio, cuatrimestre, nota)
+VALUES
+('1602/339', 1, 2024, 1, 8),
+('1602/339', 4, 2024, 2, 9),
+('182/23',   1, 2024, 1, 7),
+('1600/17',  3, 2024, 1, 10);
+
+-- ============================
+-- FIN DEL SCRIPT
+-- ============================

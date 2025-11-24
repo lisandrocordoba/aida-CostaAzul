@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { pool } from '../database/db.js';
-import { ColumnName, TableDef } from '../applicationStructure.js';
-
+import { ColumnName, ForeignKeyDef, TableDef, TableName } from '../applicationStructure.js';
+import { tableDefs } from "../applicationStructure.js";
 
 export function controllers(tableDef: TableDef){
 
@@ -14,6 +14,26 @@ export function controllers(tableDef: TableDef){
     const pkDolarCondition = (startingOn:number) => pk.map((colname,i) => `${colname} = \$${i+startingOn}`).join(' AND ')
     const pkParams = (params:Record<string, any>) => pk.map(colname => params[colname])
     const allParams = (params:Record<string, any>) => allColnames.map(colname => params[colname])
+    const allTableDefs = tableDefs;
+
+
+
+
+    // CHEQUEAR COMO INCLUIR LAS TABLE DEFS EN EL MODULO
+    function mapColumnGenerico(colname: ColumnName, tableName: TableName): ColumnName[] {
+        //obtener fk de "tableName" en la tableDef.
+
+        const tabla = allTableDefs.find(tabla => tabla.name === tableName);
+        //console.log(allTableDefs);
+        //console.log(tabla);
+        const fk = tabla!.fks.find(fk => fk.column === colname); //             HABRIA QUE ATRAPAR EL CASO TABLA = NULL
+        //console.log(fk);
+        if(fk){
+            return [colname, ...fk.referencesColumns.map(referenceColname => mapColumnGenerico(referenceColname, fk.referencesTable)).flat()];    // Asumimos que no hay columnas con mismo nombre en distintas tablas
+        } else {
+            return [colname];
+        }
+    }
 
     function mapColumn(colname: ColumnName): ColumnName[] {
         const fk = fks.find(fk => fk.column === colname);
@@ -24,17 +44,33 @@ export function controllers(tableDef: TableDef){
         }
     }
 
+    function recursiveJoin(fk: ForeignKeyDef, tablename: TableName): string{
+        if (!fk){
+            return ''
+        };
+        const tabla = allTableDefs.find(tabla => tabla.name === fk.referencesTable); // tabla alumnos
+        //console.log(tabla);
+
+        let second_fk;
+        for (const column of fk.referencesColumns) {
+            second_fk = tabla!.fks.find(second_fk => second_fk.column === column);
+        }    //             HABRIA QUE ATRAPAR EL CASO TABLA = NULL
+        console.log(second_fk);
+        console.log(fk);
+
+        return `JOIN aida.${fk.referencesTable} ON aida.${tablename}.${fk.column} = aida.${fk.referencesTable}.${fk.referencedColumn} ` + recursiveJoin(second_fk!, tabla!.name)
+    }
+
+
     const getAllRecords = async (_req: Request, res: Response): Promise<void> => {
         try {
-            const select = allColnames.map(colname => mapColumn(colname)).flat();
+            const select = allColnames.map(colname => mapColumnGenerico(colname,tableDef.name)).flat();
             let from = tablename;
             if(fks.length > 0){
                 // Caso JOIN
-                from = `${from} ` + fks.map(fk => {
-                    return `JOIN aida.${fk.referencesTable} ON ${tablename}.${fk.column} = aida.${fk.referencesTable}.${fk.referencedColumn}`;
-                }).join(' ');
+                from = `${from} ` + fks.map(fk => recursiveJoin(fk, tableDef.name)).join(' ');
             }
-            console.log(`SELECT ${select} FROM ${from} ORDER BY ${orderBy ?? pk}`);
+            console.log(`SELECT ${select} FROM ${from} ORDER BY aida.${orderBy ?? pk}`);
             const result = await pool.query(`SELECT ${select} FROM ${from} ORDER BY ${orderBy ?? pk}`);
             res.json(result.rows);
         } catch (error) {

@@ -4,38 +4,50 @@ export type TableName =
   | 'cursadas'
   | 'carreras'
   | 'materias'
-  | 'usuarios';
+  | 'usuarios'
+  | 'profesores'
+  | 'secretario'
+  | 'dicta';
 
 export type ColumnName =
   // materiasEnCarrera
-  | 'carrera_id'
-  | 'materia_id'
+  | 'id_carrera'
+  | 'id_materia'
   // alumnos
   | 'lu'
-  | 'apellido'
-  | 'nombres'
+  | 'id_usuario'
   | 'id_carrera'
   | 'titulo_en_tramite'
   | 'egreso'
   // cursadas
   | 'alumno_lu'
-  | 'materia_id'
+  | 'id_materia'
   | 'anio'
   | 'cuatrimestre'
   | 'nota'
   // carreras
   | 'id'
-  | 'nombre'
+  | 'nombre_carrera'
   // materias
   | 'id'
-  | 'nombre'
+  | 'nombre_materia'
   // usuarios
   | 'id'
   | 'username'
   | 'password_hash'
   | 'nombre'
+  | 'apellido'
   | 'email'
-  | 'activo';
+  | 'activo'
+  // profesores
+  | 'legajo'
+  | 'id_usuario'
+  // secretario
+  | 'id_secretario'
+  | 'id_usuario'
+  //dicta
+  | 'legajo'
+  | 'id_materia'
 
 export type ColumnType = 'text' | 'int' | 'date' | 'boolean';
 
@@ -67,10 +79,10 @@ const tableDefinitions: TableDef[] = [
   {
     name: 'materiasEnCarrera',
     columns: [
-      { name: 'carrera_id' as ColumnName, type: 'int', title: 'Id. Carrera' },
-      { name: 'materia_id' as ColumnName, type: 'int', title: 'Id. Materia' },
+      { name: 'id_carrera' as ColumnName, type: 'int', title: 'Id. Carrera' },
+      { name: 'id_materia' as ColumnName, type: 'int', title: 'Id. Materia' },
     ],
-    pk: ['carrera_id' as ColumnName, 'materia_id' as ColumnName],
+    pk: ['id_carrera' as ColumnName, 'id_materia' as ColumnName],
     fks: [],
     elementName: 'materiaEnCarrera'
   },
@@ -78,30 +90,32 @@ const tableDefinitions: TableDef[] = [
     name: 'alumnos',
     columns: [
       { name: 'lu' as ColumnName, type: 'text', title: 'L.U' },
-      { name: 'apellido' as ColumnName, type: 'text', title: 'Apellido'},
-      { name: 'nombres' as ColumnName, type: 'text', title: 'Nombre' },     // CUANDO LO PASEMOS A USUARIO SACARLE LA "s"
+      { name: 'id_usuario' as ColumnName, type: 'int', title: 'Nombre'},   // agrego title NOMBRE porque sino el HTML muestra "id_usuario" en la columna donde pone los nombres.
       { name: 'id_carrera' as ColumnName, type: 'int', title: 'Carrera' },
       { name: 'titulo_en_tramite' as ColumnName, type: 'date', title: 'Título en Trámite' },
       { name: 'egreso' as ColumnName, type: 'date', title: 'Fecha Egreso' },
     ],
     pk: ['lu' as ColumnName],
-    fks: [{ column: 'id_carrera', referencedColumn: 'id', referencesTable: 'carreras', referencesColumns: ['nombre'] }],
-    orderBy: ['apellido' as ColumnName, 'nombres' as ColumnName],
+    fks: [
+      { column: 'id_usuario', referencedColumn: 'id', referencesTable: 'usuarios', referencesColumns: ['nombre', 'apellido']},
+      { column: 'id_carrera', referencedColumn: 'id', referencesTable: 'carreras', referencesColumns: ['nombre_carrera'] }
+    ],
+    orderBy: ['apellido' as ColumnName, 'nombre' as ColumnName],
     elementName: 'alumno'
   },
   {
     name: 'cursadas',
     columns: [
       { name: 'alumno_lu' as ColumnName, type: 'text', title: 'L.U' },
-      { name: 'materia_id' as ColumnName, type: 'int', title: 'Materia' },
+      { name: 'id_materia' as ColumnName, type: 'int', title: 'Materia' },
       { name: 'anio' as ColumnName, type: 'int', title: 'Año' },
       { name: 'cuatrimestre' as ColumnName, type: 'int', title: 'Cuatrimestre' },
       { name: 'nota' as ColumnName, type: 'int',title: 'Nota' },
     ],
-    pk: ['alumno_lu' as ColumnName, 'materia_id' as ColumnName, 'anio' as ColumnName, 'cuatrimestre' as ColumnName],
+    pk: ['alumno_lu' as ColumnName, 'id_materia' as ColumnName, 'anio' as ColumnName, 'cuatrimestre' as ColumnName],
     fks: [
-      { column: 'alumno_lu', referencedColumn: 'lu', referencesTable: 'alumnos', referencesColumns: ['lu', 'nombres', 'apellido'] },
-      { column: 'materia_id', referencedColumn: 'id', referencesTable: 'materias', referencesColumns: ['nombre'] }
+      { column: 'alumno_lu', referencedColumn: 'lu', referencesTable: 'alumnos', referencesColumns: ['lu', 'id_usuario']}, //nombre', 'apellido'] },
+      { column: 'id_materia', referencedColumn: 'id', referencesTable: 'materias', referencesColumns: ['nombre_materia'] }
     ],
     orderBy: ['anio' as ColumnName, 'cuatrimestre' as ColumnName],
     elementName: 'cursada'
@@ -110,22 +124,22 @@ const tableDefinitions: TableDef[] = [
     name: 'carreras',
     columns: [
       { name: 'id' as ColumnName, type: 'int' },
-      { name: 'nombre' as ColumnName, type: 'text' },
+      { name: 'nombre_carrera' as ColumnName, type: 'text' },
     ],
     pk: ['id' as ColumnName],
     fks: [],
-    orderBy: ['nombre' as ColumnName],
+    orderBy: ['nombre_carrera' as ColumnName],
     elementName: 'carrera'
   },
   {
     name: 'materias',
     columns: [
       { name: 'id' as ColumnName, type: 'int' },
-      { name: 'nombre' as ColumnName, type: 'text' },
+      { name: 'nombre_materia' as ColumnName, type: 'text' },
     ],
     pk: ['id' as ColumnName],
     fks: [],
-    orderBy: ['nombre' as ColumnName],
+    orderBy: ['nombre_materia' as ColumnName],
     elementName: 'materia'
   },
   {
@@ -135,13 +149,49 @@ const tableDefinitions: TableDef[] = [
       { name: 'username' as ColumnName, type: 'text' },
       { name: 'password_hash' as ColumnName, type: 'text' },
       { name: 'nombre' as ColumnName, type: 'text' },
+      { name: 'apellido' as ColumnName, type: 'text' },
       { name: 'email' as ColumnName, type: 'text' },
       { name: 'activo' as ColumnName, type: 'boolean' },
     ],
     pk: ['id' as ColumnName],
     fks: [],
-    orderBy: ['username' as ColumnName],
+    orderBy: ['apellido' as ColumnName, 'nombre' as ColumnName],
     elementName: 'usuario'
+  },
+  {
+    name: 'profesores',
+    columns: [
+      { name: 'legajo' as ColumnName, type: 'int' },
+      { name: 'id_usuario' as ColumnName, type: 'int' },
+    ],
+    pk: ['legajo' as ColumnName],
+    fks: [{ column: 'id_usuario', referencedColumn: 'id', referencesTable: 'usuarios', referencesColumns: ['nombre', 'apellido']}],
+    orderBy: ['apellido' as ColumnName, 'nombre' as ColumnName],
+    elementName: 'profesor'
+  },
+  {
+    name: 'secretario',
+    columns: [
+      { name: 'id_secretario' as ColumnName, type: 'int' },
+      { name: 'id_usuario' as ColumnName, type: 'int' },
+    ],
+    pk: ['id_secretario' as ColumnName],
+    fks: [{ column: 'id_usuario', referencedColumn: 'id', referencesTable: 'usuarios', referencesColumns: ['nombre', 'apellido']}],
+    orderBy: ['id_secretario' as ColumnName],
+    elementName: 'secretario'
+  },
+  {
+    name: 'dicta',
+    columns: [
+      { name: 'legajo' as ColumnName, type: 'int' },
+      { name: 'id_materia' as ColumnName, type: 'int' },
+    ],
+    pk: ['legajo' as ColumnName, 'id_materia' as ColumnName],
+    fks: [
+      { column: 'legajo', referencedColumn: 'legajo', referencesTable: 'profesores', referencesColumns: ['legajo', 'nombre', 'apellido']},
+      { column: 'id_materia', referencedColumn: 'id', referencesTable: 'materias', referencesColumns: ['nombre_materia']}],
+    orderBy: ['legajo' as ColumnName],
+    elementName: 'dicta'
   }
 ];
 
