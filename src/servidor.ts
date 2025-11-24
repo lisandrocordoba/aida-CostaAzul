@@ -3,6 +3,7 @@ import session/*, { SessionData }*/ from 'express-session';
 
 import appRouter from './routes/appRouter.js';
 import APIRouter from "./routes/APIRouter.js";
+import generarPlantillasHTML from "./generarPlantillas.js"
 
 
 const app = express()
@@ -23,6 +24,9 @@ app.use(session({
         maxAge: 1000 * 60 * 60 * 24 // 1 día
     }
   }));
+
+// Generamos plantillas cuando arranca el servidor
+generarPlantillasHTML();
 
 // Routes
 app.use('/api/v0', APIRouter);

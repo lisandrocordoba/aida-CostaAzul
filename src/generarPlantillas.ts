@@ -1,0 +1,352 @@
+import fs from "fs";
+import path from "path";
+import { tableDefs } from "./applicationStructure.js";
+import { fileURLToPath } from "url";
+
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+
+export function generarPlantillasHTML() {
+  const recursosDir = path.join(__dirname, "..", "views");
+
+  if (!fs.existsSync(recursosDir)) {
+    fs.mkdirSync(recursosDir, { recursive: true });
+  }
+
+  for (const table of tableDefs) {
+    const filePath = path.join(recursosDir, `plantilla-tabla-${table.name}.html`);
+    const html = buildTableHtml(table);
+    fs.writeFileSync(filePath, html, "utf8");
+    console.log(`✔ Plantilla generada: plantilla-tabla-${table.name}.html`);
+  }
+}
+
+
+function buildTableHtml(tableDef: any): string {
+  const fkByColumn = new Map<string, any>();
+  for (const fk of tableDef.fks ?? []) {
+    fkByColumn.set(fk.column, fk);
+  }
+
+  const displayColumns: { field: string; title: string; editField: string | null }[] = [];
+  for (const col of tableDef.columns) {
+  const fk = fkByColumn.get(col.name);
+  if (fk) {
+    // Columna FK: mostramos las referencesColumns
+    fk.referencesColumns.forEach((refCol: string, idx: number) => {
+      const title =
+        idx === 0 && col.title
+          ? col.title
+          : toTitle(refCol);
+
+      displayColumns.push({
+        field: refCol,               // lo que viene en el JSON (ej: "carrera")
+        title,
+        editField: idx === 0 ? col.name : null
+        // 👆 la PRIMER columna derivada edita la columna real (ej: "id_carrera")
+        // las demás son sólo de lectura
+      });
+    });
+  } else {
+    // Columna normal
+    displayColumns.push({
+      field: col.name,
+      title: col.title ?? toTitle(col.name),
+      editField: col.name
+    });
+  }
+  }
+
+
+  const pkValueFields: string[] = tableDef.pk.slice();
+
+  const displayColumnsJson = JSON.stringify(displayColumns);
+  const pkValueFieldsJson = JSON.stringify(pkValueFields);
+  const tableJson = JSON.stringify(tableDef);
+
+  return /*html*/ `
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>${tableDef.title}</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 30px; background-color: #f9f9f9; }
+    table { border-collapse: collapse; width: 100%; background: white; box-shadow: 0px 2px 6px rgba(0,0,0,0.1); }
+    th, td { border: 1px solid #ddd; padding: 10px 12px; text-align: left; }
+    th { background-color: #4CAF50; color: white; }
+    tr:nth-child(even) { background-color: #f2f2f2; }
+    tr:hover { background-color: #e1f5fe; }
+    input { width: 100%; box-sizing: border-box; padding: 6px; }
+    button { padding: 6px 10px; }
+  </style>
+</head>
+<body onload="cargarTabla()">
+  <h2>${tableDef.title}</h2>
+  <table id="tabla-generica">
+    <thead>
+      <tr id="thead-row"></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    const tableDef = ${tableJson};
+    const displayColumns = ${displayColumnsJson};
+    const pkValueFields = ${pkValueFieldsJson};
+    const API_BASE = "/api/v0/" + tableDef.name;
+
+    // solo puede haber una fila en edición a la vez
+    let editandoPk = null;
+
+    function buildPkPath(row) {
+      return pkValueFields
+        .map(function (f) { return encodeURIComponent(row[f]); })
+        .join("/");
+    }
+
+    async function cargarTabla() {
+      try {
+        const res = await fetch(API_BASE, { headers: { "Content-Type": "application/json" }});
+        if (!res.ok) {
+          console.error("Error al cargar:", res.status);
+          return;
+        }
+
+        const data = await res.json();
+        const theadRow = document.getElementById("thead-row");
+        const tbody = document.querySelector("#tabla-generica tbody");
+
+        // Encabezados
+        theadRow.innerHTML = "";
+        displayColumns.forEach(function (col) {
+          const th = document.createElement("th");
+          th.textContent = col.title;
+          theadRow.appendChild(th);
+        });
+        const thAcc = document.createElement("th");
+        thAcc.textContent = "Acción";
+        theadRow.appendChild(thAcc);
+
+        // Filas
+        tbody.innerHTML = "";
+        data.forEach(function (row) {
+          const tr = document.createElement("tr");
+          const pkPath = buildPkPath(row);
+          tr.dataset.pk = pkPath;
+
+          // ⬅️ Guardamos la fila original completa
+          tr.dataset.row = JSON.stringify(row);
+
+          displayColumns.forEach(function (col) {
+            const td = document.createElement("td");
+            td.textContent = row[col.field] ?? "";
+            tr.appendChild(td);
+          });
+
+          const tdAcc = document.createElement("td");
+          const btnEdit = document.createElement("button");
+          btnEdit.textContent = "Editar";
+          btnEdit.onclick = function () { editar(pkPath); };
+          tdAcc.appendChild(btnEdit);
+
+          const btnDel = document.createElement("button");
+          btnDel.textContent = "Eliminar";
+          btnDel.onclick = function () { eliminarRegistro(pkPath); };
+          tdAcc.appendChild(btnDel);
+
+          tr.appendChild(tdAcc);
+          tbody.appendChild(tr);
+        });
+
+        agregarFilaAlta(tbody);
+      } catch (e) {
+        console.error("Fallo al cargar tabla:", e);
+      }
+    }
+
+    function agregarFilaAlta(tbody) {
+      const tr = document.createElement("tr");
+
+      tableDef.columns.forEach(function (col) {
+        const td = document.createElement("td");
+        const input = document.createElement("input");
+        input.id = "new-" + col.name;
+        input.placeholder = col.title || col.name;
+        td.appendChild(input);
+        tr.appendChild(td);
+      });
+
+      const tdAcc = document.createElement("td");
+      const btn = document.createElement("button");
+      btn.textContent = "Agregar";
+      btn.onclick = crearRegistro;
+      tdAcc.appendChild(btn);
+      tr.appendChild(tdAcc);
+
+      tbody.appendChild(tr);
+    }
+
+    async function crearRegistro() {
+      const body = {};
+      tableDef.columns.forEach(function (col) {
+        const el = document.getElementById("new-" + col.name);
+        body[col.name] = el.value || null;
+      });
+      const res = await fetch(API_BASE, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+      if (!res.ok) { alert("Error al crear: " + res.status); return; }
+      cargarTabla();
+    }
+
+    async function eliminarRegistro(pkPath) {
+      if (!confirm("¿Eliminar registro?")) return;
+      const res = await fetch(API_BASE + "/" + pkPath, { method: "DELETE" });
+      if (!res.ok) { alert("Error al eliminar: " + res.status); return; }
+      cargarTabla();
+    }
+
+    function editar(pkPath) {
+        if (editandoPk) return; // ya hay una fila en edición
+        editandoPk = pkPath;
+
+        const fila = document.querySelector('tr[data-pk="' + pkPath + '"]');
+        if (!fila) return;
+
+        // Recuperamos la fila original para obtener los valores reales (id_carrera, etc.)
+        let rowData = {};
+        if (fila.dataset.row) {
+            try {
+            rowData = JSON.parse(fila.dataset.row);
+            } catch (e) {
+            rowData = {};
+            }
+        }
+
+        const tds = fila.querySelectorAll("td");
+        const editableFields = tableDef.columns.map(function (c) { return c.name; });
+        const pkFieldSet = new Set(tableDef.pk);
+
+        // Todas las celdas menos la última (Acción)
+        for (let i = 0; i < tds.length - 1; i++) {
+            const td = tds[i];
+            const colInfo = displayColumns[i];
+            const editField = colInfo.editField; // 👈 columna REAL que se edita (ej: "id_carrera")
+
+            // Si esta columna no es editable (editField null), la dejamos como está
+            if (!editField) continue;
+
+            // Solo editamos columnas reales de la tabla
+            if (!editableFields.includes(editField)) continue;
+
+            // Valor actual: preferimos el dato real de la fila (rowData),
+            // si no está usamos el texto de la celda
+            const valorActual =
+            (rowData && Object.prototype.hasOwnProperty.call(rowData, editField))
+                ? (rowData[editField] ?? "")
+                : td.textContent.trim();
+
+            td.innerHTML = "";
+
+            const input = document.createElement("input");
+            input.id = "edit-" + editField;
+            input.value = valorActual ?? "";
+
+            // Si es parte de la PK, no editable
+            if (pkFieldSet.has(editField)) input.disabled = true;
+
+            td.appendChild(input);
+        }
+
+        // Reemplazamos la celda de acción por Confirmar / Cancelar
+        const tdAcc = tds[tds.length - 1];
+        tdAcc.innerHTML = "";
+        const bConfirm = document.createElement("button");
+        bConfirm.textContent = "Confirmar";
+        bConfirm.onclick = function () { confirmarEditar(pkPath); };
+        tdAcc.appendChild(bConfirm);
+
+        const bCancel = document.createElement("button");
+        bCancel.textContent = "Cancelar";
+        bCancel.onclick = cancelarEditar;
+        tdAcc.appendChild(bCancel);
+    }
+
+
+    async function confirmarEditar(pkPath) {
+      const fila = document.querySelector('tr[data-pk="' + pkPath + '"]');
+
+      // leer PK desde la URL
+      const pkParts = pkPath.split("/").map(decodeURIComponent);
+
+      // armamos body SOLO con las columnas reales del tableDef
+      const body = {};
+
+      // 1) Las PK siempre se preservan
+      tableDef.pk.forEach(function (pkCol, idx) {
+        body[pkCol] = pkParts[idx];
+      });
+
+      // 2) Para el resto de columnas reales, si tienen input usamos el valor, sino dejamos el original del rowData
+      let rowData = {};
+      if (fila && fila.dataset.row) {
+        try { rowData = JSON.parse(fila.dataset.row); } catch {}
+      }
+
+      tableDef.columns.forEach(function (col) {
+        const input = document.getElementById("edit-" + col.name);
+
+        if (input) {
+          // EDITABLE
+          let val = input.value.trim();
+          if (val === "") val = null;
+          body[col.name] = val;
+        } else {
+          // NO EDITABLE → tomamos valor original REAL
+          body[col.name] = rowData[col.name];
+        }
+      });
+
+      // 3) Enviar PUT limpio
+      try {
+        const res = await fetch(API_BASE + "/" + pkPath, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body)
+        });
+        if (!res.ok) throw new Error("Error al actualizar: " + res.status);
+
+        editandoPk = null;
+        cargarTabla();
+      } catch (e) {
+        alert("No se pudo actualizar: " + e.message);
+      }
+    }
+
+
+    function cancelarEditar() {
+      editandoPk = null;
+      cargarTabla();
+    }
+  </script>
+
+</body>
+</html>`;
+}
+
+
+// helper para poner títulos más lindos
+function toTitle(name: string): string {
+  return name
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, c => c.toUpperCase());
+}
+
+
+
+export default generarPlantillasHTML
