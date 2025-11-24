@@ -3,7 +3,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>cursadas</title>
+  <title>usuarios</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 30px; background-color: #f9f9f9; }
     table { border-collapse: collapse; width: 100%; background: white; box-shadow: 0px 2px 6px rgba(0,0,0,0.1); }
@@ -16,7 +16,7 @@
   </style>
 </head>
 <body onload="cargarTabla()">
-  <h2>cursadas</h2>
+  <h2>usuarios</h2>
   <table id="tabla-generica">
     <thead>
       <tr id="thead-row"></tr>
@@ -25,9 +25,9 @@
   </table>
 
   <script>
-    const tableDef = {"name":"cursadas","columns":[{"name":"alumno_lu","type":"text","title":"L.U","description":""},{"name":"materia_id","type":"int","title":"Materia","description":""},{"name":"anio","type":"int","title":"Año","description":""},{"name":"cuatrimestre","type":"int","title":"Cuatrimestre","description":""},{"name":"nota","type":"int","title":"Nota","description":""}],"pk":["alumno_lu","materia_id","anio","cuatrimestre"],"fks":[{"column":"alumno_lu","referencedColumn":"lu","referencesTable":"alumnos","referencesColumns":["lu","nombres","apellido"]},{"column":"materia_id","referencedColumn":"id","referencesTable":"materias","referencesColumns":["nombre"]}],"orderBy":["anio","cuatrimestre"],"elementName":"cursada","title":"cursadas"};
-    const displayColumns = [{"field":"lu","title":"L.U","editField":"alumno_lu"},{"field":"nombres","title":"Nombres","editField":null},{"field":"apellido","title":"Apellido","editField":null},{"field":"nombre","title":"Materia","editField":"materia_id"},{"field":"anio","title":"Año","editField":"anio"},{"field":"cuatrimestre","title":"Cuatrimestre","editField":"cuatrimestre"},{"field":"nota","title":"Nota","editField":"nota"}];
-    const pkValueFields = ["alumno_lu","materia_id","anio","cuatrimestre"];
+    const tableDef = {"name":"usuarios","columns":[{"name":"id","type":"int","title":"id","description":""},{"name":"username","type":"text","title":"username","description":""},{"name":"password_hash","type":"text","title":"password_hash","description":""},{"name":"nombre","type":"text","title":"nombre","description":""},{"name":"email","type":"text","title":"email","description":""},{"name":"activo","type":"boolean","title":"activo","description":""}],"pk":["id"],"fks":[],"orderBy":["username"],"elementName":"usuario","title":"usuarios"};
+    const displayColumns = [{"field":"id","title":"id","editField":"id"},{"field":"username","title":"username","editField":"username"},{"field":"password_hash","title":"password_hash","editField":"password_hash"},{"field":"nombre","title":"nombre","editField":"nombre"},{"field":"email","title":"email","editField":"email"},{"field":"activo","title":"activo","editField":"activo"}];
+    const pkValueFields = ["id"];
     const API_BASE = "/api/v0/" + tableDef.name;
 
     // solo puede haber una fila en edición a la vez

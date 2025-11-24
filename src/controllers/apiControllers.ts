@@ -3,6 +3,7 @@ import * as aida from '../aida.js';
 import * as csv from '../csv.js';
 import * as fechas from '../fechas.js';
 import { autenticarUsuario, crearUsuario } from '../auth.js';
+import { Rol, verificarRol } from '../roles.js';
 import { Client } from 'pg';
 
 // Cliente DB para el modulo
@@ -47,6 +48,29 @@ export async function registerAPIController(req: Request, res: Response) {
   await crearUsuario(clientDb, username, password, nombre, email);
   res.status(201).send('Usuario creado');
 }
+
+// --- ROLES ---
+
+// Hay que agregar tipo ROL, por ahora solo es string
+export async function selectRolAPIController(req: Request, res: Response) {
+  const usuario = req.session.usuario; //handlear null
+  const { rol } = req.body as { rol: Rol };
+  if (verificarRol(usuario!, rol)) {
+      req.session.rol = rol;
+      res.json({ message: 'Autenticación exitosa' });
+  } else {
+      res.status(401).json({ error: 'Credenciales inválidas' });
+  }
+}
+
+export async function getRolAPIController(req: Request, res: Response) {
+  const rol = req.session?.rol;
+  if (!rol) {
+    return res.status(401).json({ error: 'No hay rol seleccionado' });
+  }
+  return res.json({ rol });
+}
+
 
 // --- ALUMNOS ---
 export async function getAlumnosController(_: Request, res: Response) {
