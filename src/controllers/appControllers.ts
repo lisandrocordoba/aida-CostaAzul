@@ -11,6 +11,12 @@ export function loginController(req: Request, res: Response) {
   res.send(loginHtml);
 }
 
+// --- SELECCION ROL ---
+export function seleccionRolController(_: Request, res: Response) {
+  const seleccionRolHtml = fs.readFileSync('views/seleccionRol.html', 'utf8');
+  res.send(seleccionRolHtml);
+}
+
 // --- MENU ---
 export async function menuController(_: Request, res: Response) {
   const HTML_MENU = await readFile('views/menu.html', { encoding: 'utf8' });

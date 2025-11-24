@@ -1,8 +1,9 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Listado de Alumnos</title>
+  <meta charset="UTF-8" />
+  <title>alumnos</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 30px; background-color: #f9f9f9; }
     table { border-collapse: collapse; width: 100%; background: white; box-shadow: 0px 2px 6px rgba(0,0,0,0.1); }
@@ -14,213 +15,257 @@
     button { padding: 6px 10px; }
   </style>
 </head>
-<body onload="cargarAlumnos()">
-  <h2>Listado de Alumnos</h2>
-  <!-- Obs: tabla acoplada al esquema, los encabezados deberian generarse dinámicamente -->
-  <table id="tabla-alumnos">
+<body onload="cargarTabla()">
+  <h2>alumnos</h2>
+  <table id="tabla-generica">
     <thead>
-      <tr>
-        <th>LU</th>
-        <th>Apellido</th>
-        <th>Nombres</th>
-        <th>Carrera</th>
-        <th>Título en trámite</th>
-        <th>Egreso</th>
-        <th>Acción</th>
-      </tr>
+      <tr id="thead-row"></tr>
     </thead>
-    <tbody>
-      <!-- Filas dinámicas + última fila para agregar -->
-    </tbody>
+    <tbody></tbody>
   </table>
 
   <script>
-    let editandoLU = null; // asegura una sola fila en edición
+    const tableDef = {"name":"alumnos","columns":[{"name":"lu","type":"text","title":"L.U","description":""},{"name":"apellido","type":"text","title":"Apellido","description":""},{"name":"nombres","type":"text","title":"Nombre","description":""},{"name":"id_carrera","type":"int","title":"Carrera","description":""},{"name":"titulo_en_tramite","type":"date","title":"Título en Trámite","description":""},{"name":"egreso","type":"date","title":"Fecha Egreso","description":""}],"pk":["lu"],"fks":[{"column":"id_carrera","referencedColumn":"id","referencesTable":"carreras","referencesColumns":["nombre"]}],"orderBy":["apellido","nombres"],"elementName":"alumno","title":"alumnos"};
+    const displayColumns = [{"field":"lu","title":"L.U","editField":"lu"},{"field":"apellido","title":"Apellido","editField":"apellido"},{"field":"nombres","title":"Nombre","editField":"nombres"},{"field":"nombre","title":"Carrera","editField":"id_carrera"},{"field":"titulo_en_tramite","title":"Título en Trámite","editField":"titulo_en_tramite"},{"field":"egreso","title":"Fecha Egreso","editField":"egreso"}];
+    const pkValueFields = ["lu"];
+    const API_BASE = "/api/v0/" + tableDef.name;
 
-    async function cargarAlumnos() {
+    // solo puede haber una fila en edición a la vez
+    let editandoPk = null;
+
+    function buildPkPath(row) {
+      return pkValueFields
+        .map(function (f) { return encodeURIComponent(row[f]); })
+        .join("/");
+    }
+
+    async function cargarTabla() {
       try {
-        const response = await fetch("/api/v0/alumnos", {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-        });
-        if (!response.ok) throw new Error("Error en la petición: " + response.status);
+        const res = await fetch(API_BASE, { headers: { "Content-Type": "application/json" }});
+        if (!res.ok) {
+          console.error("Error al cargar:", res.status);
+          return;
+        }
 
-        const alumnos = await response.json();
-        const tbody = document.querySelector("#tabla-alumnos tbody");
+        const data = await res.json();
+        const theadRow = document.getElementById("thead-row");
+        const tbody = document.querySelector("#tabla-generica tbody");
+
+        // Encabezados
+        theadRow.innerHTML = "";
+        displayColumns.forEach(function (col) {
+          const th = document.createElement("th");
+          th.textContent = col.title;
+          theadRow.appendChild(th);
+        });
+        const thAcc = document.createElement("th");
+        thAcc.textContent = "Acción";
+        theadRow.appendChild(thAcc);
+
+        // Filas
         tbody.innerHTML = "";
+        data.forEach(function (row) {
+          const tr = document.createElement("tr");
+          const pkPath = buildPkPath(row);
+          tr.dataset.pk = pkPath;
 
-        alumnos.forEach(alumno => {
-          const fila = document.createElement("tr");
-          fila.dataset.lu = alumno.lu;
-          fila.innerHTML = `
-            <td>${alumno.lu}</td>
-            <td>${alumno.apellido || ""}</td>
-            <td>${alumno.nombres || ""}</td>
-            <td>${alumno.titulo || ""}</td>
-            <td>${alumno.titulo_en_tramite || "-"}</td>
-            <td>${alumno.egreso || ""}</td>
-            <td>
-              <button onclick="empezarEditar('${alumno.lu}')" ${editandoLU ? "disabled" : ""}>Editar</button>
-              <button onclick="borrarAlumno('${alumno.lu}')" ${editandoLU ? "disabled" : ""}>Eliminar</button>
-            </td>
-          `;
-          tbody.appendChild(fila);
+          // ⬅️ Guardamos la fila original completa
+          tr.dataset.row = JSON.stringify(row);
+
+          displayColumns.forEach(function (col) {
+            const td = document.createElement("td");
+            td.textContent = row[col.field] ?? "";
+            tr.appendChild(td);
+          });
+
+          const tdAcc = document.createElement("td");
+          const btnEdit = document.createElement("button");
+          btnEdit.textContent = "Editar";
+          btnEdit.onclick = function () { editar(pkPath); };
+          tdAcc.appendChild(btnEdit);
+
+          const btnDel = document.createElement("button");
+          btnDel.textContent = "Eliminar";
+          btnDel.onclick = function () { eliminarRegistro(pkPath); };
+          tdAcc.appendChild(btnDel);
+
+          tr.appendChild(tdAcc);
+          tbody.appendChild(tr);
         });
 
-        agregarFilaDeAlta(tbody);
-
-      } catch (error) {
-        console.error("No se pudo cargar la lista de alumnos:", error);
-      }
-    }
-
-    function agregarFilaDeAlta(tbody) {
-      const filaAlta = document.createElement("tr");
-      filaAlta.id = "fila-alta";
-      filaAlta.innerHTML = `
-        <td><input id="new-lu" placeholder="1600/17" /></td>
-        <td><input id="new-apellido" placeholder="Apellido" /></td>
-        <td><input id="new-nombres" placeholder="Nombres" /></td>
-        <td><input id="new-titulo" placeholder="Título" /></td>
-        <td><input id="new-tramite" type="date" placeholder="YYYY-MM-DD" /></td>
-        <td><input id="new-egreso" type="date" placeholder="YYYY-MM-DD" /></td>
-        <td><button onclick="crearAlumno()" ${editandoLU ? "disabled" : ""}>Agregar</button></td>
-      `;
-      tbody.appendChild(filaAlta);
-    }
-
-    async function crearAlumno() {
-      const lu = document.getElementById("new-lu").value.trim();
-      const apellido = document.getElementById("new-apellido").value.trim();
-      const nombres = document.getElementById("new-nombres").value.trim();
-      const id_carrera = document.getElementById("new-titulo").value.trim();
-      const titulo_en_tramite = document.getElementById("new-tramite").value || null;
-      const egreso = document.getElementById("new-egreso").value || null;
-
-      if (!lu) return alert("LU es obligatorio");
-
-      const alumno = { lu, apellido, nombres, id_carrera, titulo_en_tramite, egreso };
-
-      try {
-        const res = await fetch("/api/v0/alumnos", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(alumno)
-        });
-        if (!res.ok) throw new Error("Error al crear: " + res.status);
-        await cargarAlumnos();
+        agregarFilaAlta(tbody);
       } catch (e) {
-        alert("No se pudo agregar el alumno: " + e.message);
+        console.error("Fallo al cargar tabla:", e);
       }
     }
 
-    // FUNCIONA, PERO HAY QUE CAMBIAR NOMBRE DE LOS CAMPOS
-    // PARA ALINEARLO CON EL NUEVO ESQUEMA DE ALUMNO
-    function empezarEditar(lu) {
-      if (editandoLU) return; // ya hay una fila en edición
-      editandoLU = lu;
+    function agregarFilaAlta(tbody) {
+      const tr = document.createElement("tr");
 
-      const fila = document.querySelector(`tr[data-lu="${CSS.escape(lu)}"]`);
-      if (!fila) return;
-
-      const [cLU, cApe, cNom, cTit, cTram, cEgre, cAcc] = fila.querySelectorAll("td");
-      const val = {
-        lu: cLU.textContent.trim(),
-        apellido: cApe.textContent.trim(),
-        nombres: cNom.textContent.trim(),
-        titulo: cTit.textContent.trim(),
-        titulo_en_tramite: cTram.textContent.trim() === "-" ? "" : cTram.textContent.trim(),
-        egreso: cEgre.textContent.trim()
-      };
-
-      // Reemplazar por inputs (LU queda fijo)
-      cLU.innerHTML = `<input value="${escapeAttr(val.lu)}" disabled />`;
-      cApe.innerHTML = `<input id="edit-apellido" value="${escapeAttr(val.apellido)}" />`;
-      cNom.innerHTML = `<input id="edit-nombres" value="${escapeAttr(val.nombres)}" />`;
-      cTit.innerHTML = `<input id="edit-titulo" value="${escapeAttr(val.titulo)}" />`;
-      cTram.innerHTML = `<input id="edit-tramite" type="date" value="${toInputDate(val.titulo_en_tramite)}" />`;
-      cEgre.innerHTML = `<input id="edit-egreso" type="date" value="${toInputDate(val.egreso)}" />`;
-      cAcc.innerHTML = `
-        <button onclick="confirmarEditar('${val.lu}')">Confirmar</button>
-        <button onclick="cancelarEditar('${val.lu}', '${escapeAttr(val.apellido)}', '${escapeAttr(val.nombres)}', '${escapeAttr(val.titulo)}', '${escapeAttr(val.titulo_en_tramite)}', '${escapeAttr(val.egreso)}')">Cancelar</button>
-      `;
-
-      // Deshabilitar otros botones (opcional: ya controlamos con editandoLU en render)
-      document.querySelectorAll('#tabla-alumnos tbody tr button').forEach(b=>{
-        if (!cAcc.contains(b)) b.disabled = true;
+      tableDef.columns.forEach(function (col) {
+        const td = document.createElement("td");
+        const input = document.createElement("input");
+        input.id = "new-" + col.name;
+        input.placeholder = col.title || col.name;
+        td.appendChild(input);
+        tr.appendChild(td);
       });
+
+      const tdAcc = document.createElement("td");
+      const btn = document.createElement("button");
+      btn.textContent = "Agregar";
+      btn.onclick = crearRegistro;
+      tdAcc.appendChild(btn);
+      tr.appendChild(tdAcc);
+
+      tbody.appendChild(tr);
     }
 
-    async function confirmarEditar(lu) {
-      const fila = document.querySelector(`tr[data-lu="${CSS.escape(lu)}"]`);
-      if (!fila) return;
+    async function crearRegistro() {
+      const body = {};
+      tableDef.columns.forEach(function (col) {
+        const el = document.getElementById("new-" + col.name);
+        body[col.name] = el.value || null;
+      });
+      const res = await fetch(API_BASE, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+      if (!res.ok) { alert("Error al crear: " + res.status); return; }
+      cargarTabla();
+    }
 
-      const apellido = document.getElementById("edit-apellido").value.trim();
-      const nombres = document.getElementById("edit-nombres").value.trim();
-      const id_carrera = document.getElementById("edit-titulo").value.trim();
-      const titulo_en_tramite = document.getElementById("edit-tramite").value || null;
-      const egreso = document.getElementById("edit-egreso").value || null;
+    async function eliminarRegistro(pkPath) {
+      if (!confirm("¿Eliminar registro?")) return;
+      const res = await fetch(API_BASE + "/" + pkPath, { method: "DELETE" });
+      if (!res.ok) { alert("Error al eliminar: " + res.status); return; }
+      cargarTabla();
+    }
 
-      const alumno = { lu, apellido, nombres, id_carrera, titulo_en_tramite, egreso };
+    function editar(pkPath) {
+        if (editandoPk) return; // ya hay una fila en edición
+        editandoPk = pkPath;
 
+        const fila = document.querySelector('tr[data-pk="' + pkPath + '"]');
+        if (!fila) return;
+
+        // Recuperamos la fila original para obtener los valores reales (id_carrera, etc.)
+        let rowData = {};
+        if (fila.dataset.row) {
+            try {
+            rowData = JSON.parse(fila.dataset.row);
+            } catch (e) {
+            rowData = {};
+            }
+        }
+
+        const tds = fila.querySelectorAll("td");
+        const editableFields = tableDef.columns.map(function (c) { return c.name; });
+        const pkFieldSet = new Set(tableDef.pk);
+
+        // Todas las celdas menos la última (Acción)
+        for (let i = 0; i < tds.length - 1; i++) {
+            const td = tds[i];
+            const colInfo = displayColumns[i];
+            const editField = colInfo.editField; // 👈 columna REAL que se edita (ej: "id_carrera")
+
+            // Si esta columna no es editable (editField null), la dejamos como está
+            if (!editField) continue;
+
+            // Solo editamos columnas reales de la tabla
+            if (!editableFields.includes(editField)) continue;
+
+            // Valor actual: preferimos el dato real de la fila (rowData),
+            // si no está usamos el texto de la celda
+            const valorActual =
+            (rowData && Object.prototype.hasOwnProperty.call(rowData, editField))
+                ? (rowData[editField] ?? "")
+                : td.textContent.trim();
+
+            td.innerHTML = "";
+
+            const input = document.createElement("input");
+            input.id = "edit-" + editField;
+            input.value = valorActual ?? "";
+
+            // Si es parte de la PK, no editable
+            if (pkFieldSet.has(editField)) input.disabled = true;
+
+            td.appendChild(input);
+        }
+
+        // Reemplazamos la celda de acción por Confirmar / Cancelar
+        const tdAcc = tds[tds.length - 1];
+        tdAcc.innerHTML = "";
+        const bConfirm = document.createElement("button");
+        bConfirm.textContent = "Confirmar";
+        bConfirm.onclick = function () { confirmarEditar(pkPath); };
+        tdAcc.appendChild(bConfirm);
+
+        const bCancel = document.createElement("button");
+        bCancel.textContent = "Cancelar";
+        bCancel.onclick = cancelarEditar;
+        tdAcc.appendChild(bCancel);
+    }
+
+
+    async function confirmarEditar(pkPath) {
+      const fila = document.querySelector('tr[data-pk="' + pkPath + '"]');
+
+      // leer PK desde la URL
+      const pkParts = pkPath.split("/").map(decodeURIComponent);
+
+      // armamos body SOLO con las columnas reales del tableDef
+      const body = {};
+
+      // 1) Las PK siempre se preservan
+      tableDef.pk.forEach(function (pkCol, idx) {
+        body[pkCol] = pkParts[idx];
+      });
+
+      // 2) Para el resto de columnas reales, si tienen input usamos el valor, sino dejamos el original del rowData
+      let rowData = {};
+      if (fila && fila.dataset.row) {
+        try { rowData = JSON.parse(fila.dataset.row); } catch {}
+      }
+
+      tableDef.columns.forEach(function (col) {
+        const input = document.getElementById("edit-" + col.name);
+
+        if (input) {
+          // EDITABLE
+          let val = input.value.trim();
+          if (val === "") val = null;
+          body[col.name] = val;
+        } else {
+          // NO EDITABLE → tomamos valor original REAL
+          body[col.name] = rowData[col.name];
+        }
+      });
+
+      // 3) Enviar PUT limpio
       try {
-        const res = await fetch(`/api/v0/alumnos/${encodeURIComponent(lu)}`, {
+        const res = await fetch(API_BASE + "/" + pkPath, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(alumno)
+          body: JSON.stringify(body)
         });
         if (!res.ok) throw new Error("Error al actualizar: " + res.status);
-        editandoLU = null;
-        await cargarAlumnos();
+
+        editandoPk = null;
+        cargarTabla();
       } catch (e) {
         alert("No se pudo actualizar: " + e.message);
       }
     }
 
-    function cancelarEditar(lu, apellido, nombres, titulo, tramite, egreso) {
-      const fila = document.querySelector(`tr[data-lu="${CSS.escape(lu)}"]`);
-      if (!fila) return;
 
-      const celdas = fila.querySelectorAll("td");
-      celdas[0].innerHTML = `${lu}`;
-      celdas[1].innerHTML = `${unescapeAttr(apellido)}`;
-      celdas[2].innerHTML = `${unescapeAttr(nombres)}`;
-      celdas[3].innerHTML = `${unescapeAttr(titulo)}`;
-      celdas[4].innerHTML = `${(unescapeAttr(tramite) || "-")}`;
-      celdas[5].innerHTML = `${unescapeAttr(egreso)}`;
-      celdas[6].innerHTML = `
-        <button onclick="empezarEditar('${lu}')">Editar</button>
-        <button onclick="borrarAlumno('${lu}')">Eliminar</button>
-      `;
-
-      // Rehabilitar botones globales
-      document.querySelectorAll('#tabla-alumnos tbody tr button').forEach(b=> b.disabled = false);
-      editandoLU = null;
+    function cancelarEditar() {
+      editandoPk = null;
+      cargarTabla();
     }
-
-    async function borrarAlumno(lu) {
-      if (!confirm("¿Eliminar alumno con LU " + lu + "?")) return;
-      try {
-        const res = await fetch(`/api/v0/alumnos/${encodeURIComponent(lu)}`, { method: "DELETE" });
-        if (!res.ok) throw new Error("Error al eliminar: " + res.status);
-        await cargarAlumnos();
-      } catch (e) {
-        alert("No se pudo eliminar: " + e.message);
-      }
-    }
-
-    // Helpers
-    function toInputDate(s) {
-      if (!s) return "";
-      const d = new Date(s);
-      if (isNaN(d.getTime())) return "";
-      const y = d.getFullYear();
-      const m = String(d.getMonth()+1).padStart(2, "0");
-      const dd = String(d.getDate()).padStart(2, "0");
-      return `${y}-${m}-${dd}`;
-    }
-    function escapeAttr(s){ return String(s).replace(/["'&<>]/g, m => ({'"':'&quot;',"'":"&#39;","&":"&amp;","<":"&lt;",">":"&gt;"}[m])); }
-    function unescapeAttr(s){ const p = {"&quot;":'"',"&#39;":"'", "&amp;":"&", "&lt;":"<", "&gt;":">"}; return String(s).replace(/(&quot;|&#39;|&amp;|&lt;|&gt;)/g, m=>p[m]); }
   </script>
+
 </body>
 </html>
