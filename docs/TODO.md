@@ -12,3 +12,9 @@
 - borrar codigo en aida
 - borrar codigo en controllers
 - borrar codigo en routers
+
+## Documentacion
+- README
+- borrar comentarios y comentar bien
+- borrar console logs
+-
