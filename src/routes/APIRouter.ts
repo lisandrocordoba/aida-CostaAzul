@@ -18,11 +18,11 @@ function requireAuthAPI(req: Request, res: Response, next: NextFunction) {
 }
 
 // Middleware de autenticación para el frontend
-function requireRolAPI(...rolesPermitidos: Rol[]) {
+function requireRolAPI(...rolesPermitidos: string[]) {
   return function (req: Request, res: Response, next: NextFunction) {
     const rol = req.session.rol as Rol | undefined;
 
-    if (rol && rolesPermitidos.includes(rol)) {
+    if (rol && rolesPermitidos.includes(rol.nombreRol)) {
       return next();
     }
 
@@ -41,12 +41,8 @@ APIRouter.post('/auth/logout', apiControllers.logoutAPIController);
 APIRouter.get('/roles/get', apiControllers.getRolAPIController);
 APIRouter.post('/roles/select', apiControllers.selectRolAPIController); //USAMOS EXPRESS.JSON() ACA?
 
-// --- RUTAS GENERICAS PARA CADA ENTIDAD ---
-for (const tableDef of tableDefs) {
-  APIRouter.use('/' + tableDef.name, createTableRouter(tableDef));
-}
-
 // --- RUTAS DE ALUMNOS NO GENERICAS ---
+APIRouter.get('/alumnos/me', apiControllers.getAlumnoActualController);
 APIRouter.patch('/alumnos', requireRolAPI("secretario"), apiControllers.patchAlumnosController);
 
 // --- RUTAS DE CURSADAS NO GENERICAS ---
@@ -57,6 +53,12 @@ APIRouter.patch('/plan_estudios', apiControllers.patchPlanEstudiosController);
 
 // --- RUTAS DE CERTIFICADOS ---
 APIRouter.get('/certificados', apiControllers.getCertificadosController);
+
+// --- RUTAS GENERICAS PARA CADA ENTIDAD ---
+for (const tableDef of tableDefs) {
+  APIRouter.use('/' + tableDef.name, createTableRouter(tableDef));
+}
+
 
 export default APIRouter;
 

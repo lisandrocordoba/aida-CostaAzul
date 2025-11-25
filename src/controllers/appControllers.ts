@@ -18,8 +18,12 @@ export function seleccionRolController(_: Request, res: Response) {
 }
 
 // --- MENU ---
-export async function menuController(_: Request, res: Response) {
-  const HTML_MENU = await readFile('views/menu.html', { encoding: 'utf8' });
+export async function menuController(req: Request, res: Response) {
+  const rol = req.session.rol;
+  if(!rol){
+    return res.redirect('/app/seleccion-rol');
+  }
+  const HTML_MENU = await readFile(`views/menu-${rol.nombreRol}.html`, { encoding: "utf8" });
   res.send(HTML_MENU);
 }
 

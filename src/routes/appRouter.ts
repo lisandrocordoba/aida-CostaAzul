@@ -8,7 +8,7 @@ import { Rol } from '../roles.js';
 declare module 'express-session' {
   interface SessionData {
       usuario?: Usuario;
-      rol?: string;
+      rol?: Rol | null;
   }
 }
 
@@ -24,11 +24,11 @@ function requireAuth(req: Request, res: Response, next: NextFunction) {
 }
 
 // Middleware de autenticación para el frontend
-function requireRol(...rolesPermitidos: Rol[]) {
+function requireRol(...rolesPermitidos: string[]) {
   return function (req: Request, res: Response, next: NextFunction) {
-    const rol = req.session.rol as Rol | undefined;
+    const rol = req.session.rol?.nombreRol as Rol | undefined;
 
-    if (rol && rolesPermitidos.includes(rol)) {
+    if (rol && rolesPermitidos.includes(rol.nombreRol)) {
       return next();
     }
 

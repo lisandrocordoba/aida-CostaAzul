@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>AIDA - Menú</title>
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&family=Merriweather:wght@700&display=swap');
+
+  body {
+    font-family: 'Roboto', sans-serif;
+    background-color: #f4f6f8;
+    margin: 0;
+    padding: 0;
+    color: #333;
+  }
+
+  header {
+    background-color: #2E7D32;
+    color: white;
+    padding: 30px 20px;
+    text-align: center;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+    position: relative;
+  }
+
+  header h1 {
+    font-family: 'Merriweather', serif;
+    font-size: 2.5em;
+    margin: 0;
+  }
+
+  /* NUEVO: datos del alumno arriba a la izquierda */
+  #datos-alumno {
+    position: absolute;
+    top: 8px;
+    left: 15px;
+    font-size: 0.9em;
+    opacity: 0.85;
+  }
+
+  main {
+    max-width: 800px;
+    margin: 50px auto;
+    padding: 0 20px;
+  }
+
+  .menu-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 25px;
+  }
+
+  .menu-card {
+    background-color: white;
+    border-radius: 12px;
+    padding: 30px 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    text-align: center;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .menu-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+  }
+
+  .menu-card a {
+    display: inline-block;
+    text-decoration: none;
+    color: #2E7D32;
+    font-weight: 600;
+    font-size: 1.1em;
+    padding: 15px 20px;
+    border: 2px solid #2E7D32;
+    border-radius: 8px;
+    transition: all 0.2s;
+  }
+
+  .menu-card a:hover {
+    background-color: #2E7D32;
+    color: white;
+    transform: translateY(-2px);
+  }
+
+  footer {
+    text-align: center;
+    margin: 80px 0 20px;
+    color: #777;
+    font-size: 0.9em;
+  }
+</style>
+
+<script>
+  async function buildMenu() {
+    try {
+      /* ===========================================================
+         1) Pedimos datos de sesión del alumno
+         =========================================================== */
+      const respAlumno = await fetch("/api/v0/alumnos/me", { credentials: "include" });
+      if (!respAlumno.ok) throw new Error("No se pudo cargar alumno");
+
+      const alumno = await respAlumno.json();
+      const { lu, nombre, apellido, carrera } = alumno;
+
+      document.getElementById("datos-alumno").innerText =
+        `LU: ${lu} — Alumno: ${apellido}, ${nombre} — Carrera: ${carrera}`;
+
+      /* ===========================================================
+         2) Construir botones del menú
+         =========================================================== */
+      const grid = document.querySelector(".menu-grid");
+      grid.innerHTML = "";
+
+      addCard(grid, "Materias Cursadas", `/app/cursadas?lu=${encodeURIComponent(lu)}`);
+      addCard(grid, "Certificado título en trámite",
+              `/app/certificados?lu=${encodeURIComponent(lu)}`);
+
+    } catch (err) {
+      console.error("Error al cargar menú:", err);
+    }
+  }
+
+  function addCard(grid, text, url) {
+    const div = document.createElement("div");
+    div.className = "menu-card";
+    div.innerHTML = `<a href="${url}">${text}</a>`;
+    grid.appendChild(div);
+  }
+
+  window.onload = buildMenu;
+</script>
+
+</head>
+<body>
+
+<header>
+  <div id="datos-alumno">Cargando...</div>
+  <h1>AIDA</h1>
+</header>
+
+<main>
+  <div class="menu-grid"></div>
+</main>
+
+<footer>
+  &copy; 2025 AIDA - Universidad
+</footer>
+
+</body>
+</html>

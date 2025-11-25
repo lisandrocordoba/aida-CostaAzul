@@ -1,23 +1,17 @@
+
 -- ============================
 -- 1. USUARIOS
 -- ============================
 
+-- La password para todos es 'estudiante'
+
 INSERT INTO aida.usuarios (username, password_hash, nombre, apellido, email)
 VALUES
-('ana123', 'hash1', 'Ana', 'Pérez', 'ana@example.com'),
-('juanito', 'hash2', 'Juan', 'Gómez', 'juan@example.com'),
-('maria88', 'hash3', 'María', 'López', 'maria@example.com'),
-('profe_luis', 'hash4', 'Luis', 'Martínez', 'luis@example.com'),
-('secre_rocio', 'hash5', 'Rocío', 'García', 'rocio@example.com');
-
--- IDs generados:
--- 1 Ana
--- 2 Juan
--- 3 María
--- 4 Luis (Profesor)
--- 5 Rocío (Secretaria)
-
-
+('alumno1', '$2b$10$Wo555zNlDRm0oLlqNddi5OkaY33I7S6h83MVtIn7TpgRetwZFamTa', 'Ana', 'Pérez', 'ana@example.com'),
+('alumno2', '$2b$10$Wo555zNlDRm0oLlqNddi5OkaY33I7S6h83MVtIn7TpgRetwZFamTa', 'Juan', 'Gómez', 'juan@example.com'),
+('alumno3', '$2b$10$Wo555zNlDRm0oLlqNddi5OkaY33I7S6h83MVtIn7TpgRetwZFamTa', 'María', 'López', 'maria@example.com'),
+('profesor1', '$2b$10$Wo555zNlDRm0oLlqNddi5OkaY33I7S6h83MVtIn7TpgRetwZFamTa', 'Luis', 'Martínez', 'luis@example.com'),
+('secretario1', '$2b$10$Wo555zNlDRm0oLlqNddi5OkaY33I7S6h83MVtIn7TpgRetwZFamTa', 'Rocío', 'García', 'rocio@example.com');
 
 -- ============================
 -- 2. CARRERAS
@@ -25,16 +19,9 @@ VALUES
 
 INSERT INTO aida.carreras (nombre_carrera)
 VALUES
-('Ingeniería en Sistemas'),
-('Ciencias de la Computación'),
-('Matemática');
-
--- IDs:
--- 1 Ingenieria
--- 2 Ciencias Compu
--- 3 Matemática
-
-
+('Ingeniería en Sistemas'),      -- id_carrera = 1
+('Ciencias de la Computación'),  -- id_carrera = 2
+('Matemática');                  -- id_carrera = 3
 
 -- ============================
 -- 3. ALUMNOS (usa id_usuario)
@@ -42,11 +29,9 @@ VALUES
 
 INSERT INTO aida.alumnos (lu, id_usuario, id_carrera, titulo_en_tramite, egreso)
 VALUES
-('1602/339', 1, 2, '2024-03-10', NULL),
-('182/23',   2, 1, NULL, NULL),
-('1600/17',  3, 3, NULL, NULL);
-
-
+('1602/339', 1, 2, '2024-03-10', NULL),  -- Ana Pérez
+('182/23',   2, 1, NULL, NULL),          -- Juan Gómez
+('1600/17',  3, 3, NULL, NULL);          -- María López
 
 -- ============================
 -- 4. MATERIAS
@@ -54,18 +39,10 @@ VALUES
 
 INSERT INTO aida.materias (nombre_materia)
 VALUES
-('Introducción a la Programación'),
-('Algoritmos y Estructuras de Datos'),
-('Análisis Matemático I'),
-('Lógica y Computabilidad');
-
--- IDs:
--- 1 Intro Prog
--- 2 Algoritmos
--- 3 AM I
--- 4 Lógica
-
-
+('Introducción a la Programación'),    -- id_materia = 1
+('Algoritmos y Estructuras de Datos'), -- id_materia = 2
+('Análisis Matemático I'),             -- id_materia = 3
+('Lógica y Computabilidad');           -- id_materia = 4
 
 -- ============================
 -- 5. materiasEnCarrera
@@ -73,56 +50,53 @@ VALUES
 
 INSERT INTO aida.materiasEnCarrera (id_carrera, id_materia)
 VALUES
+-- Ingeniería en Sistemas (1)
 (1, 1),
 (1, 2),
 (1, 3),
+-- Ciencias de la Computación (2)
 (2, 1),
+(2, 2),
 (2, 4),
-(3, 3);
-
-
+-- Matemática (3)
+(3, 3),
+(3, 4);
 
 -- ============================
 -- 6. PROFESORES
 -- ============================
 
 INSERT INTO aida.profesores (id_usuario)
-VALUES (4);  -- Usuario 4 = Luis Martínez
-
--- Genera legajo = 1
-
-
+VALUES (4);  -- Luis Martínez, usuario id 4
 
 -- ============================
 -- 7. SECRETARIO
 -- ============================
 
 INSERT INTO aida.secretario (id_usuario)
-VALUES (5); -- Rocío García
-
-
+VALUES (5);  -- Rocío García
 
 -- ============================
--- 8. DICTA (relación profe ↔ materia)
+-- 8. DICTA (relación profesor ↔ materia)
 -- ============================
 
+-- Suponiendo que legajo de Luis = 1 (autoincrement)
 INSERT INTO aida.dicta (legajo, id_materia)
 VALUES
-(1, 1),  -- Luis dicta Intro Prog
-(1, 2);  -- Luis dicta Algoritmos
-
-
+(1, 1),  -- Introducción a la Programación
+(1, 2);  -- Algoritmos y Estructuras de Datos
 
 -- ============================
 -- 9. CURSADAS
 -- ============================
 
+-- Solo materias que el alumno cursa en su carrera
 INSERT INTO aida.cursadas (alumno_lu, id_materia, anio, cuatrimestre, nota)
 VALUES
-('1602/339', 1, 2024, 1, 8),
-('1602/339', 4, 2024, 2, 9),
-('182/23',   1, 2024, 1, 7),
-('1600/17',  3, 2024, 1, 10);
+('1602/339', 1, 2024, 1, 8), -- Ana Pérez: Introducción a la Programación
+('1602/339', 4, 2024, 2, 9), -- Ana Pérez: Lógica y Computabilidad
+('182/23',   1, 2024, 1, 7), -- Juan Gómez: Introducción a la Programación
+('1600/17',  3, 2024, 1, 10); -- María López: Análisis Matemático I
 
 -- ============================
 -- FIN DEL SCRIPT

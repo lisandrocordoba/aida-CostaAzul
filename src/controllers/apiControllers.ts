@@ -3,7 +3,7 @@ import * as aida from '../aida.js';
 import * as csv from '../csv.js';
 import * as fechas from '../fechas.js';
 import { autenticarUsuario, crearUsuario } from '../auth.js';
-import { Rol, verificarRol } from '../roles.js';
+import { Rol, verificarRol, obtenerDatosRol } from '../roles.js';
 import { Client } from 'pg';
 import { generarPdfCertificado } from '../certificados.js';
 import { DatoAtomico } from '../tipos-atomicos.js';
@@ -57,9 +57,9 @@ export async function registerAPIController(req: Request, res: Response) {
 // Hay que agregar tipo ROL, por ahora solo es string
 export async function selectRolAPIController(req: Request, res: Response) {
   const usuario = req.session.usuario; //handlear null
-  const { rol } = req.body as { rol: Rol };
+  const { rol } = req.body;
   if (verificarRol(usuario!, rol)) {
-      req.session.rol = rol;
+      req.session.rol = await obtenerDatosRol(usuario!, rol, clientDb) as Rol | null;
       res.json({ message: 'Autenticación exitosa' });
   } else {
       res.status(401).json({ error: 'Credenciales inválidas' });
@@ -76,12 +76,16 @@ export async function getRolAPIController(req: Request, res: Response) {
 
 
 // --- ALUMNOS ---
-export async function getAlumnosController(_: Request, res: Response) {
-  const alumnos = await aida.obtenerTodosAlumnos(clientDb);
-  res.status(200).send(JSON.stringify(alumnos));
+export async function getAlumnoActualController(req: Request, res: Response) {
+  const alumno =  {   lu: req.session.rol?.lu,
+                      nombre: req.session.usuario?.nombre,
+                      apellido: req.session.usuario?.apellido,
+                      carrera: req.session.rol?.carrera
+                  }
+  res.status(200).send(JSON.stringify(alumno));
 }
 
-export async function addAlumnoController(req: Request, res: Response) {
+export async function addAlumnoActual(req: Request, res: Response) {
   const columnas = Object.keys(req.body);
   const valores = Object.values(req.body) as string[];
   await aida.agregarAlumno(columnas, valores, clientDb);

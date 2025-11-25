@@ -3,10 +3,12 @@ import { Client } from 'pg';
 
 const SALT_ROUNDS = 10;
 
+//UNIFICAR ESTA INTERFACE CON LA DE LA BASE DE DATOS
 export interface Usuario {
     id: number;
     username: string;
     nombre: string | null;
+    apellido: string | null;
     email: string | null;
     activo: boolean;
 }
@@ -36,7 +38,7 @@ export async function autenticarUsuario(
 ): Promise<Usuario | null> {
     try {
         const result = await client.query(
-            'SELECT id, username, password_hash, nombre, email, activo FROM aida.usuarios WHERE username = $1',
+            'SELECT id, username, password_hash, nombre, apellido, email, activo FROM aida.usuarios WHERE username = $1',
             [username]
         );
 
@@ -66,6 +68,7 @@ export async function autenticarUsuario(
             id: user.id,
             username: user.username,
             nombre: user.nombre,
+            apellido: user.apellido,
             email: user.email,
             activo: user.activo
         };
@@ -83,16 +86,18 @@ export async function crearUsuario(
     username: string,
     password: string,
     nombre?: string,
+    apellido?: string,
     email?: string
 ): Promise<Usuario | null> {
     try {
         const passwordHash = await hashPassword(password);
 
+        //Revisar si esto va con el esquema de nuestra base
         const result = await client.query(
-            `INSERT INTO aida.usuarios (username, password_hash, nombre, email)
-             VALUES ($1, $2, $3, $4)
+            `INSERT INTO aida.usuarios (username, password_hash, nombre, apellido, email)
+             VALUES ($1, $2, $3, $4, $5)
              RETURNING id, username, nombre, email, activo`,
-            [username, passwordHash, nombre || null, email || null]
+            [username, passwordHash, nombre || null, apellido || null, email || null]
         );
 
         return result.rows[0];

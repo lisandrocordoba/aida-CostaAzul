@@ -5,7 +5,6 @@ import appRouter from './routes/appRouter.js';
 import APIRouter from "./routes/APIRouter.js";
 import generarPlantillasHTML from "./generarPlantillas.js"
 
-
 const app = express()
 const port = 3000
 
