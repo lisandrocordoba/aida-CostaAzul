@@ -5,6 +5,9 @@ import * as fechas from '../fechas.js';
 import { autenticarUsuario, crearUsuario } from '../auth.js';
 import { Rol, verificarRol } from '../roles.js';
 import { Client } from 'pg';
+import { generarPdfCertificado } from '../certificados.js';
+import { DatoAtomico } from '../tipos-atomicos.js';
+
 
 // Cliente DB para el modulo
 // Pensar si conviene hacerlo en cada función
@@ -192,11 +195,11 @@ export async function patchPlanEstudiosController(req: Request, res: Response) {
   }
 }
 
-// --- CERTIFICADOS ---
+// --- CERTIFICADOS ---           VER: ESTAMOS DEVOLVIENDO UNICAMENTE EL CERTIFICADO DEL PRIMER ALUMNO QUE COINCIDE CON EL FILTRO
 export async function getCertificadosController(req: Request, res: Response) {
   const { lu, fecha } = req.query;
-  var alumnos;
-  try{
+  var alumnos: Record<string, DatoAtomico>[] = [];
+  try {
     if (lu) {
       alumnos = await aida.obtenerAlumnoQueNecesitaCertificado(clientDb, { lu: lu as string });
     } else if (fecha) {
@@ -209,14 +212,10 @@ export async function getCertificadosController(req: Request, res: Response) {
       console.log(`No hay alumnos que necesiten certificado para el parametro `, lu ?? fecha);
       res.status(404).send("El alumno no necesita certificado o no existe.");
     } else {
-      let certificadoHTML;
-      for (const alumno of alumnos) {
-        console.log('Generando certificado para alumno:', alumno);
-        certificadoHTML = await aida.generarHTMLcertificadoParaAlumno(`views/plantilla-certificado.html`, alumno);
-      }
-      res.status(200).send(certificadoHTML);
+      generarPdfCertificado(alumnos[0]!, res);
     }
   } catch (error){
     res.status(500).send("Error interno");
   }
-};
+}
+
