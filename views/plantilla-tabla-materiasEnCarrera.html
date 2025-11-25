@@ -25,9 +25,9 @@
   </table>
 
   <script>
-    const tableDef = {"name":"materiasEnCarrera","columns":[{"name":"carrera_id","type":"int","title":"Id. Carrera","description":""},{"name":"materia_id","type":"int","title":"Id. Materia","description":""}],"pk":["carrera_id","materia_id"],"fks":[],"elementName":"materiaEnCarrera","title":"materiasEnCarrera","orderBy":["carrera_id","materia_id"]};
-    const displayColumns = [{"field":"carrera_id","title":"Id. Carrera","editField":"carrera_id"},{"field":"materia_id","title":"Id. Materia","editField":"materia_id"}];
-    const pkValueFields = ["carrera_id","materia_id"];
+    const tableDef = {"name":"materiasEnCarrera","columns":[{"name":"id_carrera","type":"int","title":"Id. Carrera","description":""},{"name":"id_materia","type":"int","title":"Id. Materia","description":""}],"pk":["id_carrera","id_materia"],"fks":[],"elementName":"materiaEnCarrera","title":"materiasEnCarrera","orderBy":["id_carrera","id_materia"]};
+    const displayColumns = [{"field":"id_carrera","title":"Id. Carrera","editField":"id_carrera"},{"field":"id_materia","title":"Id. Materia","editField":"id_materia"}];
+    const pkValueFields = ["id_carrera","id_materia"];
     const API_BASE = "/api/v0/" + tableDef.name;
 
     // solo puede haber una fila en edición a la vez
@@ -143,71 +143,7 @@
       cargarTabla();
     }
 
-    function editar(pkPath) {
-        if (editandoPk) return; // ya hay una fila en edición
-        editandoPk = pkPath;
 
-        const fila = document.querySelector('tr[data-pk="' + pkPath + '"]');
-        if (!fila) return;
-
-        // Recuperamos la fila original para obtener los valores reales (id_carrera, etc.)
-        let rowData = {};
-        if (fila.dataset.row) {
-            try {
-            rowData = JSON.parse(fila.dataset.row);
-            } catch (e) {
-            rowData = {};
-            }
-        }
-
-        const tds = fila.querySelectorAll("td");
-        const editableFields = tableDef.columns.map(function (c) { return c.name; });
-        const pkFieldSet = new Set(tableDef.pk);
-
-        // Todas las celdas menos la última (Acción)
-        for (let i = 0; i < tds.length - 1; i++) {
-            const td = tds[i];
-            const colInfo = displayColumns[i];
-            const editField = colInfo.editField; // 👈 columna REAL que se edita (ej: "id_carrera")
-
-            // Si esta columna no es editable (editField null), la dejamos como está
-            if (!editField) continue;
-
-            // Solo editamos columnas reales de la tabla
-            if (!editableFields.includes(editField)) continue;
-
-            // Valor actual: preferimos el dato real de la fila (rowData),
-            // si no está usamos el texto de la celda
-            const valorActual =
-            (rowData && Object.prototype.hasOwnProperty.call(rowData, editField))
-                ? (rowData[editField] ?? "")
-                : td.textContent.trim();
-
-            td.innerHTML = "";
-
-            const input = document.createElement("input");
-            input.id = "edit-" + editField;
-            input.value = valorActual ?? "";
-
-            // Si es parte de la PK, no editable
-            if (pkFieldSet.has(editField)) input.disabled = true;
-
-            td.appendChild(input);
-        }
-
-        // Reemplazamos la celda de acción por Confirmar / Cancelar
-        const tdAcc = tds[tds.length - 1];
-        tdAcc.innerHTML = "";
-        const bConfirm = document.createElement("button");
-        bConfirm.textContent = "Confirmar";
-        bConfirm.onclick = function () { confirmarEditar(pkPath); };
-        tdAcc.appendChild(bConfirm);
-
-        const bCancel = document.createElement("button");
-        bCancel.textContent = "Cancelar";
-        bCancel.onclick = cancelarEditar;
-        tdAcc.appendChild(bCancel);
-    }
 
 
     async function confirmarEditar(pkPath) {
@@ -267,5 +203,5 @@
     }
   </script>
 
-</body>
-</html>
+  </body>
+  </html>

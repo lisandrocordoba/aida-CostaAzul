@@ -1,326 +1,277 @@
 import fs from "fs";
 import path from "path";
-import { tableDefs, TableDef, ForeignKeyDef } from "./applicationStructure.js";
+import { ColumnName, ColumnDef, TableDef, tableDefs } from "./applicationStructure.js";
 import { fileURLToPath } from "url";
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-/* ============================================================
-   TIPOS INTERNOS
-   ============================================================ */
 
-interface DisplayColumn {
-  field: string;       // nombre del campo que viene en el JSON
-  title: string;       // título a mostrar
-  editField: string | null; // nombre real de columna a editar (o null si no editable)
-}
+export function generarPlantillasHTML() {
+  const recursosDir = path.join(__dirname, "..", "views");
 
-interface ExpandedFk {
-  field: string;
-  sourceColumn: string;
-}
-
-/* ============================================================
-   RESOLVER FK RECURSIVO
-   ============================================================ */
-
-function expandFkRecursively(
-  fk: ForeignKeyDef,
-  allTables: TableDef[]
-): ExpandedFk[] {
-  const result: ExpandedFk[] = [];
-
-  for (const col of fk.referencesColumns) {
-    result.push({ field: col, sourceColumn: fk.column });
-
-    const refTable = allTables.find(t => t.name === fk.referencesTable);
-    if (!refTable) continue;
-
-    const innerFk = refTable.fks.find(f => f.column === col);
-    if (innerFk) {
-      result.push(...expandFkRecursively(innerFk, allTables));
-    }
-  }
-
-  return result;
-}
-
-/* ============================================================
-   GENERAR TODAS LAS PLANTILLAS
-   ============================================================ */
-
-export function generarPlantillasHTML(): void {
-  const viewsDir = path.join(__dirname, "..", "views");
-
-  if (!fs.existsSync(viewsDir)) {
-    fs.mkdirSync(viewsDir, { recursive: true });
+  if (!fs.existsSync(recursosDir)) {
+    fs.mkdirSync(recursosDir, { recursive: true });
   }
 
   for (const table of tableDefs) {
-    const filePath = path.join(
-      viewsDir,
-      `plantilla-tabla-${table.name}.html`
-    );
-
+    const filePath = path.join(recursosDir, `plantilla-tabla-${table.name}.html`);
     const html = buildTableHtml(table);
-
     fs.writeFileSync(filePath, html, "utf8");
-    console.log("✔ Generada:", filePath);
+    console.log(`✔ Plantilla generada: plantilla-tabla-${table.name}.html`);
   }
 }
 
-/* ============================================================
-   GENERAR HTML SEGÚN TABLA
-   ============================================================ */
+interface displayColumn {
+    field: ColumnName;
+    title: string;
+    editField: string | null
+}
+
+//hacer un map de las columns
+function toDisplayColumns(column: ColumnDef, table: TableDef): displayColumn[] {
+    const fk = table.fks?.find(fk => fk.column === column.name);
+    if(fk){
+        return  [
+                ...fk.referencesColumns.map((refCol: ColumnName) => {
+                        const refTable = tableDefs.find(tableDef => tableDef.name === fk.referencesTable);
+                        const refColumnDef = refTable?.columns.find(colDef => colDef.name === refCol);
+                        return toDisplayColumns(refColumnDef!, refTable!);
+                    }).flat()
+                ];
+    } else {
+        return [{field: column.name, title: column.title!, editField: column.name}];
+    }
+}
 
 function buildTableHtml(tableDef: TableDef): string {
-  const allTables = tableDefs;
-  const displayColumns: DisplayColumn[] = [];
 
-  for (const col of tableDef.columns) {
-    const fk = tableDef.fks.find(f => f.column === col.name);
+  const displayColumns = tableDef.columns.map((c: any) => toDisplayColumns(c, tableDef)).flat();
 
-    if (!fk) {
-      displayColumns.push({
-        field: col.name,
-        title: col.title ?? col.name,
-        editField: col.name
-      });
-      continue;
-    }
-
-    const expanded = expandFkRecursively(fk, allTables);
-
-    expanded.forEach((exp, index) => {
-      displayColumns.push({
-        field: exp.field,
-        title: index === 0 ? col.title ?? col.name : exp.field,
-        editField: index === 0 ? col.name : null
-      });
-    });
-  }
-
-  // PK para armar la URL o buscar la fila correcta
-const pkValueFields: string[] = tableDef.pk.map(pk => {
-  const fk = tableDef.fks.find(f => f.column === pk);
-  const val = fk?.referencesColumns?.[0];
-  return val ?? pk;
-});
-
+  const pkValueFields: string[] = tableDef.pk.slice();
 
   const displayColumnsJson = JSON.stringify(displayColumns);
   const pkValueFieldsJson = JSON.stringify(pkValueFields);
   const tableJson = JSON.stringify(tableDef);
 
-  /* ============================================================
-     ATENCIÓN: para evitar error TS con ${pkPath} dentro del HTML,
-     usamos ${"\\${pkPath}"} → esto evita que TypeScript lo interprete.
-     ============================================================ */
-
-  const PK_VAR = "\\${pkPath}";
-  const PK_VAR2 = "\\${pkPath}";
-
-  return `
+  return /*html*/ `
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
   <title>${tableDef.title}</title>
-
   <style>
-    body { font-family: Arial; margin: 30px; background: #fafafa; }
-    table { border-collapse: collapse; width: 100%; background: white; }
-    th, td { border: 1px solid #ccc; padding: 8px; }
-    th { background: #4CAF50; color: white; }
-    input { width: 100%; }
-    button { padding: 5px 10px; }
+    body { font-family: Arial, sans-serif; margin: 30px; background-color: #f9f9f9; }
+    table { border-collapse: collapse; width: 100%; background: white; box-shadow: 0px 2px 6px rgba(0,0,0,0.1); }
+    th, td { border: 1px solid #ddd; padding: 10px 12px; text-align: left; }
+    th { background-color: #4CAF50; color: white; }
+    tr:nth-child(even) { background-color: #f2f2f2; }
+    tr:hover { background-color: #e1f5fe; }
+    input { width: 100%; box-sizing: border-box; padding: 6px; }
+    button { padding: 6px 10px; }
   </style>
 </head>
-
 <body onload="cargarTabla()">
   <h2>${tableDef.title}</h2>
-
   <table id="tabla-generica">
-    <thead><tr id="thead-row"></tr></thead>
+    <thead>
+      <tr id="thead-row"></tr>
+    </thead>
     <tbody></tbody>
   </table>
 
-<script>
+  <script>
+    const tableDef = ${tableJson};
+    const displayColumns = ${displayColumnsJson};
+    const pkValueFields = ${pkValueFieldsJson};
+    const API_BASE = "/api/v0/" + tableDef.name;
 
-const tableDef = ${tableJson};
-const displayColumns = ${displayColumnsJson};
-const pkValueFields = ${pkValueFieldsJson};
-const API_BASE = "/api/v0/" + tableDef.name;
+    // solo puede haber una fila en edición a la vez
+    let editandoPk = null;
 
-let editandoPk = null;
+    function buildPkPath(row) {
+      return pkValueFields
+        .map(function (f) { return encodeURIComponent(row[f]); })
+        .join("/");
+    }
 
-function buildPkPath(row){
-  return pkValueFields.map(f => encodeURIComponent(row[f])).join("/");
+    async function cargarTabla() {
+      try {
+        const res = await fetch(API_BASE, { headers: { "Content-Type": "application/json" }});
+        if (!res.ok) {
+          console.error("Error al cargar:", res.status);
+          return;
+        }
+
+        const data = await res.json();
+        const theadRow = document.getElementById("thead-row");
+        const tbody = document.querySelector("#tabla-generica tbody");
+
+        // Encabezados
+        theadRow.innerHTML = "";
+        displayColumns.forEach(function (col) {
+          const th = document.createElement("th");
+          th.textContent = col.title;
+          theadRow.appendChild(th);
+        });
+        const thAcc = document.createElement("th");
+        thAcc.textContent = "Acción";
+        theadRow.appendChild(thAcc);
+
+        // Filas
+        tbody.innerHTML = "";
+        data.forEach(function (row) {
+          const tr = document.createElement("tr");
+          const pkPath = buildPkPath(row);
+          tr.dataset.pk = pkPath;
+
+          // ⬅️ Guardamos la fila original completa
+          tr.dataset.row = JSON.stringify(row);
+
+          displayColumns.forEach(function (col) {
+            const td = document.createElement("td");
+            td.textContent = row[col.field] ?? "";
+            tr.appendChild(td);
+          });
+
+          const tdAcc = document.createElement("td");
+          const btnEdit = document.createElement("button");
+          btnEdit.textContent = "Editar";
+          btnEdit.onclick = function () { editar(pkPath); };
+          tdAcc.appendChild(btnEdit);
+
+          const btnDel = document.createElement("button");
+          btnDel.textContent = "Eliminar";
+          btnDel.onclick = function () { eliminarRegistro(pkPath); };
+          tdAcc.appendChild(btnDel);
+
+          tr.appendChild(tdAcc);
+          tbody.appendChild(tr);
+        });
+
+        agregarFilaAlta(tbody);
+      } catch (e) {
+        console.error("Fallo al cargar tabla:", e);
+      }
+    }
+
+    function agregarFilaAlta(tbody) {
+      const tr = document.createElement("tr");
+
+      tableDef.columns.forEach(function (col) {
+        const td = document.createElement("td");
+        const input = document.createElement("input");
+        input.id = "new-" + col.name;
+        input.placeholder = col.title || col.name;
+        td.appendChild(input);
+        tr.appendChild(td);
+      });
+
+      const tdAcc = document.createElement("td");
+      const btn = document.createElement("button");
+      btn.textContent = "Agregar";
+      btn.onclick = crearRegistro;
+      tdAcc.appendChild(btn);
+      tr.appendChild(tdAcc);
+
+      tbody.appendChild(tr);
+    }
+
+    async function crearRegistro() {
+      const body = {};
+      tableDef.columns.forEach(function (col) {
+        const el = document.getElementById("new-" + col.name);
+        body[col.name] = el.value || null;
+      });
+      const res = await fetch(API_BASE, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+      if (!res.ok) { alert("Error al crear: " + res.status); return; }
+      cargarTabla();
+    }
+
+    async function eliminarRegistro(pkPath) {
+      if (!confirm("¿Eliminar registro?")) return;
+      const res = await fetch(API_BASE + "/" + pkPath, { method: "DELETE" });
+      if (!res.ok) { alert("Error al eliminar: " + res.status); return; }
+      cargarTabla();
+    }
+
+
+
+
+    async function confirmarEditar(pkPath) {
+      const fila = document.querySelector('tr[data-pk="' + pkPath + '"]');
+
+      // leer PK desde la URL
+      const pkParts = pkPath.split("/").map(decodeURIComponent);
+
+      // armamos body SOLO con las columnas reales del tableDef
+      const body = {};
+
+      // 1) Las PK siempre se preservan
+      tableDef.pk.forEach(function (pkCol, idx) {
+        body[pkCol] = pkParts[idx];
+      });
+
+      // 2) Para el resto de columnas reales, si tienen input usamos el valor, sino dejamos el original del rowData
+      let rowData = {};
+      if (fila && fila.dataset.row) {
+        try { rowData = JSON.parse(fila.dataset.row); } catch {}
+      }
+
+      tableDef.columns.forEach(function (col) {
+        const input = document.getElementById("edit-" + col.name);
+
+        if (input) {
+          // EDITABLE
+          let val = input.value.trim();
+          if (val === "") val = null;
+          body[col.name] = val;
+        } else {
+          // NO EDITABLE → tomamos valor original REAL
+          body[col.name] = rowData[col.name];
+        }
+      });
+
+      // 3) Enviar PUT limpio
+      try {
+        const res = await fetch(API_BASE + "/" + pkPath, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body)
+        });
+        if (!res.ok) throw new Error("Error al actualizar: " + res.status);
+
+        editandoPk = null;
+        cargarTabla();
+      } catch (e) {
+        alert("No se pudo actualizar: " + e.message);
+      }
+    }
+
+
+    function cancelarEditar() {
+      editandoPk = null;
+      cargarTabla();
+    }
+  </script>
+
+  </body>
+  </html>`;
 }
 
-async function cargarTabla(){
-  const res = await fetch(API_BASE);
-  const data = await res.json();
 
-  const thead = document.getElementById("thead-row");
-  const tbody = document.querySelector("#tabla-generica tbody");
-
-  thead.innerHTML = "";
-  displayColumns.forEach(c => {
-    const th = document.createElement("th");
-    th.textContent = c.title;
-    thead.appendChild(th);
-  });
-
-  const thAcc = document.createElement("th");
-  thAcc.textContent = "Acción";
-  thead.appendChild(thAcc);
-
-  tbody.innerHTML = "";
-
-  data.forEach(row => {
-    const tr = document.createElement("tr");
-    const pkPath = buildPkPath(row);
-    tr.dataset.pk = pkPath;
-    tr.dataset.row = JSON.stringify(row);
-
-    displayColumns.forEach(c => {
-      const td = document.createElement("td");
-      td.textContent = row[c.field] ?? "";
-      tr.appendChild(td);
-    });
-
-    const tdAcc = document.createElement("td");
-    tdAcc.innerHTML =
-      "<button onclick=\\"editar('${PK_VAR}')\\">Editar</button>" +
-      "<button onclick=\\"eliminarRegistro('${PK_VAR2}')\\">Eliminar</button>";
-
-    tr.appendChild(tdAcc);
-    tbody.appendChild(tr);
-  });
-
-  agregarFilaAlta(tbody);
-}
-
-function agregarFilaAlta(tbody){
-  const tr = document.createElement("tr");
-
-  tableDef.columns.forEach(c => {
-    const td = document.createElement("td");
-    const i = document.createElement("input");
-    i.id = "new-" + c.name;
-    td.appendChild(i);
-    tr.appendChild(td);
-  });
-
-  const tdAcc = document.createElement("td");
-  const b = document.createElement("button");
-  b.textContent = "Agregar";
-  b.onclick = crearRegistro;
-  tdAcc.appendChild(b);
-
-  tr.appendChild(tdAcc);
-  tbody.appendChild(tr);
-}
-
-async function crearRegistro(){
-  const body = {};
-  tableDef.columns.forEach(c => {
-    const i = document.getElementById("new-" + c.name);
-    body[c.name] = i.value || null;
-  });
-
-  await fetch(API_BASE, {
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body: JSON.stringify(body)
-  });
-
-  cargarTabla();
-}
-
-async function eliminarRegistro(pkPath){
-  await fetch(API_BASE + "/" + pkPath, { method:"DELETE" });
-  cargarTabla();
-}
-
-function editar(pkPath){
-  if (editandoPk) return;
-  editandoPk = pkPath;
-
-  const fila = document.querySelector("tr[data-pk='" + pkPath + "']");
-  const rowData = JSON.parse(fila.dataset.row);
-  const tds = fila.querySelectorAll("td");
-
-  const editableSet = new Set(tableDef.columns.map(c => c.name));
-  const pkSet = new Set(tableDef.pk);
-
-  for (let i=0; i<tds.length-1; i++){
-    const col = displayColumns[i];
-    const real = col.editField;
-    if (!real) continue;
-    if (!editableSet.has(real)) continue;
-
-    const td = tds[i];
-    const val = rowData[real] ?? "";
-
-    td.innerHTML = "";
-    const input = document.createElement("input");
-    input.id = "edit-" + real;
-    input.value = val;
-
-    if (pkSet.has(real)) input.disabled = true;
-
-    td.appendChild(input);
-  }
-
-  const tdAcc = tds[tds.length-1];
-  tdAcc.innerHTML =
-    "<button onclick=\\"confirmarEditar('${PK_VAR}')\\">Confirmar</button>" +
-    "<button onclick=\\"cancelarEditar()\\">Cancelar</button>";
-}
-
-async function confirmarEditar(pkPath){
-  const fila = document.querySelector("tr[data-pk='" + pkPath + "']");
-  const rowData = JSON.parse(fila.dataset.row);
-
-  const body = { ...rowData };
-
-  const pkParts = pkPath.split("/").map(decodeURIComponent);
-  tableDef.pk.forEach((pk, i) => body[pk] = pkParts[i]);
-
-  tableDef.columns.forEach(c => {
-    const input = document.getElementById("edit-" + c.name);
-    if (!input) return;
-    body[c.name] = input.value || null;
-  });
-
-  await fetch(API_BASE + "/" + pkPath, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body)
-  });
-
-  editandoPk = null;
-  cargarTabla();
-}
-
-function cancelarEditar(){
-  editandoPk = null;
-  cargarTabla();
-}
-
-</script>
-</body>
-</html>
-`;
-}
+// helper para poner títulos más lindos
+/*function toTitle(name: string): string {
+  return name
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, c => c.toUpperCase());
+}*/
 
 
 
-//function toTitle(name) {
-//  return name.replace(/_/g," ").replace(/\b\w/g,c=>c.toUpperCase());
-//}
-
-export default generarPlantillasHTML;
+export default generarPlantillasHTML

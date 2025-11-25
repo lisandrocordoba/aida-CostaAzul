@@ -135,7 +135,7 @@ const tableDefinitions: TableDef[] = [
     name: 'materias',
     columns: [
       { name: 'id' as ColumnName, type: 'int' },
-      { name: 'nombre_materia' as ColumnName, type: 'text' },
+      { name: 'nombre_materia' as ColumnName, type: 'text', title: 'Materia' },
     ],
     pk: ['id' as ColumnName],
     fks: [],
@@ -148,8 +148,8 @@ const tableDefinitions: TableDef[] = [
       { name: 'id' as ColumnName, type: 'int' }, // 'serial' se maneja como 'int'
       { name: 'username' as ColumnName, type: 'text' },
       { name: 'password_hash' as ColumnName, type: 'text' },
-      { name: 'nombre' as ColumnName, type: 'text' },
-      { name: 'apellido' as ColumnName, type: 'text' },
+      { name: 'nombre' as ColumnName, type: 'text', title: 'Nombre' },
+      { name: 'apellido' as ColumnName, type: 'text', title: 'Apellido' },
       { name: 'email' as ColumnName, type: 'text' },
       { name: 'activo' as ColumnName, type: 'boolean' },
     ],
@@ -188,7 +188,7 @@ const tableDefinitions: TableDef[] = [
     ],
     pk: ['legajo' as ColumnName, 'id_materia' as ColumnName],
     fks: [
-      { column: 'legajo', referencedColumn: 'legajo', referencesTable: 'profesores', referencesColumns: ['legajo', 'nombre', 'apellido']},
+      { column: 'legajo', referencedColumn: 'legajo', referencesTable: 'profesores', referencesColumns: ['legajo', 'id_usuario']},
       { column: 'id_materia', referencedColumn: 'id', referencesTable: 'materias', referencesColumns: ['nombre_materia']}],
     orderBy: ['legajo' as ColumnName],
     elementName: 'dicta'
