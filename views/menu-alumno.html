@@ -30,13 +30,55 @@
     margin: 0;
   }
 
-  /* NUEVO: datos del alumno arriba a la izquierda */
+  /* datos alumno */
   #datos-alumno {
     position: absolute;
     top: 8px;
     left: 15px;
     font-size: 0.9em;
     opacity: 0.85;
+  }
+
+  /* contenedor a la derecha (selector + logout) */
+  #header-right {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  #role-selector {
+    background: white;
+    border: none;
+    padding: 8px 10px;
+    border-radius: 6px;
+    font-size: 0.95em;
+    font-weight: 500;
+    color: #2E7D32;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    opacity: 0;
+    transition: opacity .15s;
+  }
+
+  #logoutForm button {
+    background-color: #66BB6A;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 0.95em;
+    transition: background-color 0.2s, box-shadow 0.2s;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  }
+
+  #logoutForm button:hover {
+    background-color: #81C784;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
   }
 
   main {
@@ -89,14 +131,21 @@
     color: #777;
     font-size: 0.9em;
   }
+
+  @media (max-width: 520px) {
+    #header-right { right: 12px; gap: 8px; }
+    #role-selector { padding: 6px 8px; font-size: 0.9em; }
+    #logoutForm button { padding: 8px 12px; font-size: 0.9em; }
+    header h1 { font-size: 2em; }
+  }
 </style>
 
 <script>
   async function buildMenu() {
     try {
-      /* ===========================================================
-         1) Pedimos datos de sesión del alumno
-         =========================================================== */
+      /* ===============================
+         1. Datos del alumno
+         =============================== */
       const respAlumno = await fetch("/api/v0/alumnos/me", { credentials: "include" });
       if (!respAlumno.ok) throw new Error("No se pudo cargar alumno");
 
@@ -106,18 +155,48 @@
       document.getElementById("datos-alumno").innerText =
         `LU: ${lu} — Alumno: ${apellido}, ${nombre} — Carrera: ${carrera}`;
 
-      /* ===========================================================
-         2) Construir botones del menú
-         =========================================================== */
+      /* ===============================
+         2. Rol actual
+         =============================== */
+      const respRol = await fetch('/api/v0/roles/get', { credentials: "include" });
+      if (!respRol.ok) {
+        // si no hay rol, mostramos el menú igualmente (opcional)
+        document.getElementById("menu-container").style.opacity = "1";
+        return;
+      }
+      const dataRol = await respRol.json();
+      const rol = dataRol.rol.nombreRol;
+
+      const selector = document.getElementById("role-selector");
+      if (selector) {
+        selector.value = rol;
+        selector.style.opacity = "1";
+      }
+
+      /* ===============================
+         3. Botones según rol
+         =============================== */
       const grid = document.querySelector(".menu-grid");
       grid.innerHTML = "";
 
+      // Botones comunes
       addCard(grid, "Materias Cursadas", `/app/cursadas?lu=${encodeURIComponent(lu)}`);
       addCard(grid, "Descargar certificado título en trámite",
               `/api/v0/certificados?lu=${encodeURIComponent(lu)}`);
 
+      // Botones adicionales según rol
+      if (rol === "secretario") {
+        addCard(grid, "Imprimir certificado por LU", "/app/certificados/lu");
+        addCard(grid, "Imprimir certificado por fecha", "/app/certificados/fecha");
+      }
+
+      // finalmente mostramos el container del menú (evita parpadeo)
+      document.getElementById("menu-container").style.opacity = "1";
+
     } catch (err) {
       console.error("Error al cargar menú:", err);
+      // en caso de error mostramos igualmente la UI mínima
+      document.getElementById("menu-container").style.opacity = "1";
     }
   }
 
@@ -126,6 +205,20 @@
     div.className = "menu-card";
     div.innerHTML = `<a href="${url}">${text}</a>`;
     grid.appendChild(div);
+  }
+
+  async function cambiarRol(rol) {
+    try {
+      await fetch('/api/v0/roles/select', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rol }),
+        credentials: "include"
+      });
+    } catch (e) {
+      console.error("Error al cambiar rol:", e);
+    }
+    window.location.reload();
   }
 
   window.onload = buildMenu;
@@ -138,37 +231,27 @@
     <div id="datos-alumno">Cargando...</div>
     <h1>AIDA</h1>
 
-    <!-- === BOTÓN DE LOGOUT (AGREGADO) === -->
-    <form id="logoutForm" action="/api/v0/auth/logout" method="POST"
-          style="position: absolute; top: 25px; right: 25px;">
-      <button type="submit" style="
-        background-color: #66BB6A;
-        color: white;
-        border: none;
-        padding: 10px 16px;
-        border-radius: 8px;
-        cursor: pointer;
-        font-weight: 500;
-        font-size: 0.95em;
-        transition: background-color 0.2s, box-shadow 0.2s;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      "
-      onmouseover="this.style.backgroundColor='#81C784'; this.style.boxShadow='0 4px 10px rgba(0,0,0,0.15)';"
-      onmouseout="this.style.backgroundColor='#66BB6A'; this.style.boxShadow='0 2px 6px rgba(0,0,0,0.1)';">
-        Cerrar sesión
-      </button>
-    </form>
-    <!-- === FIN DEL BOTÓN DE LOGOUT === -->
+    <!-- CONTENEDOR A LA DERECHA: SELECTOR + LOGOUT -->
+    <div id="header-right">
+      <select id="role-selector" onchange="cambiarRol(this.value)">
+        <option value="alumno">Alumno</option>
+        <option value="profesor">Profesor</option>
+        <option value="secretario">Secretario</option>
+      </select>
 
+      <form id="logoutForm" action="/api/v0/auth/logout" method="POST">
+        <button type="submit">Cerrar sesión</button>
+      </form>
+    </div>
   </header>
 
-<main>
-  <div class="menu-grid"></div>
-</main>
+  <main id="menu-container" style="opacity:0; transition: opacity .15s;">
+    <div class="menu-grid"></div>
+  </main>
 
-<footer>
-  &copy; 2025 AIDA - Universidad
-</footer>
+  <footer>
+    &copy; 2025 AIDA - Universidad
+  </footer>
 
 </body>
 </html>
