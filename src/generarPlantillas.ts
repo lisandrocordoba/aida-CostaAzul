@@ -98,7 +98,37 @@ function buildTableHtml(tableDef: TableDef): string {
 
     async function cargarTabla() {
       try {
-        const res = await fetch(API_BASE, { headers: { "Content-Type": "application/json" }});
+        const resp_rol = await fetch('/api/v0/roles/get');
+        if (!resp_rol.ok) return;
+
+        const data_rol = await resp_rol.json();
+        const rol = data_rol.rol;
+        let urlApi = API_BASE;
+
+        // Si es alumno, filtrar por su LU
+        if(rol.nombreRol === "alumno"){
+
+          const paramsURL = new URLSearchParams(window.location.search);
+          const luAlumno = paramsURL.get('lu');
+
+          if (luAlumno) {
+              urlApi += "?lu=" + encodeURIComponent(luAlumno);
+          }
+        }
+
+        // Si es profesor, filtrar por su legajo
+        if(rol.nombreRol === "profesor"){
+
+          const paramsURL = new URLSearchParams(window.location.search);
+          const legajo = paramsURL.get('legajo');
+
+          if (legajo) {
+              urlApi += "?legajo=" + encodeURIComponent(legajo);
+          }
+        }
+
+        const res = await fetch(urlApi, { headers: { "Content-Type": "application/json" }});
+
         if (!res.ok) {
           console.error("Error al cargar:", res.status);
           return;

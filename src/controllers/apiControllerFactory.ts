@@ -62,17 +62,63 @@ export function controllers(tableDef: TableDef){
     }
 
 
-    const getAllRecords = async (_req: Request, res: Response): Promise<void> => {
+    const getAllRecords = async (req: Request, res: Response): Promise<void> => {
         try {
             const select = allColnames.map(colname => mapColumnGenerico(colname,tableDef.name)).flat();
+
             let from = tablename;
             if(fks.length > 0){
-                // Caso JOIN
                 from = `${from} ` + fks.map(fk => recursiveJoin(fk, tableDef.name)).join(' ');
             }
-            console.log(`SELECT ${select} FROM ${from} ORDER BY aida.${orderBy ?? pk}`);
-            const result = await pool.query(`SELECT ${select} FROM ${from} ORDER BY ${orderBy ?? pk}`);
+
+            let where = '';
+            const queryParams = req.query;
+            if (Object.keys(queryParams).length > 0) {
+                where = 'WHERE ';
+                let tableWhere: TableDef | undefined;
+                for(const [key, value] of Object.entries(queryParams)) {
+                    // Para cada query param que nos pasen, vamos a buscar en que tabla está esa columna
+                    // Ejemplo: si nos pasan ?lu=1234, vamos a tener tableWhere = alumnos y x lo tanto
+                    // WHERE aida.alumnos.lu = '1234'
+                    // Notar que si nos hubieran pasado ?alumno_lu=1234, la tabla seria cursadas
+                    // Notar que esto funciona ya que asumimos NO hay columnas de igual nombre en distintas tablas
+                    tableWhere = allTableDefs.find(tabla => tabla.columns.some(colDef => colDef.name === key));
+                    if(!tableWhere || !from.includes(`aida.${tableWhere.name}`)){   // Si no encontramos la tabla o la tabla no está en el from crasheamos
+                        res.status(400).json({ error: `Columna ${key} no es filtro valido` });
+                        return;
+                    }
+                    where += `aida.${tableWhere.name}.${key} = '${value}' AND `;
+                };
+                where = where.slice(0, -5); // sacar el ultimo AND, podriamos repensar la logica para evitar esto
+            }
+
+            /*
+            YA no va, lo dejo para que vean como era el caso NO generico
+
+            const lu = queryParams.lu as string | undefined;
+            if (lu) {
+                where = `WHERE aida.alumnos.lu = '${lu}'`;
+            }
+
+            if(legajo) {
+                where = `WHERE aida.profesores.legajo = '${legajo}'`;
+            }
+            */
+            console.log(`
+                SELECT ${select}
+                FROM ${from}
+                ${where}
+                ORDER BY ${orderBy ?? pk}
+            `);
+
+            const result = await pool.query(`
+                SELECT ${select}
+                FROM ${from}
+                ${where}
+                ORDER BY ${orderBy ?? pk}
+            `);
             res.json(result.rows);
+
         } catch (error) {
             console.error(`Error al obtener ${tablename}:`, error);
             res.status(500).json({ error: 'Error interno del servidor' });
