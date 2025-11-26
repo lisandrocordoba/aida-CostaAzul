@@ -8,7 +8,6 @@ import { Rol } from '../roles.js';
 const APIRouter = express.Router();
 
 // Middleware de autenticación para el backend
-
 function requireAuthAPI(req: Request, res: Response, next: NextFunction) {
   if (req.session.usuario) {
       next();
@@ -17,7 +16,7 @@ function requireAuthAPI(req: Request, res: Response, next: NextFunction) {
   }
 }
 
-// Middleware de autenticación para el frontend
+// Middleware de rol para el backend
 function requireRolAPI(...rolesPermitidos: string[]) {
   return function (req: Request, res: Response, next: NextFunction) {
     const rol = req.session.rol as Rol | undefined;
@@ -29,7 +28,6 @@ function requireRolAPI(...rolesPermitidos: string[]) {
     return res.status(401).json({ error: 'No autorizado' });
   };
 }
-
 
 // --- RUTAS DE AUTENTICACIÓN ---
 APIRouter.post('/auth/login', express.json(), apiControllers.loginAPIController);
@@ -58,7 +56,6 @@ APIRouter.get('/certificados', apiControllers.getCertificadosController);
 for (const tableDef of tableDefs) {
   APIRouter.use('/' + tableDef.name, createTableRouter(tableDef));
 }
-
 
 export default APIRouter;
 

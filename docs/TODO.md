@@ -9,8 +9,7 @@
 - hacer app route factory generico (no vamos a llegar)
 - implementar funcionalidad agregar generica con autocomplete (por ahora es con FK)
 - certificados por fecha devuelve el primer alumno que encuentra de dicha fecha
-
-
+- pensar si el trigger se mantiene funcionando con los cambios
 
 ## Deuda tecnica
 - SQL INJECTIONS!!!!!!!!!!!

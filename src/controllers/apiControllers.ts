@@ -53,7 +53,6 @@ export async function registerAPIController(req: Request, res: Response) {
 }
 
 // --- ROLES ---
-
 // Hay que agregar tipo ROL, por ahora solo es string
 export async function selectRolAPIController(req: Request, res: Response) {
   const usuario = req.session.usuario; //handlear null
@@ -74,7 +73,6 @@ export async function getRolAPIController(req: Request, res: Response) {
   return res.json({ rol });
 }
 
-
 // --- ALUMNOS ---
 export async function getAlumnoActualController(req: Request, res: Response) {
   const alumno =  {   lu: req.session.rol?.lu,
@@ -85,75 +83,11 @@ export async function getAlumnoActualController(req: Request, res: Response) {
   res.status(200).send(JSON.stringify(alumno));
 }
 
-export async function addAlumnoActual(req: Request, res: Response) {
-  const columnas = Object.keys(req.body);
-  const valores = Object.values(req.body) as string[];
-  await aida.agregarAlumno(columnas, valores, clientDb);
-  res.status(200).send('Alumno agregado');
-  console.log(req.body);
-}
-
-// PENSAR COMO QUEREMOS LIMITAR CAMBIOS
-// EJEMPLO: ES POSIBLE QUE UN ALUMNO TENGA TITULO EN TRAMITE Y SE LE CAMBIE LA CARRERA
-export async function updateAlumnoController(req: Request, res: Response) {
-  const lu = req.params.lu;
-  const columnas = Object.keys(req.body);
-  const valores = Object.values(req.body) as string[];
-  await aida.actualizarAlumno(lu!, columnas, valores, clientDb);
-  console.log(valores);
-  res.status(200).send('Alumno actualizado');
-}
-
-export async function deleteAlumnoController(req: Request, res: Response) {
-  const lu = req.params.lu;
-  await clientDb.query(`DELETE FROM aida.alumnos WHERE lu = $1`, [lu]);
-  res.status(200).send('Alumno eliminado');
-}
-
 export async function patchAlumnosController(req: Request, res: Response) {
   console.log(req.params, req.query, req.body);
   const { dataLines: listaDeAlumnosCompleta, columns: columnas } = await csv.parsearCSV(req.body.csvText);
   await aida.refrescarTablaAlumnos(clientDb, listaDeAlumnosCompleta, columnas);
   res.status(200).send('Tabla de alumnos actualizada');
-}
-
-// --- CURSADAS ---
-export async function getCursadasController(_: Request, res: Response) {
-  const cursadas = await aida.obtenerTodasLasCursadas(clientDb);
-  res.status(200).send(JSON.stringify(cursadas));
-}
-
-// IMPORTANTE: si es la última materia, un trigger en la db ingresa la fecha de título en trámite.
-// Deberia devolver JSON
-export async function addCursadaController(req: Request, res: Response) {
-  try {
-    const columnas = Object.keys(req.body);
-    const valores = Object.values(req.body);
-    await aida.agregarCursada(columnas, valores as string[], clientDb);
-    res.status(200).send('Cursada agregada');
-    console.log('Cursada agregada:', req.body);
-  } catch (err) {
-    console.error('Error al agregar cursada:', err);
-    res.status(500).send('Error al agregar la cursada');
-  }
-}
-
-export async function updateCursadaController(req: Request, res: Response) {
-  const lu = req.params.lu;
-  const columnas = Object.keys(req.body);
-  const valores = Object.values(req.body) as string[];
-  await aida.actualizarCursada(lu!, columnas, valores, clientDb);
-  console.log(valores);
-  res.status(200).send('Cursada actualizada');
-}
-
-export async function deleteCursadaController(req: Request, res: Response) {
-  const { lu, materia_id, anio, cuatrimestre } = req.params;
-  await clientDb.query(
-    `DELETE FROM aida.cursadas WHERE alumno_lu = $1 AND materia_id = $2 AND anio = $3 AND cuatrimestre = $4`,
-    [lu, materia_id, anio, cuatrimestre]
-  );
-  res.status(200).send('Cursada eliminado');
 }
 
 export async function patchCursadasController(req: Request, res: Response) {
