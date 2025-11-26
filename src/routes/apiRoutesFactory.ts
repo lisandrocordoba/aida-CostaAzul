@@ -13,6 +13,7 @@ export function requireOwnershipAPI(req: Request, res: Response, next: NextFunct
   }
 
   const queryParams = req.query;
+  console.log(queryParams)
   // Solo el secretario puede acceder sin filtros
   if(Object.keys(queryParams).length === 0) {
     if(rol?.nombreRol !== "secretario"){
@@ -21,9 +22,10 @@ export function requireOwnershipAPI(req: Request, res: Response, next: NextFunct
     return next();
 
   } else {
-        console.log('Accediendo a cursadas de: ', Object.values(queryParams), 'siendo:', rol?.lu);
+
         // Alumnos pueden ver solo sus datos
         if (rol?.nombreRol === "alumno") {
+            console.log('Accediendo a cursadas de Alumno: ', Object.values(queryParams), 'siendo:', rol?.lu);
             const lu = queryParams.lu as string | undefined;
             if (!lu || lu !== rol.lu) {
                 return res.status(401).json({ error: 'No autorizado a ver datos de lu:' + lu });
@@ -34,7 +36,7 @@ export function requireOwnershipAPI(req: Request, res: Response, next: NextFunct
         // Profesores pueden ver solo sus datos
         if (rol?.nombreRol === "profesor") {
             const legajo = queryParams.legajo as string | undefined;
-            if (!legajo || legajo !== rol.legajo) {
+            if (!legajo || Number(legajo) !== rol.legajo) {
                 return res.status(401).json({ error: 'No autorizado a ver datos de legajo:' + legajo });
             }
             return next();

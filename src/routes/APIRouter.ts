@@ -38,12 +38,12 @@ APIRouter.use((requireAuthAPI));
 APIRouter.post('/auth/logout', apiControllers.logoutAPIController);
 
 // --- RUTA DE SELECCIÓN DE ROL ---
-APIRouter.get('/roles/get', apiControllers.getRolAPIController);
 APIRouter.post('/roles/select', apiControllers.selectRolAPIController); //USAMOS EXPRESS.JSON() ACA?
+APIRouter.get('/roles/get', apiControllers.getRolAPIController);
 
 // --- RUTAS DE ALUMNOS NO GENERICAS ---
-APIRouter.get('/alumnos/me', apiControllers.getAlumnoActualController);
 APIRouter.patch('/alumnos', requireRolAPI("secretario"), apiControllers.patchAlumnosController);
+
 
 // --- RUTAS DE CURSADAS NO GENERICAS ---
 APIRouter.patch('/cursadas', apiControllers.patchCursadasController);

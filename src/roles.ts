@@ -3,7 +3,7 @@ import { Client } from 'pg';
 
 export type Rol = { nombreRol: string;
                     lu?: string;
-                    legajo?: string;
+                    legajo?: Number;
                     carrera?: string;
                   }
 

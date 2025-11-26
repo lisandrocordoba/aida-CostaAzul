@@ -102,11 +102,11 @@ function buildTableHtml(tableDef: TableDef): string {
         if (!resp_rol.ok) return;
 
         const data_rol = await resp_rol.json();
-        const rol = data_rol.rol;
+
         let urlApi = API_BASE;
 
         // Si es alumno, filtrar por su LU
-        if(rol.nombreRol === "alumno"){
+        if(data_rol.nombreRol === "alumno"){
 
           const paramsURL = new URLSearchParams(window.location.search);
           const luAlumno = paramsURL.get('lu');
@@ -117,7 +117,7 @@ function buildTableHtml(tableDef: TableDef): string {
         }
 
         // Si es profesor, filtrar por su legajo
-        if(rol.nombreRol === "profesor"){
+        if(data_rol.nombreRol === "profesor"){
 
           const paramsURL = new URLSearchParams(window.location.search);
           const legajo = paramsURL.get('legajo');

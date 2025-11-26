@@ -60,30 +60,48 @@ export async function selectRolAPIController(req: Request, res: Response) {
   const { rol } = req.body;
   if (verificarRol(usuario!, rol)) {
       req.session.rol = await obtenerDatosRol(usuario!, rol, clientDb) as Rol | null;
-      res.json({ message: 'Autenticación exitosa' });
+      return res.json({ message: 'Autenticación exitosa' });
   } else {
-      res.status(401).json({ error: 'Credenciales inválidas' });
+      return res.status(401).json({ error: 'Credenciales inválidas' });
   }
 }
 
 export async function getRolAPIController(req: Request, res: Response) {
   const rol = req.session?.rol;
+  console.log("Entra en controller getRolAPIController", rol);
   if (!rol) {
     return res.status(401).json({ error: 'No hay rol seleccionado' });
   }
-  return res.json({ rol });
+  if (rol.nombreRol === 'alumno') {
+    const alumno =  {   nombreRol: req.session.rol?.nombreRol,
+                        lu: req.session.rol?.lu,
+                        nombre: req.session.usuario?.nombre,
+                        apellido: req.session.usuario?.apellido,
+                        carrera: req.session.rol?.carrera
+                    }
+    return res.status(200).send(JSON.stringify(alumno));
+  }
+  if (rol.nombreRol === 'profesor') {
+    const profesor =  {
+                          nombreRol: req.session.rol?.nombreRol,
+                          legajo: req.session.rol?.legajo,
+                          nombre: req.session.usuario?.nombre,
+                          apellido: req.session.usuario?.apellido
+                      }
+    return res.status(200).send(JSON.stringify(profesor));
+  }
+  if (rol.nombreRol === 'secretario') {
+    const secretario =  {
+                          nombreRol: req.session.rol?.nombreRol,
+                          nombre: req.session.usuario?.nombre,
+                          apellido: req.session.usuario?.apellido
+                      }
+    return res.status(200).send(JSON.stringify(secretario));
+  }
+  return res.status(500).send('Error interno al obtener rol');
 }
-
 
 // --- ALUMNOS ---
-export async function getAlumnoActualController(req: Request, res: Response) {
-  const alumno =  {   lu: req.session.rol?.lu,
-                      nombre: req.session.usuario?.nombre,
-                      apellido: req.session.usuario?.apellido,
-                      carrera: req.session.rol?.carrera
-                  }
-  res.status(200).send(JSON.stringify(alumno));
-}
 
 export async function addAlumnoActual(req: Request, res: Response) {
   const columnas = Object.keys(req.body);
