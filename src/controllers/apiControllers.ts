@@ -3,7 +3,7 @@ import * as aida from '../aida.js';
 import * as csv from '../csv.js';
 import * as fechas from '../fechas.js';
 import { autenticarUsuario, crearUsuario } from '../auth.js';
-import { Rol, verificarRol, obtenerDatosRol } from '../roles.js';
+import { Rol, obtenerDatosRol } from '../roles.js';
 import { Client } from 'pg';
 import { generarPdfCertificado } from '../certificados.js';
 import { DatoAtomico } from '../tipos-atomicos.js';
@@ -57,11 +57,11 @@ export async function registerAPIController(req: Request, res: Response) {
 export async function selectRolAPIController(req: Request, res: Response) {
   const usuario = req.session.usuario; //handlear null
   const { rol } = req.body;
-  if (verificarRol(usuario!, rol)) {
-      req.session.rol = await obtenerDatosRol(usuario!, rol, clientDb) as Rol | null;
-      return res.json({ message: 'Autenticación exitosa' });
+  req.session.rol = await obtenerDatosRol(usuario!, rol, clientDb) as Rol | null;
+  if(!req.session.rol) {
+      return res.redirect('/app/seleccionar-rol');
   } else {
-      return res.status(401).json({ error: 'Credenciales inválidas' });
+      return res.json({ message: 'Autenticación exitosa' });
   }
 }
 

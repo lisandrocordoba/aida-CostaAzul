@@ -7,12 +7,6 @@ export type Rol = { nombreRol: string;
                     carrera?: string;
                   }
 
-export function verificarRol(usuario: Usuario, rol: Rol): boolean {
-    usuario = usuario as Usuario;
-    rol = rol as Rol;
-    return true
-  }
-
 export async function obtenerDatosRol(usuario: Usuario, nombreRol: string, clientDb: Client) {
     // Obtener info del profesor o alumno con el usuario id
     // Del alumno: lu, nombre, apellido, carrera
