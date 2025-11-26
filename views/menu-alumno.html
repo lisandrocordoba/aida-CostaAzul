@@ -113,8 +113,8 @@
       grid.innerHTML = "";
 
       addCard(grid, "Materias Cursadas", `/app/cursadas?lu=${encodeURIComponent(lu)}`);
-      addCard(grid, "Certificado título en trámite",
-              `/app/certificados?lu=${encodeURIComponent(lu)}`);
+      addCard(grid, "Descargar certificado título en trámite",
+              `/api/v0/certificados?lu=${encodeURIComponent(lu)}`);
 
     } catch (err) {
       console.error("Error al cargar menú:", err);

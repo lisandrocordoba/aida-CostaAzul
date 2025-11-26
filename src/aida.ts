@@ -66,8 +66,9 @@ export async function obtenerTodosAlumnos(clientDb: Client): Promise<Record<stri
 export type FiltroAlumnos = {fecha: Fecha} | {lu: string} | {uno: true} | {todos: true}
 
 export async function obtenerAlumnoQueNecesitaCertificado(clientDb: Client, filtro:FiltroAlumnos):Promise<Record<string, (DatoAtomico)>[]>{
-    const sql = `SELECT al.lu, al.apellido, al.nombres, ca.nombre AS titulo, al.titulo_en_tramite, al.egreso
+    const sql = `SELECT al.lu, u.apellido, u.nombre, ca.nombre_carrera AS titulo, al.titulo_en_tramite
     FROM aida.alumnos al
+    JOIN aida.usuarios u ON al.id_usuario = u.id
     JOIN aida.carreras ca ON al.id_carrera = ca.id
     WHERE titulo_en_tramite IS NOT NULL
         ${`lu` in filtro ? `AND lu = ${sqlLiteral(filtro.lu)}` : ``}

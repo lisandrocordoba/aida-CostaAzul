@@ -219,7 +219,7 @@ export async function getCertificadosController(req: Request, res: Response) {
       generarPdfCertificado(alumnos[0]!, res);
     }
   } catch (error){
-    res.status(500).send("Error interno");
+    res.status(500).send("Error interno" + error);
   }
 }
 

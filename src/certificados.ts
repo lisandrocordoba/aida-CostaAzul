@@ -59,10 +59,10 @@ export function generarPdfCertificado(alumno: Record<string, DatoAtomico>, res: 
           widths: [150, '*'],
           body: [
             [{ text: 'Número de Libreta:', bold: true }, tiposAtomicos.datoATexto(alumno.lu!)],
-            [{ text: 'Nombres:', bold: true }, tiposAtomicos.datoATexto(alumno.nombres!)],
+            [{ text: 'Nombres:', bold: true }, tiposAtomicos.datoATexto(alumno.nombre!)],
             [{ text: 'Apellidos:', bold: true }, tiposAtomicos.datoATexto(alumno.apellido!)],
             [{ text: 'Título Obtenido:', bold: true }, tiposAtomicos.datoATexto(alumno.titulo!)],
-            [{ text: 'Fecha:', bold: true }, tiposAtomicos.datoATexto(alumno.egreso!)]
+            [{ text: 'Fecha:', bold: true }, tiposAtomicos.datoATexto(alumno.titulo_en_tramite!)]
           ]
         },
         margin: [20, 10, 0, 20]
