@@ -1,72 +1,9 @@
-import fs from "fs";
-import path from "path";
-import { ColumnName, ColumnDef, TableDef, tableDefs } from "./applicationStructure.js";
-import { fileURLToPath } from "url";
 
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-
-export function generarPlantillasHTML() {
-  const recursosDir = path.join(__dirname, "..", "views");
-
-  if (!fs.existsSync(recursosDir)) {
-    fs.mkdirSync(recursosDir, { recursive: true });
-  }
-
-  for (const table of tableDefs) {
-    if (table.name === "usuarios") {
-      continue; // saltar tabla usuarios
-    }
-    if (table.name === "dicta") {
-      continue; // saltar tabla usuarios
-    }
-    const filePath = path.join(recursosDir, `plantilla-tabla-${table.name}.html`);
-    const html = buildTableHtml(table);
-    fs.writeFileSync(filePath, html, "utf8");
-    console.log(`✔ Plantilla generada: plantilla-tabla-${table.name}.html`);
-  }
-}
-
-interface displayColumn {
-    field: ColumnName;
-    title: string;
-    editField: string | null
-}
-
-//hacer un map de las columns
-function toDisplayColumns(column: ColumnDef, table: TableDef): displayColumn[] {
-    const fk = table.fks?.find(fk => fk.column === column.name);
-    if(fk){
-        return  [
-                ...fk.referencesColumns.map((refCol: ColumnName) => {
-                        const refTable = tableDefs.find(tableDef => tableDef.name === fk.referencesTable);
-                        const refColumnDef = refTable?.columns.find(colDef => colDef.name === refCol);
-                        return toDisplayColumns(refColumnDef!, refTable!);
-                    }).flat()
-                ];
-    } else {
-        return [{field: column.name, title: column.title!, editField: column.name}];
-    }
-}
-
-function buildTableHtml(tableDef: TableDef): string {
-
-  const displayColumns = tableDef.columns.map((c: any) => toDisplayColumns(c, tableDef)).flat();
-
-  const pkValueFields: string[] = tableDef.pk.slice();
-
-  const displayColumnsJson = JSON.stringify(displayColumns);
-  const pkValueFieldsJson = JSON.stringify(pkValueFields);
-  const tableJson = JSON.stringify(tableDef);
-
-  return /*html*/ `
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>${tableDef.title}</title>
+  <title>dicta</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&family=Merriweather:wght@700&display=swap');
 
@@ -143,7 +80,7 @@ function buildTableHtml(tableDef: TableDef): string {
   </style>
 </head>
 <body onload="cargarTabla()">
-  <h2>${tableDef.title}</h2>
+  <h2>dicta</h2>
 
   <div class="table-wrapper">
     <table id="tabla-generica">
@@ -155,18 +92,16 @@ function buildTableHtml(tableDef: TableDef): string {
   </div>
 
   <script>
-    const tableDef = ${tableJson};
-    const displayColumns = ${displayColumnsJson};
-    const pkValueFields = ${pkValueFieldsJson};
+    const tableDef = {"name":"dicta","columns":[{"name":"legajo_DICTA","type":"int","title":"legajo_DICTA","description":""},{"name":"id_materia_DICTA","type":"int","title":"id_materia_DICTA","description":""}],"pk":["legajo_DICTA","id_materia_DICTA"],"fks":[{"column":"legajo_DICTA","referencedColumn":"legajo","referencesTable":"profesores","referencesColumns":["legajo","id_usuario_PROF"]},{"column":"id_materia_DICTA","referencedColumn":"id_materia","referencesTable":"materias","referencesColumns":["nombre_materia"]}],"orderBy":["legajo_DICTA"],"elementName":"dicta","title":"dicta"};
+    const displayColumns = [{"field":"legajo","title":"legajo","editField":"legajo"},{"field":"nombre_usuario","title":"Nombre","editField":"nombre_usuario"},{"field":"apellido","title":"Apellido","editField":"apellido"},{"field":"nombre_materia","title":"Materia","editField":"nombre_materia"}];
+    const pkValueFields = ["legajo_DICTA","id_materia_DICTA"];
     const API_BASE = "/api/v0/" + tableDef.name;
 
     // solo puede haber una fila en edición a la vez
     let editandoPk = null;
 
     function buildPkPath(row) {
-      return pkValueFields
-        .map(function (f) { return encodeURIComponent(row[f]); })
-        .join("/");
+      return pkValueFields.map(f => encodeURIComponent(row[f])).join("/");
     }
 
     async function cargarTabla() {
@@ -239,15 +174,9 @@ function buildTableHtml(tableDef: TableDef): string {
           });
 
           const tdAcc = document.createElement("td");
-          const btnEdit = document.createElement("button");
-          btnEdit.textContent = "Editar";
-          btnEdit.className = "action-btn btn-edit";   // 🎨 solo estilo
-          btnEdit.onclick = function () { editar(pkPath); };
-          tdAcc.appendChild(btnEdit);
-
           const btnDel = document.createElement("button");
           btnDel.textContent = "Eliminar";
-          btnDel.className = "action-btn btn-del";     // 🎨 solo estilo
+          btnDel.className = "action-btn btn-del";
           btnDel.onclick = function () { eliminarRegistro(pkPath); };
           tdAcc.appendChild(btnDel);
 
@@ -300,11 +229,21 @@ function buildTableHtml(tableDef: TableDef): string {
     }
 
     async function eliminarRegistro(pkPath) {
-      if (!confirm("¿Eliminar registro?")) return;
-      const res = await fetch(API_BASE + "/" + pkPath, { method: "DELETE" });
-      if (!res.ok) { alert("Error al eliminar: " + res.status); return; }
-      cargarTabla();
+        if (!confirm("¿Eliminar registro de dicta?")) return;
+
+        const res = await fetch("/api/v0/dicta/" + pkPath, {
+            method: "DELETE"
+        });
+
+        if (!res.ok) {
+            const txt = await res.text();
+            alert("Error al eliminar: " + res.status + "\n" + txt);
+            return;
+        }
+
+        cargarTabla(); // recarga la tabla
     }
+
 
     async function confirmarEditar(pkPath) {
       const fila = document.querySelector('tr[data-pk="' + pkPath + '"]');
@@ -363,10 +302,4 @@ function buildTableHtml(tableDef: TableDef): string {
   </script>
 
 </body>
-</html>`;
-}
-
-
-
-
-export default generarPlantillasHTML
+</html>

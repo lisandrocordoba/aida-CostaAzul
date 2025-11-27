@@ -41,13 +41,18 @@ APIRouter.delete('/cursada-profesor/:lu/:id_materia/:anio/:cuatrimestre', apiCon
 APIRouter.post('/cursada-profesor', apiControllers.createCursadaProfesorController);
 APIRouter.put('/cursada-profesor/:lu/:id_materia/:anio/:cuatrimestre', apiControllers.updateCursadaProfesorController);
 
+// -- RUTAS DE DICTA (SECRETARIO) --
+APIRouter.get('/dicta', requireRolAPI("secretario"), apiControllers.getDictaController);
+APIRouter.post('/dicta', requireRolAPI("secretario"),apiControllers.createDictaController);
+APIRouter.delete('/dicta/:legajo_DICTA/:id_materia_DICTA', requireRolAPI("secretario"),apiControllers.deleteDictaController);
+
+
 
 // -- RUTAS DE USUARIOS NO GENERICAS ---
 APIRouter.get('/usuarios', requireRolAPI("secretario"), apiControllers.getUsuariosController);
 APIRouter.post('/usuarios', requireRolAPI("secretario"), express.json(), apiControllers.agregarUsuarioController);
 APIRouter.delete('/usuarios/:id_usuario', requireRolAPI("secretario"), apiControllers.eliminarUsuarioController);
 APIRouter.put('/usuarios/:id_usuario', requireRolAPI("secretario"), apiControllers.modificarUsuarioController);
-
 
 
 // --- PLAN DE ESTUDIOS ---
