@@ -303,6 +303,72 @@ function buildTableHtml(tableDef: TableDef): string {
       cargarTabla();
     }
 
+    function editar(pkPath) {
+        if (editandoPk) return; // ya hay una fila en edición
+        editandoPk = pkPath;
+
+        const fila = document.querySelector('tr[data-pk="' + pkPath + '"]');
+        if (!fila) return;
+
+        // Recuperamos la fila original para obtener los valores reales (id_carrera, etc.)
+        let rowData = {};
+        if (fila.dataset.row) {
+            try {
+            rowData = JSON.parse(fila.dataset.row);
+            } catch (e) {
+            rowData = {};
+            }
+        }
+
+        const tds = fila.querySelectorAll("td");
+        const editableFields = tableDef.columns.map(function (c) { return c.name; });
+        const pkFieldSet = new Set(tableDef.pk);
+
+        // Todas las celdas menos la última (Acción)
+        for (let i = 0; i < tds.length - 1; i++) {
+            const td = tds[i];
+            const colInfo = displayColumns[i];
+            const editField = colInfo.editField; // 👈 columna REAL que se edita (ej: "id_carrera")
+
+            // Si esta columna no es editable (editField null), la dejamos como está
+            if (!editField) continue;
+
+            // Solo editamos columnas reales de la tabla
+            if (!editableFields.includes(editField)) continue;
+
+            // Valor actual: preferimos el dato real de la fila (rowData),
+            // si no está usamos el texto de la celda
+            const valorActual =
+            (rowData && Object.prototype.hasOwnProperty.call(rowData, editField))
+                ? (rowData[editField] ?? "")
+                : td.textContent.trim();
+
+            td.innerHTML = "";
+
+            const input = document.createElement("input");
+            input.id = "edit-" + editField;
+            input.value = valorActual ?? "";
+
+            // Si es parte de la PK, no editable
+            if (pkFieldSet.has(editField)) input.disabled = true;
+
+            td.appendChild(input);
+        }
+
+        // Reemplazamos la celda de acción por Confirmar / Cancelar
+        const tdAcc = tds[tds.length - 1];
+        tdAcc.innerHTML = "";
+        const bConfirm = document.createElement("button");
+        bConfirm.textContent = "Confirmar";
+        bConfirm.onclick = function () { confirmarEditar(pkPath); };
+        tdAcc.appendChild(bConfirm);
+
+        const bCancel = document.createElement("button");
+        bCancel.textContent = "Cancelar";
+        bCancel.onclick = cancelarEditar;
+        tdAcc.appendChild(bCancel);
+    }
+
     async function confirmarEditar(pkPath) {
       const fila = document.querySelector('tr[data-pk="' + pkPath + '"]');
 
