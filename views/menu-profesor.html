@@ -31,10 +31,11 @@
 
     #datos-usuario {
         position: absolute;
-        top: 8px;
-        left: 15px;
+        top: 18px;
+        left: 48px;
         font-size: 0.9em;
         opacity: 0.9;
+        font-weight: 700;
     }
 
     #header-right {
@@ -188,11 +189,37 @@
         color: #777;
         font-size: 0.9em;
     }
+
+    #password-left {
+    position: absolute;
+    top: 8px;
+    left: 15px;
+    width: 34px;          /* tamaño real clickable */
+    height: 34px;
+    display: inline-flex; /* evita expandirse */
+    align-items: center;
+    justify-content: center;
+    z-index: 20;          /* por si algo lo tapa */
+    text-decoration: none;
+}
+
+#password-left .password-icon {
+    width: 26px;
+    height: 26px;
+    display: block;
+}
   </style>
 </head>
 <body>
 
 <header>
+    <a id="password-left" href="/app/cambiar-passwords" title="Cambiar contraseña">
+        <svg class="password-icon" viewBox="0 0 24 24" fill="#FFD54F">
+          <path d="M12 17a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm6-7h-1V7a5 5 0 0 0-10 0v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2ZM9 7a3 3 0 0 1 6 0v3H9V7Z"/>
+        </svg>
+      </a>
+
+
   <div id="datos-usuario">Cargando...</div>
   <h1>AIDA</h1>
 

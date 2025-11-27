@@ -33,6 +33,12 @@ export async function alumnosController(_: Request, res: Response) {
   res.status(200).send(plantillaTablaAlumnos);
 }
 
+// --- USUARIOS ---
+export async function usuariosController(_: Request, res: Response) {
+  const HTML = await readFile('views/plantilla-tabla-usuarios.html', { encoding: 'utf8' });
+  res.status(200).send(HTML);
+}
+
 // --- CURSADAS ---
 export async function cursadasController(_: Request, res: Response) {
   const plantillaTablaCursadas = await readFile('views/plantilla-tabla-cursadas.html', { encoding: 'utf8' });

@@ -119,7 +119,7 @@ export async function cambiarPassword(
         const passwordHash = await hashPassword(newPassword);
 
         await client.query(
-            'UPDATE aida.usuarios SET password_hash = $1 WHERE id = $2',
+            'UPDATE aida.usuarios SET password_hash = $1 WHERE id_usuario = $2',
             [passwordHash, userId]
         );
 

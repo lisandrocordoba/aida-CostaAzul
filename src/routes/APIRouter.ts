@@ -3,7 +3,7 @@ import * as apiControllers from '../controllers/apiControllers.js';
 import { Request, Response, NextFunction } from "express";
 import { tableDefs } from "../applicationStructure.js";
 import { createTableRouter as createTableRouter } from "./apiRoutesFactory.js";
-import { Rol } from '../roles.js';
+import { requireRolAPI } from '../roles.js';
 
 const APIRouter = express.Router();
 
@@ -16,18 +16,7 @@ function requireAuthAPI(req: Request, res: Response, next: NextFunction) {
   }
 }
 
-// Middleware de rol para el backend
-function requireRolAPI(...rolesPermitidos: string[]) {
-  return function (req: Request, res: Response, next: NextFunction) {
-    const rol = req.session.rol as Rol | undefined;
 
-    if (rol && rolesPermitidos.includes(rol.nombreRol)) {
-      return next();
-    }
-
-    return res.status(401).json({ error: 'No autorizado' });
-  };
-}
 
 // --- RUTAS DE AUTENTICACIÓN ---
 APIRouter.post('/auth/login', express.json(), apiControllers.loginAPIController);

@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import * as aida from '../aida.js';
 import * as csv from '../csv.js';
 import * as fechas from '../fechas.js';
-import { autenticarUsuario, hashPassword, crearUsuario } from '../auth.js';
+import { autenticarUsuario, crearUsuario, cambiarPassword } from '../auth.js';
 import { Rol, obtenerDatosRol } from '../roles.js';
 import { Client } from 'pg';
 import { generarPdfCertificado } from '../certificados.js';
@@ -213,19 +213,12 @@ export async function getCertificadosController(req: Request, res: Response) {
 // --- CAMBIO DE PASSWORD ---
 export async function cambioPasswordAPIController(req: Request, res: Response) {
 
-  const { username, password } = req.body;
-    const hash = await hashPassword(password);
-    console.log("Hash generado: ", hash);
+    const { password } = req.body;
 
-    try {
-          await clientDb.query('UPDATE aida.usuarios SET password_hash = $1 WHERE username = $2',[hash, username]);
+    if (await cambiarPassword(clientDb, req.session.usuario!.id, password)) {
+      return res.status(200).json({ ok: true, message: 'Contraseña actualizada' });
+    } else {
+      return res.status(500).json({ ok: false, error: 'Error al actualizar la contraseña' });
+    }
 
-        } catch (error) {
-
-          console.error('Error al cambiar la contraseña:', error);
-          return res.status(500).json({ error: 'Error al cambiar la contraseña' });
-
-        }
-
-    return res.status(200).json({ ok: true, message: 'Contraseña actualizada' });
-}
+  }
