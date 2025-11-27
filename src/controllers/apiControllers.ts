@@ -103,21 +103,37 @@ export async function getRolAPIController(req: Request, res: Response) {
 }
 
 // --- CURSADAS ---
-export async function getCursadasDeProfesorAPIController(req: Request, res: Response) {
+export async function getMateriasDeProfesorAPIController(req: Request, res: Response) {
   const rol = req.session.rol as Rol;
   const legajo = rol.legajo;
   const cursadas = await pool.query(
-    `SELECT lu_CURS,lu,id_usuario_ALU,nombre_usuario,apellido,id_materia_CURS,nombre_materia,anio,cuatrimestre,nota
-                FROM aida.cursadas
-                JOIN aida.alumnos ON aida.cursadas.lu_CURS = aida.alumnos.lu
-                JOIN aida.usuarios ON aida.alumnos.id_usuario_ALU = aida.usuarios.id_usuario
-                JOIN aida.materias ON aida.cursadas.id_materia_CURS = aida.materias.id_materia
-                JOIN aida.dicta ON aida.cursadas.id_materia_CURS = aida.dicta.id_materia_DICTA
+    `SELECT id_materia_DICTA, nombre_materia
+                FROM aida.dicta
+                JOIN aida.materias ON aida.dicta.id_materia_DICTA = aida.materias.id_materia
                 WHERE aida.dicta.legajo_DICTA = ${legajo}
-                ORDER BY anio,cuatrimestre`
+                `
    );
-   res.json(cursadas.rows);
+   return res.json(cursadas.rows);
 }
+
+
+export async function getCursadasDeProfesorAPIController(req: Request, res: Response) {
+  const queryParams = req.query;
+  const id_materia = queryParams.id_materia as string | undefined;
+  const sql =`
+    SELECT lu, apellido, nombre_usuario, anio, cuatrimestre, nota, nombre_materia
+    FROM aida.cursadas
+    JOIN aida.materias ON aida.cursadas.id_materia_CURS = aida.materias.id_materia
+    JOIN aida.alumnos ON aida.cursadas.lu_CURS = aida.alumnos.lu
+    JOIN aida.usuarios ON aida.alumnos.id_usuario_ALU = aida.usuarios.id_usuario
+    WHERE aida.cursadas.id_materia_CURS = ${id_materia}
+    ORDER BY anio, cuatrimestre
+  `;
+  console.log(sql);
+  const cursadas = await pool.query(sql);
+  return res.json(cursadas.rows);
+}
+
 
 // --- ALUMNOS ---
 export async function patchAlumnosController(req: Request, res: Response) {
