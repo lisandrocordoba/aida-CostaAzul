@@ -147,7 +147,7 @@ export async function deleteCursadaProfesorController(req: Request, res: Respons
   const checkSql = `
     SELECT 1
     FROM aida.dicta
-    WHERE legajo = $1 AND id_materia = $2
+    WHERE legajo_DICTA = $1 AND id_materia_DICTA = $2
   `;
 
   const check = await pool.query(checkSql, [legajo, id_materia]);
