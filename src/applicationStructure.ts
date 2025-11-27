@@ -124,7 +124,7 @@ const tableDefinitions: TableDef[] = [
     name: 'carreras',
     columns: [
       { name: 'id_carrera' as ColumnName, type: 'int' },
-      { name: 'nombre_carrera' as ColumnName, type: 'text' },
+      { name: 'nombre_carrera' as ColumnName, type: 'text' , title: 'Carrera' },
     ],
     pk: ['id_carrera' as ColumnName],
     fks: [],
