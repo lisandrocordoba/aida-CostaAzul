@@ -429,3 +429,123 @@ export async function cambioPasswordAPIController(req: Request, res: Response) {
       return res.status(500).json({ error: 'Error al modificar usuario' });
     }
   }
+
+
+// DICTA - SECRETARIOS
+
+
+export async function getDictaController(req: Request, res: Response) {
+  try {
+    const { legajo, lu } = req.query as { legajo?: string; lu?: string };
+
+    // Base query: todas las relaciones dicta con datos de profesor + materia
+    let sql = `
+      SELECT
+        d.legajo_dicta      AS "legajo_DICTA",
+        d.id_materia_dicta  AS "id_materia_DICTA",
+        p.legajo            AS "legajo",
+        u.nombre_usuario    AS "nombre_usuario",
+        u.apellido          AS "apellido",
+        m.nombre_materia    AS "nombre_materia"
+      FROM aida.dicta d
+      JOIN aida.profesores p
+        ON p.legajo = d.legajo_dicta
+      JOIN aida.usuarios u
+        ON u.id_usuario = p.id_usuario_PROF
+      JOIN aida.materias m
+        ON m.id_materia = d.id_materia_dicta
+    `;
+
+
+    const params: any[] = [];
+    const conditions: string[] = [];
+
+    // Si viene ?legajo=... → filtrar por ese profesor
+    if (legajo) {
+      params.push(legajo);
+      conditions.push(`d.legajo_DICTA = $${params.length}`);
+    }
+
+    // Si viene ?lu=... → filtrar solo materias donde ese alumno está cursando
+    if (lu) {
+      params.push(lu);
+      conditions.push(`
+        EXISTS (
+          SELECT 1
+          FROM aida.cursadas c
+          WHERE c.id_materia_CURS = d.id_materia_DICTA
+            AND c.lu_CURS = $${params.length}
+        )
+      `);
+    }
+
+    if (conditions.length > 0) {
+      sql += " WHERE " + conditions.join(" AND ");
+    }
+
+    sql += " ORDER BY d.legajo_DICTA, d.id_materia_DICTA;";
+
+    const result = await pool.query(sql, params);
+    return res.json(result.rows);
+
+  } catch (error) {
+    console.error("Error al obtener dicta:", error);
+    return res.status(500).json({ error: "Error interno del servidor." });
+  }
+}
+
+
+export async function createDictaController(req: Request, res: Response) {
+  try {
+    const { legajo_DICTA, id_materia_DICTA } = req.body;
+
+    if (!legajo_DICTA || !id_materia_DICTA) {
+      return res.status(400).json({ error: "Faltan datos obligatorios." });
+    }
+
+    const sql = `
+      INSERT INTO aida.dicta (legajo_DICTA, id_materia_DICTA)
+      VALUES ($1, $2)
+      RETURNING *;
+    `;
+
+    const result = await pool.query(sql, [
+      legajo_DICTA,
+      id_materia_DICTA
+    ]);
+
+    return res.json(result.rows[0]);
+
+  } catch (error) {
+    console.error("Error al crear dicta:", error);
+    return res.status(500).json({ error: "Error interno del servidor." });
+  }
+}
+
+export async function deleteDictaController(req: Request, res: Response) {
+  try {
+    const { legajo_DICTA, id_materia_DICTA } = req.params;
+
+    const sql = `
+      DELETE FROM aida.dicta
+      WHERE legajo_DICTA = $1
+      AND id_materia_DICTA = $2
+      RETURNING *;
+    `;
+
+    const result = await pool.query(sql, [
+      legajo_DICTA,
+      id_materia_DICTA
+    ]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Registro no encontrado." });
+    }
+
+    return res.json({ message: "Registro eliminado correctamente." });
+
+  } catch (error) {
+    console.error("Error al eliminar dicta:", error);
+    return res.status(500).json({ error: "Error interno del servidor." });
+  }
+}

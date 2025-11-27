@@ -52,7 +52,7 @@ export async function cursadasProfesorController(_: Request, res: Response) {
 
 // --- DICTA ---
 export async function dictaController(_: Request, res: Response) {
-  const plantillaTablaDicta = await readFile('views/plantilla-tabla-dicta.html', { encoding: 'utf8' });
+  const plantillaTablaDicta = await readFile('views/tabla-dicta.html', { encoding: 'utf8' });
   res.status(200).send(plantillaTablaDicta);
 }
 
