@@ -121,7 +121,7 @@ export async function getCursadasDeProfesorAPIController(req: Request, res: Resp
   const queryParams = req.query;
   const id_materia = queryParams.id_materia as string | undefined;
   const sql =`
-    SELECT lu, apellido, nombre_usuario, anio, cuatrimestre, nota, nombre_materia
+    SELECT lu, apellido, nombre_usuario, anio, cuatrimestre, nota, nombre_materia, id_materia
     FROM aida.cursadas
     JOIN aida.materias ON aida.cursadas.id_materia_CURS = aida.materias.id_materia
     JOIN aida.alumnos ON aida.cursadas.lu_CURS = aida.alumnos.lu
@@ -133,6 +133,52 @@ export async function getCursadasDeProfesorAPIController(req: Request, res: Resp
   const cursadas = await pool.query(sql);
   return res.json(cursadas.rows);
 }
+
+export async function deleteCursadaProfesorController(req: Request, res: Response) {
+  const { lu, id_materia, anio, cuatrimestre } = req.params;
+
+  console.log("BORRANDO CURSADA:", { lu, id_materia, anio, cuatrimestre });
+
+  const legajo = req.session.rol?.legajo;                                                       // USAR MISMA LOGICA PARA EL EDIT Y PARA EL AGREGAR! ! ! ! !! ! !  !!
+  if (!legajo) {
+    return res.status(403).json({ error: "Acceso no autorizado." });
+  }
+
+  const checkSql = `
+    SELECT 1
+    FROM aida.dicta
+    WHERE legajo = $1 AND id_materia = $2
+  `;
+
+  const check = await pool.query(checkSql, [legajo, id_materia]);
+
+  if (check.rowCount === 0) {
+    return res.status(403).json({
+      error: "No es profesor de esta materia."
+    });
+  }
+
+  try{
+    const sql = `
+      DELETE FROM aida.cursadas
+      WHERE lu_CURS = $1
+        AND id_materia_CURS = $2
+        AND anio = $3
+        AND cuatrimestre = $4
+      RETURNING *;
+    `;
+
+    const result = await pool.query(sql, [lu, id_materia, anio, cuatrimestre]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Cursada no encontrada" });
+    }
+    return res.json({ message: "Cursada eliminada correctamente" });
+  } catch (error) {
+    console.error("Error al eliminar cursada (profesor):", error);
+    return res.status(500).json({ error: "Error interno del servidor" });
+  }
+}
+
 
 
 // --- ALUMNOS ---

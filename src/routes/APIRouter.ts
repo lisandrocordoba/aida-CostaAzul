@@ -48,6 +48,7 @@ APIRouter.patch('/alumnos', requireRolAPI("secretario"), apiControllers.patchAlu
 APIRouter.get('/materias/profesor', requireRolAPI("profesor"), apiControllers.getMateriasDeProfesorAPIController);
 APIRouter.get('/cursadas/profesor', requireRolAPI("profesor"), apiControllers.getCursadasDeProfesorAPIController);
 APIRouter.patch('/cursadas', apiControllers.patchCursadasController);
+APIRouter.delete('/cursada-profesor/:lu/:id_materia/:anio/:cuatrimestre', apiControllers.deleteCursadaProfesorController)
 
 // --- PLAN DE ESTUDIOS ---
 APIRouter.patch('/plan_estudios', apiControllers.patchPlanEstudiosController);

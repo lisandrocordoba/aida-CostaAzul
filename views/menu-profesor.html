@@ -260,7 +260,8 @@
         {"field":"nota","title":"Nota"}
     ];
 
-    const pkValueFields = ["lu_CURS","id_materia_CURS","anio","cuatrimestre"];
+    const pkValueFields = ["lu","id_materia","anio","cuatrimestre"];
+
 
     // Endpoints
     const API_MATERIAS = "/api/v0/materias/profesor";
@@ -381,17 +382,21 @@
 
             // Título Dinámico
             const titulo = document.getElementById("page-title");
-            if (data.length === 0) {
-                titulo.innerText = "No hay cursadas para esta materia.";
+            if (data[0].nombre_materia) {
+                titulo.innerText = "Cursadas de: " + data[0].nombre_materia;
             } else {
-              titulo.innerText = "Cursadas de: " + data[0].nombre_materia;
+                titulo.innerText = "Cursadas de la materia seleccionada";
             }
+
+
             renderTablaGenerica(data, idMateria);
 
         } catch (e) {
             console.error("Fallo al cargar tabla cursadas:", e);
         }
+
     }
+
 
     function renderTablaGenerica(data, idMateria) {
         const theadRow = document.getElementById("thead-cursadas");
@@ -430,7 +435,7 @@
             const btnEdit = document.createElement("button");
             btnEdit.textContent = "Editar";
             btnEdit.className = "action-btn btn-edit";
-            // Aquí iría btnEdit.onclick = ...
+            btnEdit.onclick = function () { confirmarEditar(pkPath, idMateria); };         // chequear esto lo puse a mano
             tdAcc.appendChild(btnEdit);
 
             const btnDel = document.createElement("button");
@@ -481,7 +486,7 @@
 
     // --- ACCIONES (CREAR / ELIMINAR) ---
 
-    async function crearRegistro(idMateriaActual) {
+    async function crearRegistro(idMateriaActual) {             // APLICAR LOGICA SIMILAR AL EDIT
         const body = {};
         tableDef.columns.forEach(col => {
             const el = document.getElementById("new-" + col.name);
@@ -499,15 +504,63 @@
 
     async function eliminarRegistro(pkPath, idMateriaActual) {
         if (!confirm("¿Eliminar registro?")) return;
-        // Nota: El DELETE suele ir al endpoint genérico con la PK completa
-        // Si API_CURSADAS es solo para GET con filtro, quizás el delete deba ir a la base de la tabla.
-        // Asumiremos que el router maneja delete en la raíz o subruta.
-        // Aquí usamos la convención REST genérica sobre la tabla base si es posible,
-        // o sobre el mismo endpoint si el router lo soporta.
-        const res = await fetch(API_CURSADAS + "/" + pkPath, { method: "DELETE" });
+        const res = await fetch("/api/v0/cursada-profesor/" + pkPath, { method: "DELETE" });
         if (!res.ok) { alert("Error al eliminar: " + res.status); return; }
         cargarTablaCursadas(idMateriaActual);
     }
+
+     // COPIO Y PEGO EL EDITAR DE LAS PLANTILLAS GENERALES, HAY QUE HACER QUE ESTO FUNCIONE CON UN NUEVO ENDPOINT DE EDITAR PARA PROFESOR (chequeando que sea prof. de esa materia)
+
+    async function confirmarEditar(pkPath, idMateria){
+        const fila = document.querySelector('tr[data-pk="' + pkPath + '"]');
+
+      // leer PK desde la URL
+      const pkParts = pkPath.split("/").map(decodeURIComponent);
+
+      // armamos body SOLO con las columnas reales del tableDef
+      const body = {};
+
+      // 1) Las PK siempre se preservan
+      tableDef.pk.forEach(function (pkCol, idx) {
+        body[pkCol] = pkParts[idx];
+      });
+
+      // 2) Para el resto de columnas reales, si tienen input usamos el valor, sino dejamos el original del rowData
+      let rowData = {};
+      if (fila && fila.dataset.row) {
+        try { rowData = JSON.parse(fila.dataset.row); } catch {}
+      }
+
+      tableDef.columns.forEach(function (col) {
+        const input = document.getElementById("edit-" + col.name);
+
+        if (input) {
+          // EDITABLE
+          let val = input.value.trim();
+          if (val === "") val = null;
+          body[col.name] = val;
+        } else {
+          // NO EDITABLE → tomamos valor original REAL
+          body[col.name] = rowData[col.name];
+        }
+      });
+
+      // 3) Enviar PUT limpio
+      try {
+        const res = await fetch(API_BASE + "/" + pkPath, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body)
+        });
+        if (!res.ok) throw new Error("Error al actualizar: " + res.status);
+
+        editandoPk = null;
+        cargarTabla();
+      } catch (e) {
+        alert("No se pudo actualizar: " + e.message);
+      }
+    }
+
 
     async function cambiarRol(rol) {
         try {
