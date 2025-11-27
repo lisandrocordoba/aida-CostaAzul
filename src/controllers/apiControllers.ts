@@ -178,6 +178,116 @@ export async function deleteCursadaProfesorController(req: Request, res: Respons
   }
 }
 
+export async function updateCursadaProfesorController(req: Request, res: Response) {
+  // PK actual de la cursada (la que ya existe)
+  const { lu, id_materia, anio, cuatrimestre} = req.params;
+
+  // Campos que vas a editar (por ahora solo nota)
+  const { nota } = req.body;
+
+  console.log("EDITANDO CURSADA:", { lu, id_materia, anio, cuatrimestre, nota });
+
+  // 1) Verificar sesión del profesor
+  const legajo = req.session.rol?.legajo;
+  if (!legajo) {
+    return res.status(403).json({ error: "Acceso no autorizado." });
+  }
+
+  // 2) Verificar que el profesor dicta la materia (MISMA LÓGICA QUE DELETE/CREATE)
+  const checkSql = `
+    SELECT 1
+    FROM aida.dicta
+    WHERE legajo_DICTA = $1 AND id_materia_DICTA = $2
+  `;
+  const check = await pool.query(checkSql, [legajo, id_materia]);
+
+  if (check.rowCount === 0) {
+    return res.status(403).json({
+      error: "No es profesor de esta materia."
+    });
+  }
+
+  try {
+    // 3) UPDATE de la cursada
+    const sql = `
+      UPDATE aida.cursadas
+      SET nota = $5
+      WHERE lu_CURS = $1
+        AND id_materia_CURS = $2
+        AND anio = $3
+        AND cuatrimestre = $4
+      RETURNING *;
+    `;
+
+    const params = [lu, id_materia, anio, cuatrimestre, nota];
+
+    const result = await pool.query(sql, params);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Cursada no encontrada" });
+    }
+
+    return res.json({
+      message: "Cursada actualizada correctamente",
+      data: result.rows[0],
+    });
+
+  } catch (error) {
+    console.error("Error al editar cursada (profesor):", error);
+    return res.status(500).json({ error: "Error interno del servidor" });
+  }
+}
+
+
+export async function createCursadaProfesorController(req: Request, res: Response) {
+  const { lu_CURS, id_materia_CURS, anio, cuatrimestre, nota} = req.body;
+
+  console.log("CREANDO CURSADA:", { lu_CURS, id_materia_CURS, anio, cuatrimestre, nota });
+
+  // 1. Verificar sesión del profesor
+  const legajo = req.session.rol?.legajo;
+  if (!legajo) {
+    return res.status(403).json({ error: "Acceso no autorizado." });
+  }
+
+  // 2. Verificar que el profesor dicta la materia
+  const checkSql = `
+    SELECT 1
+    FROM aida.dicta
+    WHERE legajo_DICTA = $1 AND id_materia_DICTA = $2
+  `;
+
+  const check = await pool.query(checkSql, [legajo, id_materia_CURS]);
+
+  if (check.rowCount === 0) {
+    return res.status(403).json({
+      error: "No es profesor de esta materia."
+    });
+  }
+
+  try {
+    // 3. Insertar la cursada
+    const sql = `
+      INSERT INTO aida.cursadas (lu_CURS, id_materia_CURS, anio, cuatrimestre, nota)
+      VALUES ($1, $2, $3, $4, $5)
+      RETURNING *;
+    `;
+
+    const params = [lu_CURS, id_materia_CURS, anio, cuatrimestre, nota];
+
+    const result = await pool.query(sql, params);
+
+    return res.json({
+      message: "Cursada creada correctamente",
+      data: result.rows[0]
+    });
+
+  } catch (error) {
+    console.error("Error al crear cursada (profesor):", error);
+    return res.status(500).json({ error: "Error interno del servidor" });
+  }
+}
+
 
 
 // --- ALUMNOS ---

@@ -37,7 +37,10 @@ APIRouter.patch('/alumnos', requireRolAPI("secretario"), apiControllers.patchAlu
 APIRouter.get('/materias/profesor', requireRolAPI("profesor"), apiControllers.getMateriasDeProfesorAPIController);
 APIRouter.get('/cursadas/profesor', requireRolAPI("profesor"), apiControllers.getCursadasDeProfesorAPIController);
 APIRouter.patch('/cursadas', apiControllers.patchCursadasController);
-APIRouter.delete('/cursada-profesor/:lu/:id_materia/:anio/:cuatrimestre', apiControllers.deleteCursadaProfesorController)
+APIRouter.delete('/cursada-profesor/:lu/:id_materia/:anio/:cuatrimestre', apiControllers.deleteCursadaProfesorController);
+APIRouter.post('/cursada-profesor', apiControllers.createCursadaProfesorController);
+APIRouter.put('/cursada-profesor/:lu/:id_materia/:anio/:cuatrimestre', apiControllers.updateCursadaProfesorController);
+
 
 // -- RUTAS DE USUARIOS NO GENERICAS ---
 APIRouter.get('/usuarios', requireRolAPI("secretario"), apiControllers.getUsuariosController);

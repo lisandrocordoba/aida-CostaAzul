@@ -396,33 +396,43 @@
     }
 
     async function cargarTablaCursadas(idMateria) {
-        try {
-            const url = `${API_CURSADAS}?id_materia=${encodeURIComponent(idMateria)}`;
-            const res = await fetch(url, { headers: { "Content-Type": "application/json" }});
+    try {
+        const url = `${API_CURSADAS}?id_materia=${encodeURIComponent(idMateria)}`;
+        const res = await fetch(url, { headers: { "Content-Type": "application/json" }});
 
-            if (!res.ok) {
-                console.error("Error al cargar cursadas:", res.status);
-                return;
-            }
-
-            const data = await res.json();
-
-            // Título Dinámico
-            const titulo = document.getElementById("page-title");
-            if (data[0].nombre_materia) {
-                titulo.innerText = "Cursadas de: " + data[0].nombre_materia;
-            } else {
-                titulo.innerText = "Cursadas de la materia seleccionada";
-            }
-
-
-            renderTablaGenerica(data, idMateria);
-
-        } catch (e) {
-            console.error("Fallo al cargar tabla cursadas:", e);
+        if (!res.ok) {
+            console.error("Error al cargar cursadas:", res.status);
+            return;
         }
 
+        const data = await res.json();
+
+        const titulo = document.getElementById("page-title");
+
+        if (!data || data.length === 0) {
+            // 🧠 No hay alumnos, pero mantenemos la tabla para poder AGREGAR
+            titulo.innerText = "Sin alumnos en la materia seleccionada";
+
+            // Igual renderizamos la tabla genérica con lista vacía
+            // para que dibuje los headers + fila "new-..."
+            renderTablaGenerica([], idMateria);
+            return;
+        }
+
+        // 🧠 Caso normal: sí hay alumnos
+        if (data[0].nombre_materia) {
+            titulo.innerText = "Cursadas de: " + data[0].nombre_materia;
+        } else {
+            titulo.innerText = "Cursadas de la materia seleccionada";
+        }
+
+        renderTablaGenerica(data, idMateria);
+
+    } catch (e) {
+        console.error("Fallo al cargar tabla cursadas:", e);
     }
+    }
+
 
 
     function renderTablaGenerica(data, idMateria) {
@@ -452,6 +462,12 @@
 
             displayColumns.forEach(col => {
                 const td = document.createElement("td");
+
+                // 👇 SOLO acá usamos el id especial para la celda de NOTA
+                if (col.field === "nota") {
+                    td.id = "nota-" + pkPath;
+                }
+
                 td.textContent = row[col.field] ?? "";
                 tr.appendChild(td);
             });
@@ -462,7 +478,8 @@
             const btnEdit = document.createElement("button");
             btnEdit.textContent = "Editar";
             btnEdit.className = "action-btn btn-edit";
-            btnEdit.onclick = function () { confirmarEditar(pkPath, idMateria); };         // chequear esto lo puse a mano
+            btnEdit.id = "btn-editar-" + pkPath;   // id para usar en confirmarEditar
+            btnEdit.onclick = function () { confirmarEditar(pkPath, idMateria); };
             tdAcc.appendChild(btnEdit);
 
             const btnDel = document.createElement("button");
@@ -478,6 +495,7 @@
         // 3. Fila de Alta
         agregarFilaAlta(tbody, idMateria);
     }
+
 
     function agregarFilaAlta(tbody, idMateriaPreseleccionada) {
         const tr = document.createElement("tr");
@@ -513,19 +531,29 @@
 
     // --- ACCIONES (CREAR / ELIMINAR) ---
 
-    async function crearRegistro(idMateriaActual) {             // APLICAR LOGICA SIMILAR AL EDIT
+    async function crearRegistro(idMateriaActual) {
+
+        if (!confirm("¿Crear nuevo registro?")) return;
+
+        // Armamos el body igual que antes
         const body = {};
         tableDef.columns.forEach(col => {
             const el = document.getElementById("new-" + col.name);
             body[col.name] = el.value || null;
         });
 
-        const res = await fetch(API_CURSADAS, {
+        const res = await fetch("/api/v0/cursada-profesor", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(body)
         });
-        if (!res.ok) { alert("Error al crear: " + res.status); return; }
+
+        if (!res.ok) {
+            const text = await res.text();
+            alert("Error al crear: " + res.status + "\n" + text);
+            return;
+        }
+
         cargarTablaCursadas(idMateriaActual);
     }
 
@@ -536,57 +564,54 @@
         cargarTablaCursadas(idMateriaActual);
     }
 
-     // COPIO Y PEGO EL EDITAR DE LAS PLANTILLAS GENERALES, HAY QUE HACER QUE ESTO FUNCIONE CON UN NUEVO ENDPOINT DE EDITAR PARA PROFESOR (chequeando que sea prof. de esa materia)
 
-    async function confirmarEditar(pkPath, idMateria){
-        const fila = document.querySelector('tr[data-pk="' + pkPath + '"]');
+    async function confirmarEditar(pkPath, idMateria) {
+        const notaCell = document.getElementById("nota-" + pkPath);
+        const btnEditar = document.getElementById("btn-editar-" + pkPath);
 
-      // leer PK desde la URL
-      const pkParts = pkPath.split("/").map(decodeURIComponent);
+        if (!notaCell || !btnEditar) return;
 
-      // armamos body SOLO con las columnas reales del tableDef
-      const body = {};
+        // 🧠 PRIMER CLICK: entrar en modo edición
+        if (!notaCell.dataset.editing) {
+            const valorActual = (notaCell.textContent || "").trim();
 
-      // 1) Las PK siempre se preservan
-      tableDef.pk.forEach(function (pkCol, idx) {
-        body[pkCol] = pkParts[idx];
-      });
+            notaCell.innerHTML = `
+                <input type="number"
+                    id="edit-nota-${pkPath}"
+                    value="${valorActual}"
+                    class="form-control form-control-sm" />
+            `;
 
-      // 2) Para el resto de columnas reales, si tienen input usamos el valor, sino dejamos el original del rowData
-      let rowData = {};
-      if (fila && fila.dataset.row) {
-        try { rowData = JSON.parse(fila.dataset.row); } catch {}
-      }
-
-      tableDef.columns.forEach(function (col) {
-        const input = document.getElementById("edit-" + col.name);
-
-        if (input) {
-          // EDITABLE
-          let val = input.value.trim();
-          if (val === "") val = null;
-          body[col.name] = val;
-        } else {
-          // NO EDITABLE → tomamos valor original REAL
-          body[col.name] = rowData[col.name];
+            notaCell.dataset.editing = "1";
+            btnEditar.textContent = "Guardar";
+            return; // todavía no mandamos nada al backend
         }
-      });
 
-      // 3) Enviar PUT limpio
-      try {
-        const res = await fetch(API_BASE + "/" + pkPath, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body)
+        // 🧠 SEGUNDO CLICK: guardar
+        if (!confirm("¿Guardar cambios de la cursada?")) return;
+
+        const notaInput = document.getElementById("edit-nota-" + pkPath);
+        const body = {
+            nota: notaInput.value || null
+        };
+
+        const res = await fetch("/api/v0/cursada-profesor/" + pkPath, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body)
         });
-        if (!res.ok) throw new Error("Error al actualizar: " + res.status);
 
-        editandoPk = null;
-        cargarTabla();
-      } catch (e) {
-        alert("No se pudo actualizar: " + e.message);
-      }
+        if (!res.ok) {
+            const text = await res.text();
+            alert("Error al editar: " + res.status + "\n" + text);
+            return;
+        }
+
+        // Recargamos la tabla para ver el cambio
+        cargarTablaCursadas(idMateria);
     }
+
+
 
 
     async function cambiarRol(rol) {
