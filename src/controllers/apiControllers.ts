@@ -47,7 +47,6 @@ export function logoutAPIController(req: Request, res: Response) {
 
 // --- REGISTER ---
 export async function registerAPIController(req: Request, res: Response) {
-  console.log("entra");
   const { username, password, nombre, email } = req.body;
   await crearUsuario(clientDb, username, password, nombre, email);
   res.status(201).send('Usuario creado');
@@ -377,4 +376,56 @@ export async function cambioPasswordAPIController(req: Request, res: Response) {
       return res.status(500).json({ ok: false, error: 'Error al actualizar la contraseña' });
     }
 
+  }
+
+  // --- USUARIOS ---
+  export async function getUsuariosController(_: Request, res: Response) {
+    const usuarios = await pool.query('SELECT id_usuario, username, nombre_usuario, apellido, email FROM aida.usuarios');
+    return res.status(200).json(usuarios.rows);
+  }
+
+  export async function agregarUsuarioController(req: Request, res: Response) {
+    const { username, password, nombre_usuario, apellido, email } = req.body;
+    try {
+        await crearUsuario(clientDb, username, password, nombre_usuario, apellido, email);
+        return res.status(201).send('Usuario creado');
+    } catch (error) {
+      console.error('Error al crear usuario:', error);
+      return res.status(500).json({ error: 'Error al crear usuario' });
+    }
+  }
+
+  export async function eliminarUsuarioController(req: Request, res: Response) {
+    const { id_usuario } = req.params;
+    try {
+        const result = await pool.query('DELETE FROM aida.usuarios WHERE id_usuario = $1 RETURNING *', [id_usuario]);
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: 'Usuario no encontrado' });
+        }
+        return res.status(200).json({ message: 'Usuario eliminado correctamente' });
+    } catch (error) {
+      console.error('Error al eliminar usuario:', error);
+      return res.status(500).json({ error: 'Error al eliminar usuario' });
+    }
+  }
+
+  export async function modificarUsuarioController(req: Request, res: Response) {
+    const { id_usuario } = req.params;
+    const { nombre_usuario, apellido, email } = req.body;
+    try {
+        const result = await pool.query(
+            `UPDATE aida.usuarios
+             SET nombre_usuario = $1, apellido = $2, email = $3
+             WHERE id_usuario = $4
+             RETURNING *`,
+            [ nombre_usuario, apellido, email, id_usuario]
+        );
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: 'Usuario no encontrado' });
+        }
+        return res.status(200).json({ message: 'Usuario modificado correctamente', usuario: result.rows[0] });
+    } catch (error) {
+      console.error('Error al modificar usuario:', error);
+      return res.status(500).json({ error: 'Error al modificar usuario' });
+    }
   }

@@ -94,16 +94,17 @@ export async function crearUsuario(
 
         //Revisar si esto va con el esquema de nuestra base
         const result = await client.query(
-            `INSERT INTO aida.usuarios (username, password_hash, nombre, apellido, email)
+            `INSERT INTO aida.usuarios (username, password_hash, nombre_usuario, apellido, email)
              VALUES ($1, $2, $3, $4, $5)
-             RETURNING id, username, nombre, email, activo`,
+             RETURNING id_usuario, username, nombre_usuario, apellido, email, activo`,
             [username, passwordHash, nombre || null, apellido || null, email || null]
         );
 
         return result.rows[0];
     } catch (error) {
         console.error('Error al crear usuario:', error);
-        return null;
+        // tiramos excepción para que la levante el controller
+        throw new Error('Fallo en la operación de base de datos para crear el usuario.');
     }
 }
 

@@ -11,7 +11,6 @@
 ## Deuda tecnica
 - SQL INJECTIONS!!!!!!!!!!!
 - tema de manejo de fechas, IMPORTANTE!!!
-- generalizar html de certificados (lu y fecha)
 - borrar codigo en aida
 - borrar codigo en controllers
 - borrar codigo en routers

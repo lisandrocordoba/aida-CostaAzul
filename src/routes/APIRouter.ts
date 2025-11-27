@@ -42,14 +42,28 @@ APIRouter.post('/cursada-profesor', apiControllers.createCursadaProfesorControll
 APIRouter.put('/cursada-profesor/:lu/:id_materia/:anio/:cuatrimestre', apiControllers.updateCursadaProfesorController);
 
 
+// -- RUTAS DE USUARIOS NO GENERICAS ---
+APIRouter.get('/usuarios', requireRolAPI("secretario"), apiControllers.getUsuariosController);
+APIRouter.post('/usuarios', requireRolAPI("secretario"), express.json(), apiControllers.agregarUsuarioController);
+APIRouter.delete('/usuarios/:id_usuario', requireRolAPI("secretario"), apiControllers.eliminarUsuarioController);
+APIRouter.put('/usuarios/:id_usuario', requireRolAPI("secretario"), apiControllers.modificarUsuarioController);
+
+
+
 // --- PLAN DE ESTUDIOS ---
 APIRouter.patch('/plan_estudios', apiControllers.patchPlanEstudiosController);
 
 // --- RUTAS DE CERTIFICADOS ---
 APIRouter.get('/certificados', apiControllers.getCertificadosController);
 
+
+
 // --- RUTAS GENERICAS PARA CADA ENTIDAD ---
 for (const tableDef of tableDefs) {
+  // Saltar la tabla 'usuarios' ya que tiene su propia ruta personalizada
+  if (tableDef.name === 'usuarios') {
+      continue;
+  }
   APIRouter.use('/' + tableDef.name, createTableRouter(tableDef));
 }
 
