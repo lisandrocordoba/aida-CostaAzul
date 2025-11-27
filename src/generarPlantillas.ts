@@ -16,6 +16,9 @@ export function generarPlantillasHTML() {
   }
 
   for (const table of tableDefs) {
+    if (table.name === "usuarios") {
+      continue; // saltar tabla usuarios
+    }
     const filePath = path.join(recursosDir, `plantilla-tabla-${table.name}.html`);
     const html = buildTableHtml(table);
     fs.writeFileSync(filePath, html, "utf8");

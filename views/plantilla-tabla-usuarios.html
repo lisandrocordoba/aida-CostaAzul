@@ -1,9 +1,8 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>usuarios</title>
+  <title>Gestión de Usuarios Simple</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 30px; background-color: #f9f9f9; }
     table { border-collapse: collapse; width: 100%; background: white; box-shadow: 0px 2px 6px rgba(0,0,0,0.1); }
@@ -11,227 +10,260 @@
     th { background-color: #4CAF50; color: white; }
     tr:nth-child(even) { background-color: #f2f2f2; }
     tr:hover { background-color: #e1f5fe; }
-    input { width: 100%; box-sizing: border-box; padding: 6px; }
-    button { padding: 6px 10px; }
+    input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 6px;
+      /* Estilo para campos no editables */
+      background-color: #eee;
+      color: #777;
+    }
+    input.editable {
+        background-color: white;
+        color: #333;
+    }
+    button { padding: 6px 10px; margin: 3px; }
+
+    #form-alta {
+      margin-top: 20px;
+      padding: 20px;
+      background: white;
+      width: 350px;
+      border-radius: 6px;
+      box-shadow: 0px 2px 6px rgba(0,0,0,0.1);
+      display: none;
+    }
+
+    #form-alta div { margin-bottom: 12px; }
+    #form-alta label { font-weight: bold; display: block; margin-bottom: 4px; }
   </style>
 </head>
-<body onload="cargarTabla()">
-  <h2>usuarios</h2>
-  <table id="tabla-generica">
+
+<body onload="cargarUsuarios()">
+
+  <h2>Gestión de Usuarios</h2>
+
+  <table id="tabla-usuarios">
     <thead>
-      <tr id="thead-row"></tr>
+      <tr>
+        <th>id_usuario</th>
+        <th>username</th>
+        <th>Nombre</th>
+        <th>Apellido</th>
+        <th>Email</th>
+        <th>Acción</th>
+      </tr>
     </thead>
     <tbody></tbody>
   </table>
 
+  <button id="btn-toggle-form" onclick="toggleFormularioAlta()">Agregar usuario</button>
+
+  <div id="form-alta">
+    <h3>Nuevo usuario</h3>
+
+    <div>
+      <label>Username</label>
+      <input id="alta-username" />
+    </div>
+
+    <div>
+      <label>Nombre</label>
+      <input id="alta-nombre" />
+    </div>
+
+    <div>
+      <label>Apellido</label>
+      <input id="alta-apellido" />
+    </div>
+
+    <div>
+      <label>Email</label>
+      <input id="alta-email" />
+    </div>
+
+    <div>
+      <label>Password</label>
+      <input id="alta-password" type="password" />
+    </div>
+
+    <button onclick="crearUsuario()">Crear</button>
+    <button onclick="toggleFormularioAlta()">Cancelar</button>
+  </div>
+
   <script>
-    const tableDef = {"name":"usuarios","columns":[{"name":"id_usuario","type":"int","title":"id_usuario","description":""},{"name":"username","type":"text","title":"username","description":""},{"name":"password_hash","type":"text","title":"password_hash","description":""},{"name":"nombre_usuario","type":"text","title":"Nombre","description":""},{"name":"apellido","type":"text","title":"Apellido","description":""},{"name":"email","type":"text","title":"email","description":""},{"name":"activo","type":"boolean","title":"activo","description":""}],"pk":["id_usuario"],"fks":[],"orderBy":["apellido","nombre_usuario"],"elementName":"usuario","title":"usuarios"};
-    const displayColumns = [{"field":"id_usuario","title":"id_usuario","editField":"id_usuario"},{"field":"username","title":"username","editField":"username"},{"field":"password_hash","title":"password_hash","editField":"password_hash"},{"field":"nombre_usuario","title":"Nombre","editField":"nombre_usuario"},{"field":"apellido","title":"Apellido","editField":"apellido"},{"field":"email","title":"email","editField":"email"},{"field":"activo","title":"activo","editField":"activo"}];
-    const pkValueFields = ["id_usuario"];
-    const API_BASE = "/api/v0/" + tableDef.name;
+    const API_USUARIOS_BASE = "/api/v0/usuarios";
 
-    // solo puede haber una fila en edición a la vez
-    let editandoPk = null;
+    // =================================================================
+    // FUNCIONES CRUD
+    // =================================================================
 
-    function buildPkPath(row) {
-      return pkValueFields
-        .map(function (f) { return encodeURIComponent(row[f]); })
-        .join("/");
-    }
-
-    async function cargarTabla() {
+    async function cargarUsuarios() {
       try {
-        const resp_rol = await fetch('/api/v0/roles/get');
-        if (!resp_rol.ok) return;
-
-        const data_rol = await resp_rol.json();
-
-        let urlApi = API_BASE;
-
-        // Si es alumno, filtrar por su LU
-        if(data_rol.nombreRol === "alumno"){
-
-          const paramsURL = new URLSearchParams(window.location.search);
-          const luAlumno = paramsURL.get('lu');
-
-          if (luAlumno) {
-              urlApi += "?lu=" + encodeURIComponent(luAlumno);
-          }
-        }
-
-        // Si es profesor, filtrar por su legajo
-        if(data_rol.nombreRol === "profesor"){
-
-          const paramsURL = new URLSearchParams(window.location.search);
-          const legajo = paramsURL.get('legajo');
-
-          if (legajo) {
-              urlApi += "?legajo=" + encodeURIComponent(legajo);
-          }
-        }
-
-        const res = await fetch(urlApi, { headers: { "Content-Type": "application/json" }});
-
-        if (!res.ok) {
-          console.error("Error al cargar:", res.status);
-          return;
-        }
+        const res = await fetch(API_USUARIOS_BASE);
+        if (!res.ok) throw new Error(`Error ${res.status} al cargar usuarios.`);
 
         const data = await res.json();
-        const theadRow = document.getElementById("thead-row");
-        const tbody = document.querySelector("#tabla-generica tbody");
-
-        // Encabezados
-        theadRow.innerHTML = "";
-        displayColumns.forEach(function (col) {
-          const th = document.createElement("th");
-          th.textContent = col.title;
-          theadRow.appendChild(th);
-        });
-        const thAcc = document.createElement("th");
-        thAcc.textContent = "Acción";
-        theadRow.appendChild(thAcc);
-
-        // Filas
+        const tbody = document.querySelector("#tabla-usuarios tbody");
         tbody.innerHTML = "";
-        data.forEach(function (row) {
+
+        data.forEach(usuario => {
           const tr = document.createElement("tr");
-          const pkPath = buildPkPath(row);
-          tr.dataset.pk = pkPath;
+          // Añadimos el ID como data-id para facilitar la selección
+          tr.dataset.id = usuario.id_usuario;
 
-          // ⬅️ Guardamos la fila original completa
-          tr.dataset.row = JSON.stringify(row);
-
-          displayColumns.forEach(function (col) {
-            const td = document.createElement("td");
-            td.textContent = row[col.field] ?? "";
-            tr.appendChild(td);
-          });
-
-          const tdAcc = document.createElement("td");
-          const btnEdit = document.createElement("button");
-          btnEdit.textContent = "Editar";
-          btnEdit.onclick = function () { editar(pkPath); };
-          tdAcc.appendChild(btnEdit);
-
-          const btnDel = document.createElement("button");
-          btnDel.textContent = "Eliminar";
-          btnDel.onclick = function () { eliminarRegistro(pkPath); };
-          tdAcc.appendChild(btnDel);
-
-          tr.appendChild(tdAcc);
+          tr.innerHTML = `
+            <td data-field="id_usuario" class="uneditable">${usuario.id_usuario}</td>
+            <td data-field="username" class="uneditable">${usuario.username}</td>
+            <td data-field="nombre_usuario" class="editable">${usuario.nombre_usuario ?? ''}</td>
+            <td data-field="apellido" class="editable">${usuario.apellido ?? ''}</td>
+            <td data-field="email" class="editable">${usuario.email ?? ''}</td>
+            <td class="acciones">
+              <button onclick="editarUsuario('${usuario.id_usuario}', this)">Editar</button>
+              <button onclick="eliminarRegistro('${usuario.id_usuario}')">Eliminar</button>
+            </td>
+          `;
           tbody.appendChild(tr);
         });
 
-        agregarFilaAlta(tbody);
       } catch (e) {
-        console.error("Fallo al cargar tabla:", e);
+        console.error("Error al cargar:", e);
+        alert("No se pudo cargar la lista de usuarios.");
       }
     }
 
-    function agregarFilaAlta(tbody) {
-      const tr = document.createElement("tr");
+    async function crearUsuario() {
+      const body = {
+        username: document.getElementById("alta-username").value,
+        nombre_usuario: document.getElementById("alta-nombre").value,
+        apellido: document.getElementById("alta-apellido").value,
+        email: document.getElementById("alta-email").value,
+        password: document.getElementById("alta-password").value
+      };
 
-      tableDef.columns.forEach(function (col) {
-        const td = document.createElement("td");
-        const input = document.createElement("input");
-        input.id = "new-" + col.name;
-        input.placeholder = col.title || col.name;
-        td.appendChild(input);
-        tr.appendChild(td);
-      });
-
-      const tdAcc = document.createElement("td");
-      const btn = document.createElement("button");
-      btn.textContent = "Agregar";
-      btn.onclick = crearRegistro;
-      tdAcc.appendChild(btn);
-      tr.appendChild(tdAcc);
-
-      tbody.appendChild(tr);
-    }
-
-    async function crearRegistro() {
-      const body = {};
-      tableDef.columns.forEach(function (col) {
-        const el = document.getElementById("new-" + col.name);
-        body[col.name] = el.value || null;
-      });
-      const res = await fetch(API_BASE, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body)
-      });
-      if (!res.ok) { alert("Error al crear: " + res.status); return; }
-      cargarTabla();
-    }
-
-    async function eliminarRegistro(pkPath) {
-      if (!confirm("¿Eliminar registro?")) return;
-      const res = await fetch(API_BASE + "/" + pkPath, { method: "DELETE" });
-      if (!res.ok) { alert("Error al eliminar: " + res.status); return; }
-      cargarTabla();
-    }
-
-
-
-
-    async function confirmarEditar(pkPath) {
-      const fila = document.querySelector('tr[data-pk="' + pkPath + '"]');
-
-      // leer PK desde la URL
-      const pkParts = pkPath.split("/").map(decodeURIComponent);
-
-      // armamos body SOLO con las columnas reales del tableDef
-      const body = {};
-
-      // 1) Las PK siempre se preservan
-      tableDef.pk.forEach(function (pkCol, idx) {
-        body[pkCol] = pkParts[idx];
-      });
-
-      // 2) Para el resto de columnas reales, si tienen input usamos el valor, sino dejamos el original del rowData
-      let rowData = {};
-      if (fila && fila.dataset.row) {
-        try { rowData = JSON.parse(fila.dataset.row); } catch {}
-      }
-
-      tableDef.columns.forEach(function (col) {
-        const input = document.getElementById("edit-" + col.name);
-
-        if (input) {
-          // EDITABLE
-          let val = input.value.trim();
-          if (val === "") val = null;
-          body[col.name] = val;
-        } else {
-          // NO EDITABLE → tomamos valor original REAL
-          body[col.name] = rowData[col.name];
-        }
-      });
-
-      // 3) Enviar PUT limpio
       try {
-        const res = await fetch(API_BASE + "/" + pkPath, {
-          method: "PUT",
+        const res = await fetch(API_USUARIOS_BASE, {
+          method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body)
         });
-        if (!res.ok) throw new Error("Error al actualizar: " + res.status);
 
-        editandoPk = null;
-        cargarTabla();
-      } catch (e) {
-        alert("No se pudo actualizar: " + e.message);
+        if (!res.ok) {
+          const errorText = await res.text();
+          throw new Error(`Error ${res.status}: ${errorText || res.statusText}`);
+        }
+
+        // Éxito: limpia y recarga
+        document.getElementById("form-alta").querySelectorAll('input').forEach(input => input.value = '');
+        toggleFormularioAlta();
+        cargarUsuarios();
+
+      } catch (error) {
+        alert("Fallo al crear usuario: " + error.message);
+        console.error("Error completo:", error);
       }
     }
 
+    async function eliminarRegistro(idUsuario) {
+      if (!confirm(`¿Eliminar usuario con ID ${idUsuario}?`)) return;
 
-    function cancelarEditar() {
-      editandoPk = null;
-      cargarTabla();
+      try {
+        const url = `${API_USUARIOS_BASE}/${idUsuario}`;
+        const res = await fetch(url, { method: "DELETE" });
+
+        if (!res.ok) {
+          const errorText = await res.text();
+          throw new Error(`Error ${res.status}: ${errorText || res.statusText}`);
+        }
+
+        cargarUsuarios();
+
+      } catch (error) {
+        alert("Fallo al eliminar: " + error.message);
+        console.error("Error al eliminar:", error);
+      }
+    }
+
+    // =================================================================
+    // FUNCIONES DE EDICIÓN
+    // =================================================================
+
+    function editarUsuario(idUsuario, editButton) {
+      const row = editButton.closest('tr');
+      const editableFields = ['nombre_usuario', 'apellido', 'email'];
+
+      // 1. Convertir celdas a inputs
+      row.querySelectorAll('td').forEach(td => {
+        const fieldName = td.dataset.field;
+
+        if (editableFields.includes(fieldName)) {
+          // Campos editables (Nombre, Apellido, Email)
+          const currentValue = td.textContent;
+          td.innerHTML = `<input type="text" value="${currentValue}" data-field="${fieldName}" class="editable">`;
+        } else if (fieldName) {
+          // Campos no editables (ID, Username) - Se simula la deshabilitación visual
+          td.innerHTML = `<input type="text" value="${td.textContent}" disabled>`;
+        }
+      });
+
+      // 2. Modificar botones
+      const actionsCell = row.querySelector('.acciones');
+      actionsCell.innerHTML = `
+        <button onclick="guardarEdicion('${idUsuario}', this)">Guardar</button>
+        <button onclick="cargarUsuarios()">Deshacer</button>
+      `;
+    }
+
+    async function guardarEdicion(idUsuario, saveButton) {
+      const row = saveButton.closest('tr');
+      const inputs = row.querySelectorAll('input.editable');
+
+      const body = {};
+      inputs.forEach(input => {
+        // Recopila los datos de los inputs
+        body[input.dataset.field] = input.value;
+      });
+
+      try {
+        // Ruta: /api/v0/usuarios/:id_usuario
+        const url = `${API_USUARIOS_BASE}/${idUsuario}`;
+        const res = await fetch(url, {
+          method: "PUT", // Usamos PUT para la actualización
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body)
+        });
+
+        if (!res.ok) {
+          const errorText = await res.text();
+          throw new Error(`Error ${res.status}: ${errorText || res.statusText}`);
+        }
+
+        alert("Usuario actualizado con éxito.");
+        cargarUsuarios(); // Recargar para mostrar los datos actualizados y el estado normal
+
+      } catch (error) {
+        alert("Fallo al guardar: " + error.message);
+        console.error("Error al guardar:", error);
+      }
+    }
+
+    // =================================================================
+    // FUNCIÓN DE UI
+    // =================================================================
+
+    function toggleFormularioAlta() {
+      const f = document.getElementById("form-alta");
+      const btn = document.getElementById("btn-toggle-form");
+
+      if (f.style.display === "none" || f.style.display === "") {
+        f.style.display = "block";
+        btn.textContent = "Ocultar formulario";
+      } else {
+        f.style.display = "none";
+        btn.textContent = "Agregar usuario";
+      }
     }
   </script>
 
-  </body>
-  </html>
+</body>
+</html>
