@@ -26,7 +26,7 @@ function requireAuth(req: Request, res: Response, next: NextFunction) {
 // Middleware de autenticación para el frontend
 function requireRol(...rolesPermitidos: string[]) {
   return function (req: Request, res: Response, next: NextFunction) {
-    const rol = req.session.rol?.nombreRol as Rol | undefined;
+    const rol = req.session.rol as Rol | undefined;
 
     if (rol && rolesPermitidos.includes(rol.nombreRol)) {
       return next();
