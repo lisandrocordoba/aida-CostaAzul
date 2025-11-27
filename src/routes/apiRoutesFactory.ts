@@ -3,6 +3,8 @@ import { controllers } from '../controllers/apiControllerFactory.js';
 import { TableDef } from '../applicationStructure.js';
 import { Request, Response, NextFunction } from "express";
 import { Rol } from '../roles.js';
+//import { table } from 'console';
+import { requireRolAPI } from '../roles.js';
 
 // Middleware de ownership de datos (alumnos ven sus datos, profesores ven sus cursadas, etc)
 // Es feo?: repensar...
@@ -46,6 +48,7 @@ export function requireOwnershipAPI(req: Request, res: Response, next: NextFunct
 
 
 export function createTableRouter(tableDef:TableDef) {
+    console.log(`Creando router para tabla ${tableDef.name} con PK: ${tableDef.pk.join(', ')}`);
     const pkPath = tableDef.pk.map(column => `/:${column}`).join('')
     const router = Router();
     const {
@@ -55,10 +58,14 @@ export function createTableRouter(tableDef:TableDef) {
         updateRecord,
         deleteRecord
     } = controllers(tableDef);
-    router.get('/', requireOwnershipAPI, getAllRecords);
-    router.get(pkPath, getRecord);
-    router.post('/', createRecord);
-    router.put(pkPath, updateRecord);
-    router.delete(pkPath, deleteRecord);
+    if (tableDef.name === 'usuarios') {
+        router.get('/', requireRolAPI("secretario") , getAllRecords);
+    } else {
+        router.get('/', requireOwnershipAPI, getAllRecords);
+    }
+    router.get(pkPath, requireRolAPI("secretario"), getRecord);
+    router.post('/', requireRolAPI("secretario"), createRecord);
+    router.put(pkPath, requireRolAPI("secretario"), updateRecord);
+    router.delete(pkPath, requireRolAPI("secretario"), deleteRecord);
     return router
 }

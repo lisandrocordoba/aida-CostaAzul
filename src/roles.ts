@@ -1,5 +1,6 @@
 import { Usuario } from 'auth.js';
 import { Client } from 'pg';
+import { Request, Response, NextFunction } from "express";
 
 export type Rol = { nombreRol: string;
                     lu?: string;
@@ -84,4 +85,17 @@ export async function obtenerDatosRol(usuario: Usuario, nombreRol: string, clien
       }
     }
   return null;
+}
+
+// Middleware de rol para el backend
+export function requireRolAPI(...rolesPermitidos: string[]) {
+  return function (req: Request, res: Response, next: NextFunction) {
+    const rol = req.session.rol as Rol | undefined;
+
+    if (rol && rolesPermitidos.includes(rol.nombreRol)) {
+      return next();
+    }
+
+    return res.status(401).json({ error: 'No autorizado' });
+  };
 }
