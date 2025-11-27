@@ -63,9 +63,9 @@ export function createTableRouter(tableDef:TableDef) {
     } else {
         router.get('/', requireOwnershipAPI, getAllRecords);
     }
-    router.get(pkPath, getRecord);
-    router.post('/', createRecord);
-    router.put(pkPath, updateRecord);
-    router.delete(pkPath, deleteRecord);
+    router.get(pkPath, requireRolAPI("secretario"), getRecord);
+    router.post('/', requireRolAPI("secretario"), createRecord);
+    router.put(pkPath, requireRolAPI("secretario"), updateRecord);
+    router.delete(pkPath, requireRolAPI("secretario"), deleteRecord);
     return router
 }

@@ -65,21 +65,39 @@ export async function obtenerTodosAlumnos(clientDb: Client): Promise<Record<stri
 
 export type FiltroAlumnos = {fecha: Fecha} | {lu: string} | {uno: true} | {todos: true}
 
-export async function obtenerAlumnoQueNecesitaCertificado(clientDb: Client, filtro:FiltroAlumnos):Promise<Record<string, (DatoAtomico)>[]>{
-    const sql = `SELECT al.lu, u.apellido, u.nombre, ca.nombre_carrera AS titulo, al.titulo_en_tramite
-    FROM aida.alumnos al
-    JOIN aida.usuarios u ON al.id_usuario = u.id
-    JOIN aida.carreras ca ON al.id_carrera = ca.id
-    WHERE titulo_en_tramite IS NOT NULL
-        ${`lu` in filtro ? `AND lu = ${sqlLiteral(filtro.lu)}` : ``}
-        ${`fecha` in filtro ? `AND titulo_en_tramite = ${sqlLiteral(filtro.fecha)}` : ``}
-    ORDER BY egreso
-    ${`uno` in filtro ? `LIMIT 1` : ``}`;
-    console.log('Corriendo query:', sql);
-    const res = await clientDb.query(sql);
-    console.log('Resultado de obtenerAlumnoQueNecesitaCertificado:', res.rows);
-    return res.rows;
-}
+export async function obtenerAlumnoQueNecesitaCertificado(
+    clientDb: Client,
+    filtro: FiltroAlumnos
+  ): Promise<Record<string, DatoAtomico>[]> {
+
+      const sql = `
+          SELECT
+              al.lu,
+              u.apellido,
+              u.nombre_usuario AS nombre,
+              ca.nombre_carrera AS titulo,
+              al.titulo_en_tramite
+          FROM aida.alumnos al
+          JOIN aida.usuarios u
+              ON al.id_usuario_ALU = u.id_usuario
+          JOIN aida.carreras ca
+              ON al.id_carrera_ALU = ca.id_carrera
+          WHERE al.titulo_en_tramite IS NOT NULL
+              ${"lu" in filtro ? `AND al.lu = ${sqlLiteral(filtro.lu)}` : ""}
+              ${"fecha" in filtro ? `AND al.titulo_en_tramite = ${sqlLiteral(filtro.fecha)}` : ""}
+          ORDER BY al.egreso
+          ${"uno" in filtro ? `LIMIT 1` : ""}
+      `;
+
+      console.log("Corriendo query:", sql);
+
+      const res = await clientDb.query(sql);
+
+      console.log("Resultado de obtenerAlumnoQueNecesitaCertificado:", res.rows);
+
+      return res.rows;
+  }
+
 
 async function generarCertificadoParaAlumno(pathPlantilla:string, alumno:Record<string, DatoAtomico>){
     let certificado = await generarHTMLcertificadoParaAlumno(pathPlantilla, alumno);
