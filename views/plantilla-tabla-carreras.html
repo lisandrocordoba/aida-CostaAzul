@@ -25,9 +25,9 @@
   </table>
 
   <script>
-    const tableDef = {"name":"carreras","columns":[{"name":"id","type":"int","title":"id","description":""},{"name":"nombre_carrera","type":"text","title":"nombre_carrera","description":""}],"pk":["id"],"fks":[],"orderBy":["nombre_carrera"],"elementName":"carrera","title":"carreras"};
-    const displayColumns = [{"field":"id","title":"id","editField":"id"},{"field":"nombre_carrera","title":"nombre_carrera","editField":"nombre_carrera"}];
-    const pkValueFields = ["id"];
+    const tableDef = {"name":"carreras","columns":[{"name":"id_carrera","type":"int","title":"id_carrera","description":""},{"name":"nombre_carrera","type":"text","title":"nombre_carrera","description":""}],"pk":["id_carrera"],"fks":[],"orderBy":["nombre_carrera"],"elementName":"carrera","title":"carreras"};
+    const displayColumns = [{"field":"id_carrera","title":"id_carrera","editField":"id_carrera"},{"field":"nombre_carrera","title":"nombre_carrera","editField":"nombre_carrera"}];
+    const pkValueFields = ["id_carrera"];
     const API_BASE = "/api/v0/" + tableDef.name;
 
     // solo puede haber una fila en edición a la vez

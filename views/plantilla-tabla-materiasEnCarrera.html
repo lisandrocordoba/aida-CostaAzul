@@ -25,9 +25,9 @@
   </table>
 
   <script>
-    const tableDef = {"name":"materiasEnCarrera","columns":[{"name":"id_carrera","type":"int","title":"Id. Carrera","description":""},{"name":"id_materia","type":"int","title":"Id. Materia","description":""}],"pk":["id_carrera","id_materia"],"fks":[],"elementName":"materiaEnCarrera","title":"materiasEnCarrera","orderBy":["id_carrera","id_materia"]};
-    const displayColumns = [{"field":"id_carrera","title":"Id. Carrera","editField":"id_carrera"},{"field":"id_materia","title":"Id. Materia","editField":"id_materia"}];
-    const pkValueFields = ["id_carrera","id_materia"];
+    const tableDef = {"name":"materiasEnCarrera","columns":[{"name":"id_carrera_MEC","type":"int","title":"Id. Carrera","description":""},{"name":"id_materia_MEC","type":"int","title":"Id. Materia","description":""}],"pk":["id_carrera_MEC","id_materia_MEC"],"fks":[],"elementName":"materiaEnCarrera","title":"materiasEnCarrera","orderBy":["id_carrera_MEC","id_materia_MEC"]};
+    const displayColumns = [{"field":"id_carrera_MEC","title":"Id. Carrera","editField":"id_carrera_MEC"},{"field":"id_materia_MEC","title":"Id. Materia","editField":"id_materia_MEC"}];
+    const pkValueFields = ["id_carrera_MEC","id_materia_MEC"];
     const API_BASE = "/api/v0/" + tableDef.name;
 
     // solo puede haber una fila en edición a la vez

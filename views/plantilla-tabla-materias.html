@@ -25,9 +25,9 @@
   </table>
 
   <script>
-    const tableDef = {"name":"materias","columns":[{"name":"id","type":"int","title":"id","description":""},{"name":"nombre_materia","type":"text","title":"Materia","description":""}],"pk":["id"],"fks":[],"orderBy":["nombre_materia"],"elementName":"materia","title":"materias"};
-    const displayColumns = [{"field":"id","title":"id","editField":"id"},{"field":"nombre_materia","title":"Materia","editField":"nombre_materia"}];
-    const pkValueFields = ["id"];
+    const tableDef = {"name":"materias","columns":[{"name":"id_materia","type":"int","title":"id_materia","description":""},{"name":"nombre_materia","type":"text","title":"Materia","description":""}],"pk":["id_materia"],"fks":[],"orderBy":["nombre_materia"],"elementName":"materia","title":"materias"};
+    const displayColumns = [{"field":"id_materia","title":"id_materia","editField":"id_materia"},{"field":"nombre_materia","title":"Materia","editField":"nombre_materia"}];
+    const pkValueFields = ["id_materia"];
     const API_BASE = "/api/v0/" + tableDef.name;
 
     // solo puede haber una fila en edición a la vez

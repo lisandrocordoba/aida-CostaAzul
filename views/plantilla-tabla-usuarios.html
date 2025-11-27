@@ -25,9 +25,9 @@
   </table>
 
   <script>
-    const tableDef = {"name":"usuarios","columns":[{"name":"id","type":"int","title":"id","description":""},{"name":"username","type":"text","title":"username","description":""},{"name":"password_hash","type":"text","title":"password_hash","description":""},{"name":"nombre","type":"text","title":"Nombre","description":""},{"name":"apellido","type":"text","title":"Apellido","description":""},{"name":"email","type":"text","title":"email","description":""},{"name":"activo","type":"boolean","title":"activo","description":""}],"pk":["id"],"fks":[],"orderBy":["apellido","nombre"],"elementName":"usuario","title":"usuarios"};
-    const displayColumns = [{"field":"id","title":"id","editField":"id"},{"field":"username","title":"username","editField":"username"},{"field":"password_hash","title":"password_hash","editField":"password_hash"},{"field":"nombre","title":"Nombre","editField":"nombre"},{"field":"apellido","title":"Apellido","editField":"apellido"},{"field":"email","title":"email","editField":"email"},{"field":"activo","title":"activo","editField":"activo"}];
-    const pkValueFields = ["id"];
+    const tableDef = {"name":"usuarios","columns":[{"name":"id_usuario","type":"int","title":"id_usuario","description":""},{"name":"username","type":"text","title":"username","description":""},{"name":"password_hash","type":"text","title":"password_hash","description":""},{"name":"nombre_usuario","type":"text","title":"Nombre","description":""},{"name":"apellido","type":"text","title":"Apellido","description":""},{"name":"email","type":"text","title":"email","description":""},{"name":"activo","type":"boolean","title":"activo","description":""}],"pk":["id_usuario"],"fks":[],"orderBy":["apellido","nombre_usuario"],"elementName":"usuario","title":"usuarios"};
+    const displayColumns = [{"field":"id_usuario","title":"id_usuario","editField":"id_usuario"},{"field":"username","title":"username","editField":"username"},{"field":"password_hash","title":"password_hash","editField":"password_hash"},{"field":"nombre_usuario","title":"Nombre","editField":"nombre_usuario"},{"field":"apellido","title":"Apellido","editField":"apellido"},{"field":"email","title":"email","editField":"email"},{"field":"activo","title":"activo","editField":"activo"}];
+    const pkValueFields = ["id_usuario"];
     const API_BASE = "/api/v0/" + tableDef.name;
 
     // solo puede haber una fila en edición a la vez
