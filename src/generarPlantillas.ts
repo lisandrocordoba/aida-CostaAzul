@@ -48,19 +48,26 @@ function toDisplayColumns(column: ColumnDef, table: TableDef): displayColumn[] {
 function buildTableHtml(tableDef: TableDef): string {
 
   const displayColumns = tableDef.columns.map((c: any) => toDisplayColumns(c, tableDef)).flat();
-  const pkValueFields: string[] = tableDef.pk.slice();
+
+  // FIX CRÍTICO: Usamos .toLowerCase() en las PKs.
+  // Postgres devuelve las columnas en minúsculas (ej: 'lu_curs') aunque las definamos como 'lu_CURS'.
+  // Al hacer esto, row['lu_curs'] encontrará el valor correcto en el JSON.
+  const pkValueFields = tableDef.pk.map(pk => pk.toLowerCase());
 
   const displayColumnsJson = JSON.stringify(displayColumns);
   const pkValueFieldsJson = JSON.stringify(pkValueFields);
   const tableJson = JSON.stringify(tableDef);
 
-  // 1. Generamos el HTML de los inputs del formulario basados en las columnas
+  // VARIABLE CLAVE: Definición de columnas base para el script del cliente
+  const columnsJson = JSON.stringify(tableDef.columns);
+
+  // GENERAMOS EL HTML DE LOS INPUTS EN EL SERVIDOR
   const formFieldsHtml = tableDef.columns.map(col => {
-      // Nota: Aquí podrías agregar lógica para no mostrar IDs autoincrementales si tuvieras esa metadata
+      const label = col.title || col.name;
       return `
     <div>
-      <label>${col.title || col.name}</label>
-      <input id="alta-${col.name}" placeholder="${col.title || col.name}" />
+      <label>${label}</label>
+      <input id="alta-${col.name}" placeholder="${label}" />
     </div>`;
   }).join('');
 
@@ -89,14 +96,14 @@ function buildTableHtml(tableDef: TableDef): string {
       font-family: 'Merriweather', serif;
     }
 
-    /* ESTILOS TABLA */
+    /* TABLA */
     .table-wrapper {
       background: white;
       border-radius: 8px;
       box-shadow: 0 2px 10px rgba(0,0,0,0.08);
       overflow: hidden;
       margin-top: 20px;
-      margin-bottom: 20px; /* Espacio debajo de la tabla */
+      margin-bottom: 20px;
     }
 
     table {
@@ -152,14 +159,14 @@ function buildTableHtml(tableDef: TableDef): string {
     .btn-cancel { background-color: #ccc; color: #333; }
     .btn-cancel:hover { background-color: #bbb; }
 
-    /* ESTILOS DEL FORMULARIO DE ALTA */
+    /* FORMULARIO CARD */
     .actions-bar {
         margin-bottom: 15px;
-        margin-top: 15px; /* Agregado para separar de la tabla */
+        margin-top: 15px;
     }
 
     #form-alta {
-        display: none; /* Oculto por defecto */
+        display: none;
         background: white;
         padding: 25px;
         border-radius: 8px;
@@ -198,7 +205,7 @@ function buildTableHtml(tableDef: TableDef): string {
 <body onload="cargarTabla()">
   <h2>${tableDef.title}</h2>
 
-  <!-- TABLA DE DATOS (Ahora va primero) -->
+  <!-- 1. TABLA DE DATOS -->
   <div class="table-wrapper">
     <table id="tabla-generica">
       <thead>
@@ -208,17 +215,16 @@ function buildTableHtml(tableDef: TableDef): string {
     </table>
   </div>
 
-  <!-- BOTÓN AGREGAR (Ahora va debajo) -->
+  <!-- 2. BOTÓN AGREGAR -->
   <div class="actions-bar">
     <button id="btn-toggle-form" class="action-btn btn-add" onclick="toggleFormularioAlta()">
       Agregar registro
     </button>
   </div>
 
-  <!-- FORMULARIO DE ALTA (CARD) -->
+  <!-- 3. FORMULARIO DE ALTA -->
   <div id="form-alta">
     <h3>Nuevo registro</h3>
-    <!-- CAMPOS GENERADOS DINÁMICAMENTE -->
     ${formFieldsHtml}
 
     <div id="form-alta-buttons">
@@ -229,6 +235,7 @@ function buildTableHtml(tableDef: TableDef): string {
 
   <script>
     const tableDef = ${tableJson};
+    const columns = ${columnsJson};
     const displayColumns = ${displayColumnsJson};
     const pkValueFields = ${pkValueFieldsJson};
     const API_BASE = "/api/v0/" + tableDef.name;
@@ -243,14 +250,12 @@ function buildTableHtml(tableDef: TableDef): string {
 
     async function cargarTabla() {
       try {
-        // Lógica de Rol (simplificada para este ejemplo, asume backend maneja seguridad o view ya tiene filtro)
         const resp_rol = await fetch('/api/v0/roles/get');
         if (!resp_rol.ok) return;
         const data_rol = await resp_rol.json();
 
         let urlApi = API_BASE;
 
-        // Filtros de rol básicos (manteniendo tu lógica existente)
         if(data_rol.nombreRol === "alumno"){
           const paramsURL = new URLSearchParams(window.location.search);
           const luAlumno = paramsURL.get('lu');
@@ -302,7 +307,8 @@ function buildTableHtml(tableDef: TableDef): string {
           const btnEdit = document.createElement("button");
           btnEdit.textContent = "Editar";
           btnEdit.className = "action-btn btn-edit";
-          btnEdit.onclick = function () { confirmarEditar(pkPath); };
+          // USAMOS LA FUNCIÓN EDITAR (POPUP TODO)
+          btnEdit.onclick = function () { editar(pkPath); };
           tdAcc.appendChild(btnEdit);
 
           const btnDel = document.createElement("button");
@@ -315,14 +321,10 @@ function buildTableHtml(tableDef: TableDef): string {
           tbody.appendChild(tr);
         });
 
-        // NOTA: Ya NO llamamos a agregarFilaAlta(tbody) aquí.
-
       } catch (e) {
         console.error("Fallo al cargar tabla:", e);
       }
     }
-
-    // --- NUEVA LÓGICA DE FORMULARIO ---
 
     function toggleFormularioAlta() {
         const f = document.getElementById("form-alta");
@@ -331,7 +333,6 @@ function buildTableHtml(tableDef: TableDef): string {
         if (f.style.display === "none" || f.style.display === "") {
             f.style.display = "block";
             btn.textContent = "Ocultar formulario";
-            // Scroll suave hacia el form
             f.scrollIntoView({ behavior: 'smooth' });
         } else {
             f.style.display = "none";
@@ -342,8 +343,8 @@ function buildTableHtml(tableDef: TableDef): string {
     async function crearRegistro() {
       const body = {};
 
-      // Recolectar datos del formulario card
-      tableDef.columns.forEach(function (col) {
+      // RECOLECTAMOS DATOS USANDO 'columns' (Definición real de la tabla)
+      columns.forEach(function (col) {
         const el = document.getElementById("alta-" + col.name);
         if (el) {
             let val = el.value.trim();
@@ -363,14 +364,14 @@ function buildTableHtml(tableDef: TableDef): string {
           return;
       }
 
-      // Éxito: Limpiar campos y ocultar form
-      tableDef.columns.forEach(function (col) {
+      // Limpiar campos
+      columns.forEach(function (col) {
          const el = document.getElementById("alta-" + col.name);
          if(el) el.value = "";
       });
 
-      toggleFormularioAlta(); // Cerrar form
-      cargarTabla(); // Recargar datos
+      toggleFormularioAlta();
+      cargarTabla();
     }
 
     async function eliminarRegistro(pkPath) {
@@ -380,54 +381,11 @@ function buildTableHtml(tableDef: TableDef): string {
       cargarTabla();
     }
 
-    function editar() {
-      alert("TODO: falta implementar editar generico");
+    // EL POPUP DE TODO
+    function editar(pkPath) {
+        alert("TODO: falta implementar editar genérico");
     }
 
-    async function confirmarEditar(pkPath) {
-      const fila = document.querySelector('tr[data-pk="' + pkPath + '"]');
-      const pkParts = pkPath.split("/").map(decodeURIComponent);
-      const body = {};
-
-      tableDef.pk.forEach(function (pkCol, idx) {
-        body[pkCol] = pkParts[idx];
-      });
-
-      let rowData = {};
-      if (fila && fila.dataset.row) {
-        try { rowData = JSON.parse(fila.dataset.row); } catch {}
-      }
-
-      tableDef.columns.forEach(function (col) {
-        const input = document.getElementById("edit-" + col.name);
-        if (input) {
-          let val = input.value.trim();
-          if (val === "") val = null;
-          body[col.name] = val;
-        } else {
-          body[col.name] = rowData[col.name];
-        }
-      });
-
-      try {
-        const res = await fetch(API_BASE + "/" + pkPath, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body)
-        });
-        if (!res.ok) throw new Error("Error al actualizar: " + res.status);
-
-        editandoPk = null;
-        cargarTabla();
-      } catch (e) {
-        alert("No se pudo actualizar: " + e.message);
-      }
-    }
-
-    function cancelarEditar() {
-      editandoPk = null;
-      cargarTabla();
-    }
   </script>
 
 </body>
