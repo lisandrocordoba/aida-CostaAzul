@@ -13,13 +13,11 @@ export async function obtenerDatosRol(usuario: Usuario, nombreRol: string, clien
     // Del profesor: legajo, nombre, apellido
 
     if (nombreRol === "alumno") {
-
-
       //obtengo LU y carrera del alumno
         try {
           const result = await clientDb.query(
               'SELECT lu, nombre_carrera FROM aida.alumnos ' +
-                  'JOIN aida.carreras ON aida.alumnos.id_carrera = aida.carreras.id WHERE id_usuario = $1',
+                  'JOIN aida.carreras ON aida.alumnos.id_carrera_ALU = aida.carreras.id_carrera WHERE id_usuario_ALU = $1',
               [usuario.id]
           );
 
@@ -45,7 +43,7 @@ export async function obtenerDatosRol(usuario: Usuario, nombreRol: string, clien
       //obtengo legajo del profesor
         try {
           const result = await clientDb.query(
-              'SELECT legajo FROM aida.profesores WHERE id_usuario = $1',
+              'SELECT legajo FROM aida.profesores WHERE id_usuario_PROF = $1',
               [usuario.id]
           );
 

@@ -44,6 +44,7 @@ APIRouter.patch('/alumnos', requireRolAPI("secretario"), apiControllers.patchAlu
 
 
 // --- RUTAS DE CURSADAS NO GENERICAS ---
+APIRouter.get('/cursadas/profesor', requireRolAPI("profesor"), apiControllers.getCursadasDeProfesorAPIController);
 APIRouter.patch('/cursadas', apiControllers.patchCursadasController);
 
 // --- PLAN DE ESTUDIOS ---

@@ -38,7 +38,7 @@ export async function autenticarUsuario(
 ): Promise<Usuario | null> {
     try {
         const result = await client.query(
-            'SELECT id, username, password_hash, nombre, apellido, email, activo FROM aida.usuarios WHERE username = $1',
+            'SELECT id_usuario, username, password_hash, nombre_usuario, apellido, email, activo FROM aida.usuarios WHERE username = $1',
             [username]
         );
 
@@ -65,9 +65,9 @@ export async function autenticarUsuario(
         );*/
 
         return {
-            id: user.id,
+            id: user.id_usuario,
             username: user.username,
-            nombre: user.nombre,
+            nombre: user.nombre_usuario,
             apellido: user.apellido,
             email: user.email,
             activo: user.activo

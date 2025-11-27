@@ -7,6 +7,7 @@ import { Rol, obtenerDatosRol } from '../roles.js';
 import { Client } from 'pg';
 import { generarPdfCertificado } from '../certificados.js';
 import { DatoAtomico } from '../tipos-atomicos.js';
+import { pool } from '../database/db.js';
 
 
 // Cliente DB para el modulo
@@ -58,8 +59,9 @@ export async function selectRolAPIController(req: Request, res: Response) {
   const usuario = req.session.usuario; //handlear null
   const { rol } = req.body;
   req.session.rol = await obtenerDatosRol(usuario!, rol, clientDb) as Rol | null;
+  console.log("Entra en controller selectRolAPIController", req.session.rol);
   if(!req.session.rol) {
-      return res.redirect('/app/seleccionar-rol');
+      return res.redirect('/app/seleccion-rol');
   } else {
       return res.json({ message: 'Autenticación exitosa' });
   }
@@ -100,8 +102,24 @@ export async function getRolAPIController(req: Request, res: Response) {
   return res.status(500).send('Error interno al obtener rol');
 }
 
-// --- ALUMNOS ---
+// --- CURSADAS ---
+export async function getCursadasDeProfesorAPIController(req: Request, res: Response) {
+  const rol = req.session.rol as Rol;
+  const legajo = rol.legajo;
+  const cursadas = await pool.query(
+    `SELECT lu_CURS,lu,id_usuario_ALU,nombre_usuario,apellido,id_materia_CURS,nombre_materia,anio,cuatrimestre,nota
+                FROM aida.cursadas
+                JOIN aida.alumnos ON aida.cursadas.lu_CURS = aida.alumnos.lu
+                JOIN aida.usuarios ON aida.alumnos.id_usuario_ALU = aida.usuarios.id_usuario
+                JOIN aida.materias ON aida.cursadas.id_materia_CURS = aida.materias.id_materia
+                JOIN aida.dicta ON aida.cursadas.id_materia_CURS = aida.dicta.id_materia_DICTA
+                WHERE aida.dicta.legajo_DICTA = ${legajo}
+                ORDER BY anio,cuatrimestre`
+   );
+   res.json(cursadas.rows);
+}
 
+// --- ALUMNOS ---
 export async function patchAlumnosController(req: Request, res: Response) {
   console.log(req.params, req.query, req.body);
   const { dataLines: listaDeAlumnosCompleta, columns: columnas } = await csv.parsearCSV(req.body.csvText);

@@ -9,15 +9,15 @@ import { Rol } from '../roles.js';
 export function requireOwnershipAPI(req: Request, res: Response, next: NextFunction) {
   const rol = req.session.rol as Rol;
   if (!rol) {
-    return res.status(401).json({ error: 'No autorizado' });
+    return res.status(401).json({ error: 'No autorizado.' });
   }
 
   const queryParams = req.query;
-  console.log(queryParams)
+  //console.log(queryParams)
   // Solo el secretario puede acceder sin filtros
   if(Object.keys(queryParams).length === 0) {
     if(rol?.nombreRol !== "secretario"){
-        return res.status(401).json({ error: 'No autorizado sin filtros' });
+        return res.status(401).json({ error: 'No autorizado. Requiere rol secretario' });
     }
     return next();
 

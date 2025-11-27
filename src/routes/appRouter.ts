@@ -42,6 +42,10 @@ appRouter.get('/login', appControllers.loginController);
 // Usamos el middleware requireAuth para proteger las rutas de la aplicación
 appRouter.use(requireAuth);
 
+appRouter.get('/', (_: Request, res: Response) => {
+  res.redirect('/app/menu');
+});
+
 // Rutas que requieren autenticación
 
 // Ruta de selección de rol
@@ -54,5 +58,5 @@ appRouter.get('/cursadas', /*requireRol("secretario", "profesor"),*/ appControll
 appRouter.get('/archivo', requireRol("secretario"), appControllers.archivoController);
 appRouter.get('/certificados/lu', requireRol("secretario"), appControllers.certificadosLUController);
 appRouter.get('/certificados/fecha', requireRol("secretario"), appControllers.certificadosFechaController);
-
+appRouter.get('/cursadas/profesor', requireRol("profesor"), appControllers.cursadasProfesorController);
 export default appRouter;

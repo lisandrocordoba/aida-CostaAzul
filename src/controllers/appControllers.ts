@@ -39,6 +39,11 @@ export async function cursadasController(_: Request, res: Response) {
   res.status(200).send(plantillaTablaCursadas);
 }
 
+export async function cursadasProfesorController(_: Request, res: Response) {
+  const plantillaTablaCursadasProfesor = await readFile('views/tabla-cursadas-profesor.html', { encoding: 'utf8' });
+  res.status(200).send(plantillaTablaCursadasProfesor);
+}
+
 // --- ARCHIVO ---
 export async function archivoController(_: Request, res: Response) {
   const plantilla_carga_csv = await readFile('views/plantilla-carga-csv.html', { encoding: 'utf8' });

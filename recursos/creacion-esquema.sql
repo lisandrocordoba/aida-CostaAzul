@@ -3,86 +3,126 @@ drop schema if exists aida cascade;
 create schema aida;
 grant usage on schema aida to aida_admin;
 
--- version nueva
-create table aida.usuarios (                -- ESTA IMPLEMENTADA LA FUNCION "CAMBIAR PASSWORD", HAY Q HACER EN EL FRONTEND UN BOTON PARA CAMBIAR CONTRASEÑA
-    id serial primary key,
+-- ==========================================
+-- 1. TABLAS BASE (Sin FKs o con FKs cíclicas)
+-- ==========================================
+
+-- Tabla USUARIOS
+-- Cambios: id -> id_usuario, nombre -> nombre_usuario
+create table aida.usuarios (
+    id_usuario serial primary key,
     username text unique not null,
     password_hash text not null,
-    nombre text,
+    nombre_usuario text,
     apellido text,
     email text unique,
-    activo boolean not null default true    -- ESTO LO USAMOS? DESPUES VER BIEN QUE HACER CON EL
+    activo boolean not null default true
 );
 
-
+-- Tabla CARRERAS
+-- Cambios: id -> id_carrera
 CREATE TABLE aida.carreras (
-    id serial primary key,
+    id_carrera serial primary key,
     nombre_carrera text unique not null
 );
 
---version nueva
+-- Tabla MATERIAS
+-- Cambios: id -> id_materia
+CREATE TABLE aida.materias (
+    id_materia serial primary key,
+    nombre_materia text not null
+);
+
+-- ==========================================
+-- 2. TABLAS PRINCIPALES (Referencian a Base)
+-- ==========================================
+
+-- Tabla ALUMNOS
+-- Cambios: id_usuario -> id_usuario_ALU, id_carrera -> id_carrera_ALU
 create table aida.alumnos (
     lu text primary key,
-    id_usuario integer references aida.usuarios(id) on delete cascade, -- si borramos un usuario no queremos que este en alumno.(se pierde nombre y apellido y el id_usuario es incorrecto)
-    id_carrera integer references aida.carreras(id),
+    id_usuario_ALU integer references aida.usuarios(id_usuario) on delete cascade,
+    id_carrera_ALU integer references aida.carreras(id_carrera),
     titulo_en_tramite date,
     egreso date
 );
 
-CREATE TABLE aida.materias (
-    id serial primary key,
-    nombre_materia text not null
+-- Tabla PROFESORES
+-- Cambios: id_usuario -> id_usuario_PROF
+create table aida.profesores (
+    legajo serial primary key,
+    id_usuario_PROF integer references aida.usuarios(id_usuario) on delete cascade
 );
 
+-- Tabla SECRETARIO
+-- Cambios: id_usuario -> id_usuario_SEC
+create table aida.secretario (
+    id_secretario serial primary key,
+    id_usuario_SEC integer references aida.usuarios(id_usuario) on delete cascade
+);
+
+-- ==========================================
+-- 3. TABLAS DE RELACIÓN (Muchos a Muchos / Detalle)
+-- ==========================================
+
+-- Tabla MATERIAS EN CARRERA
+-- Cambios: id_carrera -> id_carrera_MEC, id_materia -> id_materia_MEC
 create TABLE aida.materiasEnCarrera (
-    id_carrera integer references aida.carreras(id) on delete cascade,
-    id_materia integer references aida.materias(id) on delete cascade,
-    primary key (id_carrera, id_materia)
+    id_carrera_MEC integer references aida.carreras(id_carrera) on delete cascade,
+    id_materia_MEC integer references aida.materias(id_materia) on delete cascade,
+    primary key (id_carrera_MEC, id_materia_MEC)
 );
 
+-- Tabla CURSADAS
+-- Cambios: alumno_lu -> lu_CURS, id_materia -> id_materia_CURS
 CREATE TABLE aida.cursadas (
-    alumno_lu text references aida.alumnos(lu) on delete cascade, -- si borramos un alumno queremos borrar todas sus cursadas
-    id_materia integer references aida.materias(id) on delete cascade, -- lo mismo con materia
+    lu_CURS text references aida.alumnos(lu) on delete cascade,
+    id_materia_CURS integer references aida.materias(id_materia) on delete cascade,
     anio integer not null,
     cuatrimestre integer not null,
     nota integer,
-    primary key (alumno_lu, id_materia, anio, cuatrimestre)
+    primary key (lu_CURS, id_materia_CURS, anio, cuatrimestre)
 );
 
-
--- version nueva
-create table aida.profesores (
-    legajo serial primary key,
-    id_usuario integer references aida.usuarios(id) on delete cascade
-);
-
--- version nueva
-create table aida.secretario (
-    id_secretario serial primary key,
-    id_usuario integer references aida.usuarios(id) on delete cascade
-);
-
--- version nueva
+-- Tabla DICTA
+-- Cambios: legajo_profesor -> legajo_DICTA, id_materia -> id_materia_DICTA
 create table aida.dicta (
-    legajo integer references aida.profesores(legajo) on delete cascade,
-    id_materia integer references aida.materias(id) on delete cascade,
-    primary key (legajo, id_materia)
+    legajo_DICTA integer references aida.profesores(legajo) on delete cascade,
+    id_materia_DICTA integer references aida.materias(id_materia) on delete cascade,
+    primary key (legajo_DICTA, id_materia_DICTA)
 );
 
 
-grant select, insert, update, delete on aida.alumnos to aida_admin;
+-- ==========================================
+-- 4. PERMISOS (GRANTS)
+-- ==========================================
+-- Nota: Al cambiar los nombres de las columnas ID, Postgres cambia el nombre de las secuencias automáticas.
+-- El formato suele ser: tabla_columna_seq
+
+-- Usuarios
 grant select, insert, update, delete on aida.usuarios to aida_admin;
-GRANT USAGE, SELECT, UPDATE ON SEQUENCE aida.usuarios_id_seq to aida_admin;
+GRANT USAGE, SELECT, UPDATE ON SEQUENCE aida.usuarios_id_usuario_seq to aida_admin;
+
+-- Carreras
 grant select, insert, update, delete on aida.carreras to aida_admin;
-GRANT USAGE, SELECT, UPDATE ON SEQUENCE aida.carreras_id_seq to aida_admin;
+GRANT USAGE, SELECT, UPDATE ON SEQUENCE aida.carreras_id_carrera_seq to aida_admin;
+
+-- Materias
 grant select, insert, update, delete on aida.materias to aida_admin;
-GRANT USAGE, SELECT, UPDATE ON SEQUENCE aida.materias_id_seq to aida_admin;
-grant select, insert, update, delete on aida.materiasEnCarrera to aida_admin;
-/*GRANT USAGE, SELECT, UPDATE ON SEQUENCE aida.materiasEnCarrera_id_seq to aida_admin;*/
-grant select, insert, update, delete on aida.cursadas to aida_admin;
-/*GRANT USAGE, SELECT, UPDATE ON SEQUENCE aida.cursadas_id_seq to aida_admin;*/
-/* grant select, insert, update, delete on aida.alumnosEnCarrera to aida_admin; */
---grants nuevos:
+GRANT USAGE, SELECT, UPDATE ON SEQUENCE aida.materias_id_materia_seq to aida_admin;
+
+-- Alumnos
+grant select, insert, update, delete on aida.alumnos to aida_admin;
+
+-- Profesores
 grant select, insert, update, delete on aida.profesores to aida_admin;
-grant select, insert, update, delete on aida.dicta to aida_admin;
+GRANT USAGE, SELECT, UPDATE ON SEQUENCE aida.profesores_legajo_seq to aida_admin; -- legajo es serial
+
+-- Secretario
 grant select, insert, update, delete on aida.secretario to aida_admin;
+GRANT USAGE, SELECT, UPDATE ON SEQUENCE aida.secretario_id_secretario_seq to aida_admin;
+
+-- Tablas de relación
+grant select, insert, update, delete on aida.materiasEnCarrera to aida_admin;
+grant select, insert, update, delete on aida.cursadas to aida_admin;
+grant select, insert, update, delete on aida.dicta to aida_admin;
