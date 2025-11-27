@@ -62,5 +62,26 @@ export async function obtenerDatosRol(usuario: Usuario, nombreRol: string, clien
           return null;
       }
     }
+
+    if (nombreRol === "secretario") {
+      //obtengo LU y carrera del alumno
+        try {
+          const result = await clientDb.query(
+              'SELECT * FROM aida.secretario WHERE id_usuario_SEC = $1',
+              [usuario.id]
+          );
+
+          if (result.rows.length === 0) {
+              return null;
+          }
+
+          return {
+              nombreRol: nombreRol
+          };
+      } catch (error) {
+          console.error('Error al obtener datos de sesión:', error);
+          return null;
+      }
+    }
   return null;
 }
