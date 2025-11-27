@@ -41,7 +41,7 @@ CREATE TABLE aida.materias (
 -- Cambios: id_usuario -> id_usuario_ALU, id_carrera -> id_carrera_ALU
 create table aida.alumnos (
     lu text primary key,
-    id_usuario_ALU integer references aida.usuarios(id_usuario) on delete cascade,
+    id_usuario_ALU integer unique references aida.usuarios(id_usuario) on delete cascade,
     id_carrera_ALU integer references aida.carreras(id_carrera),
     titulo_en_tramite date,
     egreso date
@@ -51,14 +51,14 @@ create table aida.alumnos (
 -- Cambios: id_usuario -> id_usuario_PROF
 create table aida.profesores (
     legajo serial primary key,
-    id_usuario_PROF integer references aida.usuarios(id_usuario) on delete cascade
+    id_usuario_PROF integer unique references aida.usuarios(id_usuario) on delete cascade
 );
 
 -- Tabla SECRETARIO
 -- Cambios: id_usuario -> id_usuario_SEC
 create table aida.secretario (
     id_secretario serial primary key,
-    id_usuario_SEC integer references aida.usuarios(id_usuario) on delete cascade
+    id_usuario_SEC integer unique references aida.usuarios(id_usuario) on delete cascade
 );
 
 -- ==========================================
