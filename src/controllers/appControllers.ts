@@ -35,7 +35,7 @@ export async function alumnosController(_: Request, res: Response) {
 
 // --- USUARIOS ---
 export async function usuariosController(_: Request, res: Response) {
-  const HTML = await readFile('views/plantilla-tabla-usuarios.html', { encoding: 'utf8' });
+  const HTML = await readFile('views/tabla-usuarios.html', { encoding: 'utf8' });
   res.status(200).send(HTML);
 }
 
