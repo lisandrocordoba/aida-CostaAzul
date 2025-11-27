@@ -62,24 +62,91 @@ function buildTableHtml(tableDef: TableDef): string {
   <meta charset="UTF-8" />
   <title>${tableDef.title}</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 30px; background-color: #f9f9f9; }
-    table { border-collapse: collapse; width: 100%; background: white; box-shadow: 0px 2px 6px rgba(0,0,0,0.1); }
-    th, td { border: 1px solid #ddd; padding: 10px 12px; text-align: left; }
-    th { background-color: #4CAF50; color: white; }
-    tr:nth-child(even) { background-color: #f2f2f2; }
-    tr:hover { background-color: #e1f5fe; }
-    input { width: 100%; box-sizing: border-box; padding: 6px; }
-    button { padding: 6px 10px; }
+    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&family=Merriweather:wght@700&display=swap');
+
+    body {
+      font-family: 'Roboto', sans-serif;
+      margin: 0;
+      padding: 30px 20px;
+      background-color: #f4f6f8;
+      color: #333;
+    }
+
+    h2 {
+      color: #2E7D32;
+      border-bottom: 2px solid #2E7D32;
+      padding-bottom: 10px;
+      margin-bottom: 25px;
+      font-family: 'Merriweather', serif;
+    }
+
+    .table-wrapper {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+      overflow: hidden;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+
+    th, td {
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid #eee;
+    }
+
+    th {
+      background-color: #4CAF50;
+      color: white;
+      font-weight: 500;
+      text-transform: uppercase;
+      font-size: 0.85em;
+    }
+
+    tr:nth-child(even) { background-color: #fcfcfc; }
+    tr:hover { background-color: #f1f8e9; }
+
+    input {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+
+    button.action-btn {
+      padding: 6px 12px;
+      cursor: pointer;
+      border: none;
+      border-radius: 4px;
+      font-size: 0.9em;
+      transition: background 0.2s;
+    }
+
+    .btn-edit { background-color: #FFB74D; color: white; margin-right: 5px; }
+    .btn-edit:hover { background-color: #F57C00; }
+
+    .btn-del { background-color: #E57373; color: white; }
+    .btn-del:hover { background-color: #D32F2F; }
+
+    .btn-add { background-color: #66BB6A; color: white; }
+    .btn-add:hover { background-color: #388E3C; }
   </style>
 </head>
 <body onload="cargarTabla()">
   <h2>${tableDef.title}</h2>
-  <table id="tabla-generica">
-    <thead>
-      <tr id="thead-row"></tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+
+  <div class="table-wrapper">
+    <table id="tabla-generica">
+      <thead>
+        <tr id="thead-row"></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
 
   <script>
     const tableDef = ${tableJson};
@@ -168,11 +235,13 @@ function buildTableHtml(tableDef: TableDef): string {
           const tdAcc = document.createElement("td");
           const btnEdit = document.createElement("button");
           btnEdit.textContent = "Editar";
+          btnEdit.className = "action-btn btn-edit";   // 🎨 solo estilo
           btnEdit.onclick = function () { editar(pkPath); };
           tdAcc.appendChild(btnEdit);
 
           const btnDel = document.createElement("button");
           btnDel.textContent = "Eliminar";
+          btnDel.className = "action-btn btn-del";     // 🎨 solo estilo
           btnDel.onclick = function () { eliminarRegistro(pkPath); };
           tdAcc.appendChild(btnDel);
 
@@ -201,6 +270,7 @@ function buildTableHtml(tableDef: TableDef): string {
       const tdAcc = document.createElement("td");
       const btn = document.createElement("button");
       btn.textContent = "Agregar";
+      btn.className = "action-btn btn-add";           // 🎨 solo estilo
       btn.onclick = crearRegistro;
       tdAcc.appendChild(btn);
       tr.appendChild(tdAcc);
@@ -229,9 +299,6 @@ function buildTableHtml(tableDef: TableDef): string {
       if (!res.ok) { alert("Error al eliminar: " + res.status); return; }
       cargarTabla();
     }
-
-
-
 
     async function confirmarEditar(pkPath) {
       const fila = document.querySelector('tr[data-pk="' + pkPath + '"]');
@@ -283,24 +350,16 @@ function buildTableHtml(tableDef: TableDef): string {
       }
     }
 
-
     function cancelarEditar() {
       editandoPk = null;
       cargarTabla();
     }
   </script>
 
-  </body>
-  </html>`;
+</body>
+</html>`;
 }
 
-
-// helper para poner títulos más lindos
-/*function toTitle(name: string): string {
-  return name
-    .replace(/_/g, " ")
-    .replace(/\b\w/g, c => c.toUpperCase());
-}*/
 
 
 
