@@ -56,6 +56,7 @@ appRouter.get('/menu', appControllers.menuController);
 appRouter.get('/alumnos', requireRol("secretario", "profesor"), appControllers.alumnosController);
 appRouter.get('/usuarios', requireRol("secretario"), appControllers.usuariosController);
 appRouter.get('/cursadas', /*requireRol("secretario", "profesor"),*/ appControllers.cursadasController);
+appRouter.get('/dicta', requireRol("secretario"), appControllers.dictaController);
 appRouter.get('/archivo', requireRol("secretario"), appControllers.archivoController);
 appRouter.get('/certificados/lu', requireRol("secretario"), appControllers.certificadosLUController);
 appRouter.get('/certificados/fecha', requireRol("secretario"), appControllers.certificadosFechaController);

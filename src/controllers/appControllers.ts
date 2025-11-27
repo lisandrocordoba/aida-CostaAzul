@@ -50,6 +50,12 @@ export async function cursadasProfesorController(_: Request, res: Response) {
   res.status(200).send(plantillaTablaCursadasProfesor);
 }
 
+// --- DICTA ---
+export async function dictaController(_: Request, res: Response) {
+  const plantillaTablaDicta = await readFile('views/plantilla-tabla-dicta.html', { encoding: 'utf8' });
+  res.status(200).send(plantillaTablaDicta);
+}
+
 // --- ARCHIVO ---
 export async function archivoController(_: Request, res: Response) {
   const plantilla_carga_csv = await readFile('views/plantilla-carga-csv.html', { encoding: 'utf8' });
