@@ -61,3 +61,9 @@ export async function certificadosFechaController(_: Request, res: Response) {
   const HTML_FECHA = await readFile('views/obtener-certificado-fecha.html', { encoding: 'utf8' });
   res.send(HTML_FECHA);
 }
+
+// --- CAMBIO DE PASSWORD ---
+export async function cambiarPasswordsController(_: Request, res: Response) {
+  const HTML = await readFile('views/cambiar-passwords.html', { encoding: 'utf8' });
+  res.send(HTML);
+}

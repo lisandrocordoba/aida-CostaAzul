@@ -32,6 +32,7 @@ function requireRolAPI(...rolesPermitidos: string[]) {
 // --- RUTAS DE AUTENTICACIÓN ---
 APIRouter.post('/auth/login', express.json(), apiControllers.loginAPIController);
 APIRouter.post('/auth/register', apiControllers.registerAPIController);
+APIRouter.post('/auth/cambiar-passwords', express.json(), apiControllers.cambioPasswordAPIController);
 APIRouter.use((requireAuthAPI));
 APIRouter.post('/auth/logout', apiControllers.logoutAPIController);
 

@@ -59,4 +59,5 @@ appRouter.get('/archivo', requireRol("secretario"), appControllers.archivoContro
 appRouter.get('/certificados/lu', requireRol("secretario"), appControllers.certificadosLUController);
 appRouter.get('/certificados/fecha', requireRol("secretario"), appControllers.certificadosFechaController);
 appRouter.get('/cursadas/profesor', requireRol("profesor"), appControllers.cursadasProfesorController);
+appRouter.get('/cambiar-passwords', requireRol("secretario"), appControllers.cambiarPasswordsController);
 export default appRouter;
