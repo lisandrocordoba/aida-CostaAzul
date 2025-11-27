@@ -7,6 +7,7 @@
 - implementar funcionalidad agregar generica con autocomplete (por ahora es con FK)
 - certificados por fecha devuelve el primer alumno que encuentra de dicha fecha
 - pensar si el trigger se mantiene funcionando con los cambios
+- FALTA VER QUE FUNCIONAN TODOS LOS BOTONES DE LAS TABLAS (EJ EDITAR/BORRAR EN CURSADAS DE PROFESOR)
 
 ## Deuda tecnica
 - SQL INJECTIONS!!!!!!!!!!!
