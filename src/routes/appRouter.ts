@@ -42,9 +42,6 @@ appRouter.get('/login', appControllers.loginController);
 // Usamos el middleware requireAuth para proteger las rutas de la aplicación
 appRouter.use(requireAuth);
 
-appRouter.get('/', (_: Request, res: Response) => {
-  res.redirect('/app/menu');
-});
 
 // Rutas que requieren autenticación
 

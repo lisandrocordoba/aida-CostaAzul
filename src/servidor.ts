@@ -1,5 +1,6 @@
 import express from "express";
 import session/*, { SessionData }*/ from 'express-session';
+import { Request, Response } from "express";
 
 import appRouter from './routes/appRouter.js';
 import APIRouter from "./routes/APIRouter.js";
@@ -26,6 +27,11 @@ app.use(session({
 
 // Generamos plantillas cuando arranca el servidor
 generarPlantillasHTML();
+
+// Redirigir la raíz a /app/menu
+appRouter.get('/', (_: Request, res: Response) => {
+  res.redirect('/app/menu');
+});
 
 // Routes
 app.use('/api/v0', APIRouter);
