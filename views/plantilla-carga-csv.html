@@ -3,31 +3,103 @@
 <head>
   <meta charset="UTF-8">
   <title>Carga de CSVs</title>
+
   <style>
-    body { font-family: sans-serif; padding: 20px; }
-    .form-section { margin-top: 20px; display: none; }
+    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&family=Merriweather:wght@700&display=swap');
+
+    body {
+      font-family: 'Roboto', sans-serif;
+      margin: 0;
+      padding: 30px 20px;
+      background-color: #f4f6f8;
+      color: #333;
+    }
+
+    h2 {
+      color: #2E7D32;
+      border-bottom: 2px solid #2E7D32;
+      padding-bottom: 10px;
+      margin-bottom: 25px;
+      font-family: 'Merriweather', serif;
+    }
+
+    .card {
+      background: white;
+      max-width: 520px;
+      padding: 22px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+      margin-top: 15px;
+    }
+
+    label {
+      font-weight: 500;
+      display: block;
+      margin-bottom: 6px;
+      color: #555;
+      margin-top: 15px;
+    }
+
+    select,
+    input[type="text"],
+    input[type="file"] {
+      width: 100%;
+      padding: 9px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background-color: white;
+      box-sizing: border-box;
+    }
+
+    button {
+      margin-top: 20px;
+      padding: 12px 16px;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+      font-size: 1em;
+      background-color: #66BB6A;
+      color: white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+      transition: background 0.2s;
+      width: 100%;
+    }
+
+    button:hover {
+      background-color: #388E3C;
+    }
+
+    .form-section {
+      display: none;
+      margin-top: 20px;
+    }
   </style>
 </head>
+
 <body>
+
   <h2>Cargar archivo CSV</h2>
 
-  <label for="fileType">Seleccioná el tipo de archivo:</label><br>
-  <select id="fileType" onchange="showForm()">
-    <option value="">-- Elegí una opción --</option>
-    <option value="alumnos">Alumnos</option>
-    <option value="plan_estudios">Plan de Estudios</option>
-    <option value="cursadas">Cursadas</option>
-  </select>
+  <div class="card">
+    <label for="fileType">Seleccioná el tipo de archivo:</label>
+    <select id="fileType" onchange="showForm()">
+      <option value="">-- Elegí una opción --</option>
+      <option value="alumnos">Alumnos</option>
+      <option value="plan_estudios">Plan de Estudios</option>
+      <option value="cursadas">Cursadas</option>
+    </select>
 
-  <div id="formContainer" class="form-section">
-    <form id="uploadForm">
-      <div id="extraFields"></div>
+    <div id="formContainer" class="form-section">
+      <form id="uploadForm">
 
-      <label for="csvFile">Archivo CSV:</label><br>
-      <input type="file" id="csvFile" name="csvFile" accept=".csv" required><br><br>
+        <div id="extraFields"></div>
 
-      <button type="button" onclick="handleUpload()">Procesar y Enviar</button>
-    </form>
+        <label for="csvFile">Archivo CSV:</label>
+        <input type="file" id="csvFile" name="csvFile" accept=".csv" required>
+
+        <button type="button" onclick="handleUpload()">Procesar y Enviar</button>
+      </form>
+    </div>
   </div>
 
   <script>
@@ -44,8 +116,8 @@
 
       if (type === 'plan_estudios') {
         extraFields.innerHTML = `
-          <label for="careerName">Nombre de la carrera:</label><br>
-          <input type="text" id="careerName" name="careerName" required><br><br>
+          <label for="careerName">Nombre de la carrera:</label>
+          <input type="text" id="careerName" name="careerName" required>
         `;
       }
 
@@ -73,6 +145,7 @@
 
       if (type === 'alumnos') {
         endpoint = '../api/v0/alumnos';
+
       } else if (type === 'plan_estudios') {
         const careerName = document.getElementById('careerName').value.trim();
         if (!careerName) {
@@ -81,6 +154,7 @@
         }
         payload.careerName = careerName;
         endpoint = '../api/v0/plan_estudios';
+
       } else if (type === 'cursadas') {
         endpoint = '../api/v0/cursadas';
       }
@@ -104,5 +178,6 @@
       }
     }
   </script>
+
 </body>
 </html>

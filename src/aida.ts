@@ -74,45 +74,54 @@ export async function obtenerAlumnoQueNecesitaCertificado(
   }
 
 export async function agregarCarrera(nombre: string, clientDb: Client): Promise<number> {
-    const existing = await clientDb.query<{ id: number }>(`
-        SELECT id FROM aida.carreras WHERE nombre = ${sqlLiteral(nombre)}
+    const existing = await clientDb.query<{ id_carrera: number }>(`
+        SELECT id_carrera FROM aida.carreras WHERE nombre_carrera = ${sqlLiteral(nombre)}
     `);
 
     if (existing.rows.length > 0) {
         throw new Error(`La carrera "${nombre}" ya existe en la base de datos`);
     }
 
-    const res = await clientDb.query<{ id: number }>(`
-        INSERT INTO aida.carreras (nombre)
+    const res = await clientDb.query<{ id_carrera: number }>(`
+        INSERT INTO aida.carreras (nombre_carrera)
         VALUES (${sqlLiteral(nombre)})
-        RETURNING id
+        RETURNING id_carrera
     `);
 
-    return res.rows[0]!.id;
+    return res.rows[0]!.id_carrera;
 }
 
 export async function agregarMateria(nombre: string, clientDb: Client): Promise<number> {
-    const existing = await clientDb.query<{ id: number }>(`
-        SELECT id FROM aida.materias WHERE nombre = ${sqlLiteral(nombre)}
+    console.log('Agregando materia:', nombre);
+
+    const existing = await clientDb.query<{ id_materia: number }>(`
+        SELECT id_materia FROM aida.materias WHERE nombre_materia = ${sqlLiteral(nombre)}
     `);
 
     if (existing.rows.length > 0) {
         throw new Error(`La materia "${nombre}" ya existe en la base de datos`);
     }
 
-    const res = await clientDb.query<{ id: number }>(`
-        INSERT INTO aida.materias (nombre)
+    const res = await clientDb.query<{ id_materia: number }>(`
+        INSERT INTO aida.materias (nombre_materia)
         VALUES (${sqlLiteral(nombre)})
-        RETURNING id
+        RETURNING id_materia
     `);
 
-    return res.rows[0]!.id;
+    return res.rows[0]!.id_materia;
 }
 
-export async function agregarMateriaACarrera(carreraId: number, materiaId: number, clientDb: Client): Promise<void> {
+
+export async function agregarMateriaACarrera(
+    carreraId: number,
+    materiaId: number,
+    clientDb: Client
+): Promise<void> {
+
     const existing = await clientDb.query<{ exists: boolean }>(`
         SELECT 1 FROM aida.materiasEnCarrera
-        WHERE carrera_id = $1 AND materia_id = $2
+        WHERE id_carrera_MEC = $1
+          AND id_materia_MEC = $2
     `, [carreraId, materiaId]);
 
     if (existing.rows.length > 0) {
@@ -120,8 +129,15 @@ export async function agregarMateriaACarrera(carreraId: number, materiaId: numbe
     }
 
     await clientDb.query(`
-        INSERT INTO aida.materiasEnCarrera (carrera_id, materia_id)
-        VALUES ($1, $2)
-    `, [carreraId, materiaId]);
+        INSERT INTO aida.materiasEnCarrera (id_carrera_MEC, id_materia_MEC)
+        VALUES (${carreraId}, ${materiaId})
+    `);
 }
 
+
+export const operacionesAida: DefinicionesDeOperaciones = [
+    {operacion: 'prueba-primero', cantidadArgumentos: 0, accion: generarCertificadoAlumnoPrueba},
+    {operacion: 'archivo'       , cantidadArgumentos: 1, accion: cargarNovedadesAlumnosDesdeCsv},
+    {operacion: 'fecha'         , cantidadArgumentos: 1, accion: generarCertificadoAlumnoFecha },
+    {operacion: 'lu'            , cantidadArgumentos: 1, accion: generarCertificadoAlumnoLu    },
+]
