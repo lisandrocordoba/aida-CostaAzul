@@ -109,9 +109,9 @@ export async function getMateriasDeProfesorAPIController(req: Request, res: Resp
     `SELECT id_materia_DICTA, nombre_materia
                 FROM aida.dicta
                 JOIN aida.materias ON aida.dicta.id_materia_DICTA = aida.materias.id_materia
-                WHERE aida.dicta.legajo_DICTA = ${legajo}
+                WHERE aida.dicta.legajo_DICTA = $1
                 `
-   );
+   , [legajo]);
    return res.json(cursadas.rows);
 }
 
@@ -125,11 +125,11 @@ export async function getCursadasDeProfesorAPIController(req: Request, res: Resp
     JOIN aida.materias ON aida.cursadas.id_materia_CURS = aida.materias.id_materia
     JOIN aida.alumnos ON aida.cursadas.lu_CURS = aida.alumnos.lu
     JOIN aida.usuarios ON aida.alumnos.id_usuario_ALU = aida.usuarios.id_usuario
-    WHERE aida.cursadas.id_materia_CURS = ${id_materia}
+    WHERE aida.cursadas.id_materia_CURS = $1
     ORDER BY anio, cuatrimestre
   `;
   console.log(sql);
-  const cursadas = await pool.query(sql);
+  const cursadas = await pool.query(sql, [id_materia]);
   return res.json(cursadas.rows);
 }
 
@@ -138,7 +138,7 @@ export async function deleteCursadaProfesorController(req: Request, res: Respons
 
   console.log("BORRANDO CURSADA:", { lu, id_materia, anio, cuatrimestre });
 
-  const legajo = req.session.rol?.legajo;                                                       // USAR MISMA LOGICA PARA EL EDIT Y PARA EL AGREGAR! ! ! ! !! ! !  !!
+  const legajo = req.session.rol?.legajo;
   if (!legajo) {
     return res.status(403).json({ error: "Acceso no autorizado." });
   }

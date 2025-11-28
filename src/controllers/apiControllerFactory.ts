@@ -49,7 +49,6 @@ export function controllers(tableDef: TableDef){
             return ''
         };
         const tabla = allTableDefs.find(tabla => tabla.name === fk.referencesTable); // tabla alumnos
-        //console.log(tabla);
 
         let second_fk;
         for (const column of fk.referencesColumns) {
