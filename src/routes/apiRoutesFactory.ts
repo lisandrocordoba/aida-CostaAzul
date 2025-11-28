@@ -15,7 +15,6 @@ export function requireOwnershipAPI(req: Request, res: Response, next: NextFunct
   }
 
   const queryParams = req.query;
-  //console.log(queryParams)
   // Solo el secretario puede acceder sin filtros
   if(Object.keys(queryParams).length === 0) {
     if(rol?.nombreRol !== "secretario"){
@@ -27,7 +26,6 @@ export function requireOwnershipAPI(req: Request, res: Response, next: NextFunct
 
         // Alumnos pueden ver solo sus datos
         if (rol?.nombreRol === "alumno") {
-            console.log('Accediendo a cursadas de Alumno: ', Object.values(queryParams), 'siendo:', rol?.lu);
             const lu = queryParams.lu as string | undefined;
             if (!lu || lu !== rol.lu) {
                 return res.status(401).json({ error: 'No autorizado a ver datos de lu:' + lu });
@@ -48,7 +46,6 @@ export function requireOwnershipAPI(req: Request, res: Response, next: NextFunct
 
 
 export function createTableRouter(tableDef:TableDef) {
-    console.log(`Creando router para tabla ${tableDef.name} con PK: ${tableDef.pk.join(', ')}`);
     const pkPath = tableDef.pk.map(column => `/:${column}`).join('')
     const router = Router();
     const {

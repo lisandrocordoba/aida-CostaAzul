@@ -18,16 +18,10 @@ export function controllers(tableDef: TableDef){
 
 
 
-
-    // CHEQUEAR COMO INCLUIR LAS TABLE DEFS EN EL MODULO
+    // Mapea una columna a todas las columnas necesarias para hacer joins y obtenerla
     function mapColumnGenerico(colname: ColumnName, tableName: TableName): ColumnName[] {
-        //obtener fk de "tableName" en la tableDef.
-
         const tabla = allTableDefs.find(tabla => tabla.name === tableName);
-        //console.log(allTableDefs);
-        //console.log(tabla);
-        const fk = tabla!.fks.find(fk => fk.column === colname); //             HABRIA QUE ATRAPAR EL CASO TABLA = NULL
-        //console.log(fk);
+        const fk = tabla!.fks.find(fk => fk.column === colname);
         if(fk){
             return [colname, ...fk.referencesColumns.map(referenceColname => mapColumnGenerico(referenceColname, fk.referencesTable)).flat()];    // Asumimos que no hay columnas con mismo nombre en distintas tablas
         } else {
@@ -44,18 +38,17 @@ export function controllers(tableDef: TableDef){
         }
     }
 
+    // Mapea recursivamente los joins necesarios para obtener una columna via foreign keys
     function recursiveJoin(fk: ForeignKeyDef, tablename: TableName): string{
         if (!fk){
             return ''
         };
-        const tabla = allTableDefs.find(tabla => tabla.name === fk.referencesTable); // tabla alumnos
+        const tabla = allTableDefs.find(tabla => tabla.name === fk.referencesTable);
 
         let second_fk;
         for (const column of fk.referencesColumns) {
             second_fk = tabla!.fks.find(second_fk => second_fk.column === column);
-        }    //             HABRIA QUE ATRAPAR EL CASO TABLA = NULL
-        console.log(second_fk);
-        console.log(fk);
+        }
 
         return `JOIN aida.${fk.referencesTable} ON aida.${tablename}.${fk.column} = aida.${fk.referencesTable}.${fk.referencedColumn} ` + recursiveJoin(second_fk!, tabla!.name)
     }
@@ -82,7 +75,7 @@ export function controllers(tableDef: TableDef){
                     // Notar que si nos hubieran pasado ?alumno_lu=1234, la tabla seria cursadas
                     // Notar que esto funciona ya que asumimos NO hay columnas de igual nombre en distintas tablas
                     tableWhere = allTableDefs.find(tabla => tabla.columns.some(colDef => colDef.name === key));
-                    if(!tableWhere || !from.includes(`aida.${tableWhere.name}`)){   // Si no encontramos la tabla o la tabla no está en el from crasheamos
+                    if(!tableWhere || !from.includes(`aida.${tableWhere.name}`)){
                         res.status(400).json({ error: `Columna ${key} no es filtro valido` });
                         return;
                     }
@@ -90,25 +83,6 @@ export function controllers(tableDef: TableDef){
                 };
                 where = where.slice(0, -5); // sacar el ultimo AND, podriamos repensar la logica para evitar esto
             }
-
-            /*
-            YA no va, lo dejo para que vean como era el caso NO generico
-
-            const lu = queryParams.lu as string | undefined;
-            if (lu) {
-                where = `WHERE aida.alumnos.lu = '${lu}'`;
-            }
-
-            if(legajo) {
-                where = `WHERE aida.profesores.legajo = '${legajo}'`;
-            }
-            */
-            console.log(`
-                SELECT ${select}
-                FROM ${from}
-                ${where}
-                ORDER BY ${orderBy ?? pk}
-            `);
 
             const result = await pool.query(`
                 SELECT ${select}
@@ -134,7 +108,6 @@ export function controllers(tableDef: TableDef){
                 return `JOIN aida.${fk.referencesTable} ON ${tablename}.${fk.column} = aida.${fk.referencesTable}.${fk.referencedColumn}`;
             }).join(' ');
         }
-        console.log(`SELECT ${select} FROM ${from} WHERE ${pkDolarCondition(1)}`, pkParams(req.params));
         const result = await pool.query(`SELECT ${select} FROM ${from} WHERE ${pkDolarCondition(1)}`, pkParams(req.params));
         if (result.rows.length === 0) {
         res.status(404).json({ error: `${elementName} no encontrado` });
@@ -162,7 +135,7 @@ export function controllers(tableDef: TableDef){
     };
 
 
-    // No se puede cambiar carrera al alumno.
+    // OBS: No se puede cambiar carrera al alumno.
     const updateRecord = async (req: Request, res: Response): Promise<void> => {
     try {
         const result = await pool.query(
@@ -184,7 +157,6 @@ export function controllers(tableDef: TableDef){
 
     const deleteRecord = async (req: Request, res: Response): Promise<void> => {
     try {
-        console.log(`DELETE FROM ${tablename} WHERE ${pkDolarCondition(1)}`, pkParams(req.params));
         const result = await pool.query(
         `DELETE FROM ${tablename} WHERE ${pkDolarCondition(1)} RETURNING *`,
         pkParams(req.params)

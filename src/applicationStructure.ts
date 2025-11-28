@@ -114,7 +114,7 @@ const tableDefinitions: TableDef[] = [
     ],
     pk: ['lu_CURS' as ColumnName, 'id_materia_CURS' as ColumnName, 'anio' as ColumnName, 'cuatrimestre' as ColumnName],
     fks: [
-      { column: 'lu_CURS', referencedColumn: 'lu', referencesTable: 'alumnos', referencesColumns: ['lu', 'id_usuario_ALU']}, //nombre', 'apellido'] },
+      { column: 'lu_CURS', referencedColumn: 'lu', referencesTable: 'alumnos', referencesColumns: ['lu', 'id_usuario_ALU']},
       { column: 'id_materia_CURS', referencedColumn: 'id_materia', referencesTable: 'materias', referencesColumns: ['nombre_materia'] }
     ],
     orderBy: ['anio' as ColumnName, 'cuatrimestre' as ColumnName],
@@ -205,7 +205,6 @@ export function completeTableDefaults(tableDef:TableDef[]): TableDef[]{
             orderBy: t.orderBy ?? t.pk,
             columns: t.columns.map(c => {
                 return {
-                    // title: c.title ?? c.name,
                     ...c,
                     title: c.title ?? c.name,
                     description: c.description ?? ''

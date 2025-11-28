@@ -25,7 +25,6 @@ export async function refrescarTablaCursadas(
         await clientDb.query(query);
     }
 
-    console.log('Tabla de cursadas actualizada');
 }
 
 export async function agregarAlumno(columnas: string[], values: string[], clientDb: Client) {
@@ -33,9 +32,7 @@ export async function agregarAlumno(columnas: string[], values: string[], client
             INSERT INTO aida.alumnos (${columnas.join(', ')}) VALUES
                 (${values.map((value) => value == '' ? 'null' : sqlLiteral(value))})
         `;
-    console.log(query);
-    const res = await clientDb.query(query);
-    console.log(res.command, res.rowCount);
+    await clientDb.query(query);
 }
 
 export type FiltroAlumnos = {fecha: Fecha} | {lu: string} | {uno: true} | {todos: true}
@@ -64,11 +61,7 @@ export async function obtenerAlumnoQueNecesitaCertificado(
           ${"uno" in filtro ? `LIMIT 1` : ""}
       `;
 
-      console.log("Corriendo query:", sql);
-
       const res = await clientDb.query(sql);
-
-      console.log("Resultado de obtenerAlumnoQueNecesitaCertificado:", res.rows);
 
       return res.rows;
   }
@@ -92,7 +85,6 @@ export async function agregarCarrera(nombre: string, clientDb: Client): Promise<
 }
 
 export async function agregarMateria(nombre: string, clientDb: Client): Promise<number> {
-    console.log('Agregando materia:', nombre);
 
     const existing = await clientDb.query<{ id_materia: number }>(`
         SELECT id_materia FROM aida.materias WHERE nombre_materia = ${sqlLiteral(nombre)}
