@@ -380,7 +380,7 @@ export async function cambioPasswordAPIController(req: Request, res: Response) {
 
   // --- USUARIOS ---
   export async function getUsuariosController(_: Request, res: Response) {
-    const usuarios = await pool.query('SELECT id_usuario, username, nombre_usuario, apellido, email FROM aida.usuarios');
+    const usuarios = await pool.query('SELECT id_usuario, username, nombre_usuario, apellido, email FROM aida.usuarios ORDER BY id_usuario');
     return res.status(200).json(usuarios.rows);
   }
 
