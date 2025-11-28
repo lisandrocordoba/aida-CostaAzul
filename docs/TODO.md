@@ -7,6 +7,7 @@
 - certificados por fecha devuelve el primer alumno que encuentra de dicha fecha
 - pensar si el trigger se mantiene funcionando con los cambios
 - FALTA VER QUE FUNCIONAN TODOS LOS BOTONES DE LAS TABLAS (EJ EDITAR/BORRAR EN CURSADAS DE PROFESOR)
+- Secretario debería poder ver planes de estudio.
 
 ## Deuda tecnica
 - SQL INJECTIONS!!!!!!!!!!!
