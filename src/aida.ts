@@ -130,14 +130,7 @@ export async function agregarMateriaACarrera(
 
     await clientDb.query(`
         INSERT INTO aida.materiasEnCarrera (id_carrera_MEC, id_materia_MEC)
-        VALUES (${carreraId}, ${materiaId})
-    `);
+        VALUES ($1, $2)
+    `, [carreraId, materiaId]);
 }
 
-
-export const operacionesAida: DefinicionesDeOperaciones = [
-    {operacion: 'prueba-primero', cantidadArgumentos: 0, accion: generarCertificadoAlumnoPrueba},
-    {operacion: 'archivo'       , cantidadArgumentos: 1, accion: cargarNovedadesAlumnosDesdeCsv},
-    {operacion: 'fecha'         , cantidadArgumentos: 1, accion: generarCertificadoAlumnoFecha },
-    {operacion: 'lu'            , cantidadArgumentos: 1, accion: generarCertificadoAlumnoLu    },
-]
