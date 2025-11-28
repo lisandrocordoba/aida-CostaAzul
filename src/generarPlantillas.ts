@@ -53,7 +53,6 @@ function buildTableHtml(tableDef: TableDef): string {
   // Postgres devuelve las columnas en minúsculas (ej: 'lu_curs') aunque las definamos como 'lu_CURS'.
   // Al hacer esto, row['lu_curs'] encontrará el valor correcto en el JSON.
   const pkValueFields = tableDef.pk.map(pk => pk.toLowerCase());
-
   const displayColumnsJson = JSON.stringify(displayColumns);
   const pkValueFieldsJson = JSON.stringify(pkValueFields);
   const tableJson = JSON.stringify(tableDef);
@@ -61,7 +60,6 @@ function buildTableHtml(tableDef: TableDef): string {
   // VARIABLE CLAVE: Definición de columnas base para el script del cliente
   const columnsJson = JSON.stringify(tableDef.columns);
 
-  // GENERAMOS EL HTML DE LOS INPUTS EN EL SERVIDOR
   const formFieldsHtml = tableDef.columns.map(col => {
       const label = col.title || col.name;
       return `

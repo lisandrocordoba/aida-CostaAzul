@@ -11,7 +11,6 @@ import { pool } from '../database/db.js';
 
 
 // Cliente DB para el modulo
-// Pensar si conviene hacerlo en cada función
 let clientDb: Client;
 if (process.env.IS_DEVELOPMENT === 'true') {
     clientDb = new Client();
@@ -37,7 +36,6 @@ export async function loginAPIController(req: Request, res: Response) {
 // --- LOGOUT ---
 export function logoutAPIController(req: Request, res: Response) {
   req.session.destroy(err => {
-    console.log("estoy aca");
     if (err) return res.status(500).json({ error: 'Error al cerrar sesión' });
     res.clearCookie('connect.sid', { path: '/' });
     res.redirect('/app/login');
@@ -53,12 +51,10 @@ export async function registerAPIController(req: Request, res: Response) {
 }
 
 // --- ROLES ---
-// Hay que agregar tipo ROL, por ahora solo es string
 export async function selectRolAPIController(req: Request, res: Response) {
-  const usuario = req.session.usuario; //handlear null
+  const usuario = req.session.usuario;
   const { rol } = req.body;
   req.session.rol = await obtenerDatosRol(usuario!, rol, clientDb) as Rol | null;
-  console.log("Entra en controller selectRolAPIController", req.session.rol);
   if(!req.session.rol) {
       return res.redirect('/app/seleccion-rol');
   } else {
@@ -68,7 +64,6 @@ export async function selectRolAPIController(req: Request, res: Response) {
 
 export async function getRolAPIController(req: Request, res: Response) {
   const rol = req.session?.rol;
-  console.log("Entra en controller getRolAPIController", rol);
   if (!rol) {
     return res.status(401).json({ error: 'No hay rol seleccionado' });
   }
@@ -128,15 +123,12 @@ export async function getCursadasDeProfesorAPIController(req: Request, res: Resp
     WHERE aida.cursadas.id_materia_CURS = $1
     ORDER BY anio, cuatrimestre
   `;
-  console.log(sql);
   const cursadas = await pool.query(sql, [id_materia]);
   return res.json(cursadas.rows);
 }
 
 export async function deleteCursadaProfesorController(req: Request, res: Response) {
   const { lu, id_materia, anio, cuatrimestre } = req.params;
-
-  console.log("BORRANDO CURSADA:", { lu, id_materia, anio, cuatrimestre });
 
   const legajo = req.session.rol?.legajo;
   if (!legajo) {
@@ -179,21 +171,15 @@ export async function deleteCursadaProfesorController(req: Request, res: Respons
 }
 
 export async function updateCursadaProfesorController(req: Request, res: Response) {
-  // PK actual de la cursada (la que ya existe)
   const { lu, id_materia, anio, cuatrimestre} = req.params;
-
-  // Campos que vas a editar (por ahora solo nota)
   const { nota } = req.body;
 
-  console.log("EDITANDO CURSADA:", { lu, id_materia, anio, cuatrimestre, nota });
-
-  // 1) Verificar sesión del profesor
   const legajo = req.session.rol?.legajo;
   if (!legajo) {
     return res.status(403).json({ error: "Acceso no autorizado." });
   }
 
-  // 2) Verificar que el profesor dicta la materia (MISMA LÓGICA QUE DELETE/CREATE)
+  // Verificar que el profesor dicta la materia (MISMA LÓGICA QUE DELETE/CREATE)
   const checkSql = `
     SELECT 1
     FROM aida.dicta
@@ -208,7 +194,6 @@ export async function updateCursadaProfesorController(req: Request, res: Respons
   }
 
   try {
-    // 3) UPDATE de la cursada
     const sql = `
       UPDATE aida.cursadas
       SET nota = $5
@@ -241,16 +226,12 @@ export async function updateCursadaProfesorController(req: Request, res: Respons
 
 export async function createCursadaProfesorController(req: Request, res: Response) {
   const { lu_CURS, id_materia_CURS, anio, cuatrimestre, nota} = req.body;
-
-  console.log("CREANDO CURSADA:", { lu_CURS, id_materia_CURS, anio, cuatrimestre, nota });
-
-  // 1. Verificar sesión del profesor
   const legajo = req.session.rol?.legajo;
   if (!legajo) {
     return res.status(403).json({ error: "Acceso no autorizado." });
   }
 
-  // 2. Verificar que el profesor dicta la materia
+  // Verificar que el profesor dicta la materia
   const checkSql = `
     SELECT 1
     FROM aida.dicta
@@ -266,7 +247,6 @@ export async function createCursadaProfesorController(req: Request, res: Respons
   }
 
   try {
-    // 3. Insertar la cursada
     const sql = `
       INSERT INTO aida.cursadas (lu_CURS, id_materia_CURS, anio, cuatrimestre, nota)
       VALUES ($1, $2, $3, $4, $5)
@@ -292,14 +272,12 @@ export async function createCursadaProfesorController(req: Request, res: Respons
 
 // --- ALUMNOS ---
 export async function patchAlumnosController(req: Request, res: Response) {
-  console.log(req.params, req.query, req.body);
   const { dataLines: listaDeAlumnosCompleta, columns: columnas } = await csv.parsearCSV(req.body.csvText);
   await aida.refrescarTablaAlumnos(clientDb, listaDeAlumnosCompleta, columnas);
   res.status(200).send('Tabla de alumnos actualizada');
 }
 
 export async function patchCursadasController(req: Request, res: Response) {
-  console.log(req.params, req.query, req.body);
   const { dataLines: listaDeCursadasCompleta, columns: columnas } = await csv.parsearCSV(req.body.csvText);
   await aida.refrescarTablaCursadas(clientDb, listaDeCursadasCompleta, columnas);
   res.status(200).send('Tabla de cursadas actualizada');
@@ -313,19 +291,14 @@ export async function patchPlanEstudiosController(req: Request, res: Response) {
       res.status(400).send('Faltan csvText o careerName');
       return;
     }
-    // Agregar carrera
     const carreraId = await aida.agregarCarrera(careerName.trim(), clientDb);
-
-    // Parsear CSV con materias
     const { dataLines, columns } = csv.parsearCSV(csvText);
 
-    // Validar estructura del CSV: una sola columna llamada "materias"
     if (columns.length !== 1 || columns[0]!.toLowerCase() !== 'materias') {
       res.status(400).send('CSV inválido: se espera columna "materias"');
       return;
     }
 
-    // Procesar cada materia
     for (const line of dataLines) {
       const materiaNombre = line[0]!.trim();
       if (!materiaNombre) continue;
@@ -341,7 +314,7 @@ export async function patchPlanEstudiosController(req: Request, res: Response) {
   }
 }
 
-// --- CERTIFICADOS ---           VER: ESTAMOS DEVOLVIENDO UNICAMENTE EL CERTIFICADO DEL PRIMER ALUMNO QUE COINCIDE CON EL FILTRO
+// --- CERTIFICADOS ---           DEVOLVEMOS UNICAMENTE EL CERTIFICADO DEL PRIMER ALUMNO QUE COINCIDE CON EL FILTRO
 export async function getCertificadosController(req: Request, res: Response) {
   const { lu, fecha } = req.query;
   var alumnos: Record<string, DatoAtomico>[] = [];
@@ -355,7 +328,6 @@ export async function getCertificadosController(req: Request, res: Response) {
         return;
     }
     if (alumnos.length == 0) {
-      console.log(`No hay alumnos que necesiten certificado para el parametro `, lu ?? fecha);
       res.status(404).send("El alumno no necesita certificado o no existe.");
     } else {
       generarPdfCertificado(alumnos[0]!, res);
@@ -433,12 +405,10 @@ export async function cambioPasswordAPIController(req: Request, res: Response) {
 
 // DICTA - SECRETARIOS
 
-
 export async function getDictaController(req: Request, res: Response) {
   try {
     const { legajo, lu } = req.query as { legajo?: string; lu?: string };
 
-    // Base query: todas las relaciones dicta con datos de profesor + materia
     let sql = `
       SELECT
         d.legajo_dicta      AS "legajo_DICTA",
@@ -456,17 +426,16 @@ export async function getDictaController(req: Request, res: Response) {
         ON m.id_materia = d.id_materia_dicta
     `;
 
-
     const params: any[] = [];
     const conditions: string[] = [];
 
-    // Si viene ?legajo=... → filtrar por ese profesor
+    // Si viene ?legajo=... filtrar por ese profesor
     if (legajo) {
       params.push(legajo);
       conditions.push(`d.legajo_DICTA = $${params.length}`);
     }
 
-    // Si viene ?lu=... → filtrar solo materias donde ese alumno está cursando
+    // Si viene ?lu=... filtrar solo materias donde ese alumno está cursando
     if (lu) {
       params.push(lu);
       conditions.push(`

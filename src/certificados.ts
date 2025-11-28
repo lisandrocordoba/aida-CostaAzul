@@ -16,7 +16,6 @@ export function generarPdfCertificado(alumno: Record<string, DatoAtomico>, res: 
   };
   const printer = new PdfPrinter(fonts);
 
-  // 3. TU DISEÑO (Con las variables inyectadas)
   const docDefinition: TDocumentDefinitions = {
     pageSize: 'A4',
     pageMargins: [60, 60, 60, 60],

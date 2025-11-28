@@ -26,7 +26,7 @@ APIRouter.use((requireAuthAPI));
 APIRouter.post('/auth/logout', apiControllers.logoutAPIController);
 
 // --- RUTA DE SELECCIÓN DE ROL ---
-APIRouter.post('/roles/select', apiControllers.selectRolAPIController); //USAMOS EXPRESS.JSON() ACA?
+APIRouter.post('/roles/select', apiControllers.selectRolAPIController);
 APIRouter.get('/roles/get', apiControllers.getRolAPIController);
 
 // --- RUTAS DE ALUMNOS NO GENERICAS ---

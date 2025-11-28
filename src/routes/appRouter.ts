@@ -4,7 +4,7 @@ import * as appControllers from '../controllers/appControllers.js';
 import { Rol } from '../roles.js';
 
 // Extendemos los tipos de sesion
-// HABRIA QUE HACERLO EN OTRO LADO!
+// HABRIA QUE HACERLO EN OTRO LADO?
 declare module 'express-session' {
   interface SessionData {
       usuario?: Usuario;

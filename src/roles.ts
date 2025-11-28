@@ -9,9 +9,6 @@ export type Rol = { nombreRol: string;
                   }
 
 export async function obtenerDatosRol(usuario: Usuario, nombreRol: string, clientDb: Client) {
-    // Obtener info del profesor o alumno con el usuario id
-    // Del alumno: lu, nombre, apellido, carrera
-    // Del profesor: legajo, nombre, apellido
 
     if (nombreRol === "alumno") {
       //obtengo LU y carrera del alumno
