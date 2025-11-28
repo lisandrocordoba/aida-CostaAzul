@@ -1,7 +1,7 @@
 import { Pool } from 'pg';
 
 // Cliente DB para el modulo
-let pool: Pool;
+export let pool: Pool;
 if (process.env.IS_DEVELOPMENT === 'true') {
     pool = new Pool();
 } else {
@@ -9,7 +9,6 @@ if (process.env.IS_DEVELOPMENT === 'true') {
         connectionString: process.env.DATABASE_URL
     });
 }
-pool.connect();
 
 
 
