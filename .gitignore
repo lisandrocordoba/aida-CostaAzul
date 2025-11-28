@@ -3,6 +3,8 @@ dist-test/
 
 node_modules/
 
+views/plantilla-tabla*.html
+
 local-*
 *-local.*
 *-local

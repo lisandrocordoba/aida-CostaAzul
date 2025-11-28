@@ -1,12 +1,10 @@
 import fs from "fs";
 import path from "path";
-import { tableDefs } from "./applicationStructure.js";
+import { ColumnName, ColumnDef, TableDef, tableDefs } from "./applicationStructure.js";
 import { fileURLToPath } from "url";
-
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
 
 export function generarPlantillasHTML() {
   const recursosDir = path.join(__dirname, "..", "views");
@@ -16,6 +14,9 @@ export function generarPlantillasHTML() {
   }
 
   for (const table of tableDefs) {
+    if (table.name === "usuarios" || table.name === "dicta") {
+      continue;
+    }
     const filePath = path.join(recursosDir, `plantilla-tabla-${table.name}.html`);
     const html = buildTableHtml(table);
     fs.writeFileSync(filePath, html, "utf8");
@@ -23,48 +24,50 @@ export function generarPlantillasHTML() {
   }
 }
 
+interface displayColumn {
+    field: ColumnName;
+    title: string;
+    editField: string | null
+}
 
-function buildTableHtml(tableDef: any): string {
-  const fkByColumn = new Map<string, any>();
-  for (const fk of tableDef.fks ?? []) {
-    fkByColumn.set(fk.column, fk);
-  }
+function toDisplayColumns(column: ColumnDef, table: TableDef): displayColumn[] {
+    const fk = table.fks?.find(fk => fk.column === column.name);
+    if(fk){
+        return  [
+                ...fk.referencesColumns.map((refCol: ColumnName) => {
+                        const refTable = tableDefs.find(tableDef => tableDef.name === fk.referencesTable);
+                        const refColumnDef = refTable?.columns.find(colDef => colDef.name === refCol);
+                        return toDisplayColumns(refColumnDef!, refTable!);
+                    }).flat()
+                ];
+    } else {
+        return [{field: column.name, title: column.title!, editField: column.name}];
+    }
+}
 
-  const displayColumns: { field: string; title: string; editField: string | null }[] = [];
-  for (const col of tableDef.columns) {
-  const fk = fkByColumn.get(col.name);
-  if (fk) {
-    // Columna FK: mostramos las referencesColumns
-    fk.referencesColumns.forEach((refCol: string, idx: number) => {
-      const title =
-        idx === 0 && col.title
-          ? col.title
-          : toTitle(refCol);
+function buildTableHtml(tableDef: TableDef): string {
 
-      displayColumns.push({
-        field: refCol,               // lo que viene en el JSON (ej: "carrera")
-        title,
-        editField: idx === 0 ? col.name : null
-        // 👆 la PRIMER columna derivada edita la columna real (ej: "id_carrera")
-        // las demás son sólo de lectura
-      });
-    });
-  } else {
-    // Columna normal
-    displayColumns.push({
-      field: col.name,
-      title: col.title ?? toTitle(col.name),
-      editField: col.name
-    });
-  }
-  }
+  const displayColumns = tableDef.columns.map((c: any) => toDisplayColumns(c, tableDef)).flat();
 
-
-  const pkValueFields: string[] = tableDef.pk.slice();
-
+  // FIX CRÍTICO: Usamos .toLowerCase() en las PKs.
+  // Postgres devuelve las columnas en minúsculas (ej: 'lu_curs') aunque las definamos como 'lu_CURS'.
+  // Al hacer esto, row['lu_curs'] encontrará el valor correcto en el JSON.
+  const pkValueFields = tableDef.pk.map(pk => pk.toLowerCase());
   const displayColumnsJson = JSON.stringify(displayColumns);
   const pkValueFieldsJson = JSON.stringify(pkValueFields);
   const tableJson = JSON.stringify(tableDef);
+
+  // VARIABLE CLAVE: Definición de columnas base para el script del cliente
+  const columnsJson = JSON.stringify(tableDef.columns);
+
+  const formFieldsHtml = tableDef.columns.map(col => {
+      const label = col.title || col.name;
+      return `
+    <div>
+      <label>${label}</label>
+      <input id="alta-${col.name}" placeholder="${label}" />
+    </div>`;
+  }).join('');
 
   return /*html*/ `
 <!DOCTYPE html>
@@ -73,32 +76,168 @@ function buildTableHtml(tableDef: any): string {
   <meta charset="UTF-8" />
   <title>${tableDef.title}</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 30px; background-color: #f9f9f9; }
-    table { border-collapse: collapse; width: 100%; background: white; box-shadow: 0px 2px 6px rgba(0,0,0,0.1); }
-    th, td { border: 1px solid #ddd; padding: 10px 12px; text-align: left; }
-    th { background-color: #4CAF50; color: white; }
-    tr:nth-child(even) { background-color: #f2f2f2; }
-    tr:hover { background-color: #e1f5fe; }
-    input { width: 100%; box-sizing: border-box; padding: 6px; }
-    button { padding: 6px 10px; }
+    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&family=Merriweather:wght@700&display=swap');
+
+    body {
+      font-family: 'Roboto', sans-serif;
+      margin: 0;
+      padding: 30px 20px;
+      background-color: #f4f6f8;
+      color: #333;
+    }
+
+    h2 {
+      color: #2E7D32;
+      border-bottom: 2px solid #2E7D32;
+      padding-bottom: 10px;
+      margin-bottom: 25px;
+      font-family: 'Merriweather', serif;
+    }
+
+    /* TABLA */
+    .table-wrapper {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+      overflow: hidden;
+      margin-top: 20px;
+      margin-bottom: 20px;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+
+    th, td {
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid #eee;
+    }
+
+    th {
+      background-color: #4CAF50;
+      color: white;
+      font-weight: 500;
+      text-transform: uppercase;
+      font-size: 0.85em;
+    }
+
+    tr:nth-child(even) { background-color: #fcfcfc; }
+    tr:hover { background-color: #f1f8e9; }
+
+    /* INPUTS & BOTONES */
+    input {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+
+    button.action-btn {
+      padding: 6px 12px;
+      cursor: pointer;
+      border: none;
+      border-radius: 4px;
+      font-size: 0.9em;
+      transition: background 0.2s;
+      margin-right: 5px;
+    }
+
+    .btn-edit { background-color: #FFB74D; color: white; }
+    .btn-edit:hover { background-color: #F57C00; }
+
+    .btn-del { background-color: #E57373; color: white; }
+    .btn-del:hover { background-color: #D32F2F; }
+
+    .btn-add { background-color: #66BB6A; color: white; }
+    .btn-add:hover { background-color: #388E3C; }
+
+    .btn-cancel { background-color: #ccc; color: #333; }
+    .btn-cancel:hover { background-color: #bbb; }
+
+    /* FORMULARIO CARD */
+    .actions-bar {
+        margin-bottom: 15px;
+        margin-top: 15px;
+    }
+
+    #form-alta {
+        display: none;
+        background: white;
+        padding: 25px;
+        border-radius: 8px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        max-width: 500px;
+        margin-bottom: 25px;
+        border-left: 5px solid #2E7D32;
+    }
+
+    #form-alta h3 {
+        margin-top: 0;
+        color: #2E7D32;
+        margin-bottom: 20px;
+    }
+
+    #form-alta div {
+        margin-bottom: 15px;
+    }
+
+    #form-alta label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 500;
+        color: #555;
+        font-size: 0.9em;
+    }
+
+    #form-alta-buttons {
+        display: flex;
+        gap: 10px;
+        margin-top: 25px;
+        justify-content: flex-end;
+    }
   </style>
 </head>
 <body onload="cargarTabla()">
   <h2>${tableDef.title}</h2>
-  <table id="tabla-generica">
-    <thead>
-      <tr id="thead-row"></tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+
+  <!-- 1. TABLA DE DATOS -->
+  <div class="table-wrapper">
+    <table id="tabla-generica">
+      <thead>
+        <tr id="thead-row"></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <!-- 2. BOTÓN AGREGAR -->
+  <div class="actions-bar">
+    <button id="btn-toggle-form" class="action-btn btn-add" onclick="toggleFormularioAlta()">
+      Agregar registro
+    </button>
+  </div>
+
+  <!-- 3. FORMULARIO DE ALTA -->
+  <div id="form-alta">
+    <h3>Nuevo registro</h3>
+    ${formFieldsHtml}
+
+    <div id="form-alta-buttons">
+      <button class="action-btn btn-cancel" onclick="toggleFormularioAlta()">Cancelar</button>
+      <button class="action-btn btn-add" onclick="crearRegistro()">Crear</button>
+    </div>
+  </div>
 
   <script>
     const tableDef = ${tableJson};
+    const columns = ${columnsJson};
     const displayColumns = ${displayColumnsJson};
     const pkValueFields = ${pkValueFieldsJson};
     const API_BASE = "/api/v0/" + tableDef.name;
 
-    // solo puede haber una fila en edición a la vez
     let editandoPk = null;
 
     function buildPkPath(row) {
@@ -109,7 +248,24 @@ function buildTableHtml(tableDef: any): string {
 
     async function cargarTabla() {
       try {
-        const res = await fetch(API_BASE, { headers: { "Content-Type": "application/json" }});
+        const resp_rol = await fetch('/api/v0/roles/get');
+        if (!resp_rol.ok) return;
+        const data_rol = await resp_rol.json();
+
+        let urlApi = API_BASE;
+
+        if(data_rol.nombreRol === "alumno"){
+          const paramsURL = new URLSearchParams(window.location.search);
+          const luAlumno = paramsURL.get('lu');
+          if (luAlumno) urlApi += "?lu=" + encodeURIComponent(luAlumno);
+        }
+        if(data_rol.nombreRol === "profesor"){
+          const paramsURL = new URLSearchParams(window.location.search);
+          const legajo = paramsURL.get('legajo');
+          if (legajo) urlApi += "?legajo=" + encodeURIComponent(legajo);
+        }
+
+        const res = await fetch(urlApi, { headers: { "Content-Type": "application/json" }});
         if (!res.ok) {
           console.error("Error al cargar:", res.status);
           return;
@@ -136,8 +292,6 @@ function buildTableHtml(tableDef: any): string {
           const tr = document.createElement("tr");
           const pkPath = buildPkPath(row);
           tr.dataset.pk = pkPath;
-
-          // ⬅️ Guardamos la fila original completa
           tr.dataset.row = JSON.stringify(row);
 
           displayColumns.forEach(function (col) {
@@ -147,13 +301,17 @@ function buildTableHtml(tableDef: any): string {
           });
 
           const tdAcc = document.createElement("td");
+
           const btnEdit = document.createElement("button");
           btnEdit.textContent = "Editar";
+          btnEdit.className = "action-btn btn-edit";
+          // USAMOS LA FUNCIÓN EDITAR (POPUP TODO)
           btnEdit.onclick = function () { editar(pkPath); };
           tdAcc.appendChild(btnEdit);
 
           const btnDel = document.createElement("button");
           btnDel.textContent = "Eliminar";
+          btnDel.className = "action-btn btn-del";
           btnDel.onclick = function () { eliminarRegistro(pkPath); };
           tdAcc.appendChild(btnDel);
 
@@ -161,46 +319,56 @@ function buildTableHtml(tableDef: any): string {
           tbody.appendChild(tr);
         });
 
-        agregarFilaAlta(tbody);
       } catch (e) {
         console.error("Fallo al cargar tabla:", e);
       }
     }
 
-    function agregarFilaAlta(tbody) {
-      const tr = document.createElement("tr");
+    function toggleFormularioAlta() {
+        const f = document.getElementById("form-alta");
+        const btn = document.getElementById("btn-toggle-form");
 
-      tableDef.columns.forEach(function (col) {
-        const td = document.createElement("td");
-        const input = document.createElement("input");
-        input.id = "new-" + col.name;
-        input.placeholder = col.title || col.name;
-        td.appendChild(input);
-        tr.appendChild(td);
-      });
-
-      const tdAcc = document.createElement("td");
-      const btn = document.createElement("button");
-      btn.textContent = "Agregar";
-      btn.onclick = crearRegistro;
-      tdAcc.appendChild(btn);
-      tr.appendChild(tdAcc);
-
-      tbody.appendChild(tr);
+        if (f.style.display === "none" || f.style.display === "") {
+            f.style.display = "block";
+            btn.textContent = "Ocultar formulario";
+            f.scrollIntoView({ behavior: 'smooth' });
+        } else {
+            f.style.display = "none";
+            btn.textContent = "Agregar registro";
+        }
     }
 
     async function crearRegistro() {
       const body = {};
-      tableDef.columns.forEach(function (col) {
-        const el = document.getElementById("new-" + col.name);
-        body[col.name] = el.value || null;
+
+      // RECOLECTAMOS DATOS USANDO 'columns' (Definición real de la tabla)
+      columns.forEach(function (col) {
+        const el = document.getElementById("alta-" + col.name);
+        if (el) {
+            let val = el.value.trim();
+            if (val === "") val = null;
+            body[col.name] = val;
+        }
       });
+
       const res = await fetch(API_BASE, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body)
       });
-      if (!res.ok) { alert("Error al crear: " + res.status); return; }
+
+      if (!res.ok) {
+          alert("Error al crear: " + res.status);
+          return;
+      }
+
+      // Limpiar campos
+      columns.forEach(function (col) {
+         const el = document.getElementById("alta-" + col.name);
+         if(el) el.value = "";
+      });
+
+      toggleFormularioAlta();
       cargarTabla();
     }
 
@@ -211,142 +379,15 @@ function buildTableHtml(tableDef: any): string {
       cargarTabla();
     }
 
+    // EL POPUP DE TODO
     function editar(pkPath) {
-        if (editandoPk) return; // ya hay una fila en edición
-        editandoPk = pkPath;
-
-        const fila = document.querySelector('tr[data-pk="' + pkPath + '"]');
-        if (!fila) return;
-
-        // Recuperamos la fila original para obtener los valores reales (id_carrera, etc.)
-        let rowData = {};
-        if (fila.dataset.row) {
-            try {
-            rowData = JSON.parse(fila.dataset.row);
-            } catch (e) {
-            rowData = {};
-            }
-        }
-
-        const tds = fila.querySelectorAll("td");
-        const editableFields = tableDef.columns.map(function (c) { return c.name; });
-        const pkFieldSet = new Set(tableDef.pk);
-
-        // Todas las celdas menos la última (Acción)
-        for (let i = 0; i < tds.length - 1; i++) {
-            const td = tds[i];
-            const colInfo = displayColumns[i];
-            const editField = colInfo.editField; // 👈 columna REAL que se edita (ej: "id_carrera")
-
-            // Si esta columna no es editable (editField null), la dejamos como está
-            if (!editField) continue;
-
-            // Solo editamos columnas reales de la tabla
-            if (!editableFields.includes(editField)) continue;
-
-            // Valor actual: preferimos el dato real de la fila (rowData),
-            // si no está usamos el texto de la celda
-            const valorActual =
-            (rowData && Object.prototype.hasOwnProperty.call(rowData, editField))
-                ? (rowData[editField] ?? "")
-                : td.textContent.trim();
-
-            td.innerHTML = "";
-
-            const input = document.createElement("input");
-            input.id = "edit-" + editField;
-            input.value = valorActual ?? "";
-
-            // Si es parte de la PK, no editable
-            if (pkFieldSet.has(editField)) input.disabled = true;
-
-            td.appendChild(input);
-        }
-
-        // Reemplazamos la celda de acción por Confirmar / Cancelar
-        const tdAcc = tds[tds.length - 1];
-        tdAcc.innerHTML = "";
-        const bConfirm = document.createElement("button");
-        bConfirm.textContent = "Confirmar";
-        bConfirm.onclick = function () { confirmarEditar(pkPath); };
-        tdAcc.appendChild(bConfirm);
-
-        const bCancel = document.createElement("button");
-        bCancel.textContent = "Cancelar";
-        bCancel.onclick = cancelarEditar;
-        tdAcc.appendChild(bCancel);
+        alert("TODO: falta implementar editar genérico");
     }
 
-
-    async function confirmarEditar(pkPath) {
-      const fila = document.querySelector('tr[data-pk="' + pkPath + '"]');
-
-      // leer PK desde la URL
-      const pkParts = pkPath.split("/").map(decodeURIComponent);
-
-      // armamos body SOLO con las columnas reales del tableDef
-      const body = {};
-
-      // 1) Las PK siempre se preservan
-      tableDef.pk.forEach(function (pkCol, idx) {
-        body[pkCol] = pkParts[idx];
-      });
-
-      // 2) Para el resto de columnas reales, si tienen input usamos el valor, sino dejamos el original del rowData
-      let rowData = {};
-      if (fila && fila.dataset.row) {
-        try { rowData = JSON.parse(fila.dataset.row); } catch {}
-      }
-
-      tableDef.columns.forEach(function (col) {
-        const input = document.getElementById("edit-" + col.name);
-
-        if (input) {
-          // EDITABLE
-          let val = input.value.trim();
-          if (val === "") val = null;
-          body[col.name] = val;
-        } else {
-          // NO EDITABLE → tomamos valor original REAL
-          body[col.name] = rowData[col.name];
-        }
-      });
-
-      // 3) Enviar PUT limpio
-      try {
-        const res = await fetch(API_BASE + "/" + pkPath, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body)
-        });
-        if (!res.ok) throw new Error("Error al actualizar: " + res.status);
-
-        editandoPk = null;
-        cargarTabla();
-      } catch (e) {
-        alert("No se pudo actualizar: " + e.message);
-      }
-    }
-
-
-    function cancelarEditar() {
-      editandoPk = null;
-      cargarTabla();
-    }
   </script>
 
 </body>
 </html>`;
 }
 
-
-// helper para poner títulos más lindos
-function toTitle(name: string): string {
-  return name
-    .replace(/_/g, " ")
-    .replace(/\b\w/g, c => c.toUpperCase());
-}
-
-
-
-export default generarPlantillasHTML
+export default generarPlantillasHTML;

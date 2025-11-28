@@ -1,4 +1,4 @@
-alumno_lu,materia_id,anio,cuatrimestre,nota
+alumno_lu,id_materia,anio,cuatrimestre,nota
 1596/87,1,2025,2,6
 1600/17,1,2025,2,6
 1601/18,1,2025,2,6

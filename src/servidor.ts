@@ -5,7 +5,6 @@ import appRouter from './routes/appRouter.js';
 import APIRouter from "./routes/APIRouter.js";
 import generarPlantillasHTML from "./generarPlantillas.js"
 
-
 const app = express()
 const port = 3000
 
@@ -15,7 +14,7 @@ app.use(express.text({ type: 'text/csv', limit: '10mb' })); // para poder leer e
 
 //Agregamos el middleware de session
 app.use(session({
-    secret: process.env.SESSION_SECRET || 'cambiar_este_secreto_en_produccion', //usar variable de entorno en produccion?
+    secret: process.env.SESSION_SECRET || 'cambiar_este_secreto_en_produccion',
     resave: false,
     saveUninitialized: false,
     cookie: {

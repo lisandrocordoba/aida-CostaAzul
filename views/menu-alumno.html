@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>AIDA - Menú Alumno</title>
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&family=Merriweather:wght@700&display=swap');
+
+  body {
+    font-family: 'Roboto', sans-serif;
+    margin: 0;
+    background: #f4f6f8;
+    color: #333;
+  }
+
+  header {
+    background: #2E7D32;
+    color: white;
+    padding: 28px 20px;
+    text-align: center;
+    position: relative;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+  }
+
+  header h1 {
+    font-family: 'Merriweather', serif;
+    margin: 0;
+    font-size: 2.4em;
+  }
+
+  #datos-alumno {
+    position: absolute;
+    top: 18px;
+    left: 48px;
+    font-size: 0.9em;
+    opacity: 0.9;
+    font-weight: 700;
+  }
+
+
+  #header-right {
+    position: absolute;
+    top: 18px;
+    right: 20px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+
+  #role-selector {
+    background: white;
+    color: #2E7D32;
+    border: none;
+    padding: 8px 10px;
+    border-radius: 6px;
+    font-size: 0.95em;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+    opacity: 0;
+    transition: opacity .2s;
+  }
+
+  #logoutForm button {
+    background: #66BB6A;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.95em;
+    font-weight: 500;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  }
+
+  #logoutForm button:hover {
+    background: #81C784;
+  }
+
+  main {
+    max-width: 800px;
+    margin: 50px auto;
+    padding: 0 20px;
+    opacity: 0;
+    transition: opacity .2s;
+  }
+
+  .menu-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 25px;
+  }
+
+  .menu-card {
+    background: white;
+    padding: 30px 20px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .menu-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 7px 18px rgba(0,0,0,0.12);
+  }
+
+  .menu-card a {
+    text-decoration: none;
+    padding: 14px 20px;
+    border: 2px solid #2E7D32;
+    color: #2E7D32;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 1.05em;
+    display: inline-block;
+    transition: 0.2s;
+  }
+
+  .menu-card a:hover {
+    background: #2E7D32;
+    color: white;
+  }
+
+  footer {
+    text-align: center;
+    margin: 80px 0 20px;
+    color: #777;
+    font-size: 0.9em;
+  }
+
+  #password-left {
+    position: absolute;
+    top: 8px;
+    left: 15px;
+    width: 34px;          /* tamaño real clickable */
+    height: 34px;
+    display: inline-flex; /* evita expandirse */
+    align-items: center;
+    justify-content: center;
+    z-index: 20;          /* por si algo lo tapa */
+    text-decoration: none;
+}
+
+#password-left .password-icon {
+    width: 26px;
+    height: 26px;
+    display: block;
+}
+</style>
+
+<script>
+  async function buildMenu() {
+    try {
+      const resp = await fetch("/api/v0/roles/get", { credentials: "include" });
+      if (!resp.ok) throw new Error("No se pudo obtener rol");
+
+      const data = await resp.json();
+      const { nombreRol, lu, nombre, apellido, carrera } = data;
+
+      // Mostrar datos en header
+      document.getElementById("datos-alumno").innerText =
+        `LU: ${lu} — Alumno: ${apellido}, ${nombre} — Carrera: ${carrera}`;
+
+      // Marcar rol actual en selector
+      const selector = document.getElementById("role-selector");
+      selector.value = nombreRol;
+      selector.style.opacity = "1";
+
+      // Construir menú del alumno
+      const grid = document.querySelector(".menu-grid");
+
+      grid.innerHTML = `
+        <div class="menu-card">
+          <a href="/app/cursadas?lu=${encodeURIComponent(lu)}">Materias Cursadas</a>
+        </div>
+
+        <div class="menu-card">
+          <a href="/api/v0/certificados?lu=${encodeURIComponent(lu)}">
+            Descargar certificado título en trámite
+          </a>
+        </div>
+      `;
+
+      document.querySelector("main").style.opacity = "1";
+
+    } catch (err) {
+      console.error("Error al cargar menú:", err);
+      document.querySelector("main").style.opacity = "1";
+    }
+  }
+
+  async function cambiarRol(rol) {
+    try {
+      await fetch("/api/v0/roles/select", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ rol })
+      });
+    } catch (e) {
+      console.error("Error cambiando rol:", e);
+    }
+    window.location.reload();
+  }
+
+  window.onload = buildMenu;
+</script>
+
+</head>
+<body>
+
+<header>
+  <a id="password-left" href="/app/cambiar-passwords" title="Cambiar contraseña">
+    <svg class="password-icon" viewBox="0 0 24 24" fill="#FFD54F">
+      <path d="M12 17a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm6-7h-1V7a5 5 0 0 0-10 0v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2ZM9 7a3 3 0 0 1 6 0v3H9V7Z"/>
+    </svg>
+  </a>
+
+
+  <div id="datos-alumno">Cargando...</div>
+  <h1>AIDA</h1>
+
+  <div id="header-right">
+    <select id="role-selector" onchange="cambiarRol(this.value)">
+      <option value="alumno">Alumno</option>
+      <option value="profesor">Profesor</option>
+      <option value="secretario">Secretario</option>
+    </select>
+
+    <form id="logoutForm" action="/api/v0/auth/logout" method="POST">
+      <button type="submit">Cerrar sesión</button>
+    </form>
+  </div>
+</header>
+
+<main>
+  <div class="menu-grid"></div>
+</main>
+
+<footer>&copy; 2025 AIDA - Universidad</footer>
+
+</body>
+</html>

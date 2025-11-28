@@ -11,9 +11,19 @@ export function loginController(req: Request, res: Response) {
   res.send(loginHtml);
 }
 
+// --- SELECCION ROL ---
+export function seleccionRolController(_: Request, res: Response) {
+  const seleccionRolHtml = fs.readFileSync('views/seleccionRol.html', 'utf8');
+  res.send(seleccionRolHtml);
+}
+
 // --- MENU ---
-export async function menuController(_: Request, res: Response) {
-  const HTML_MENU = await readFile('views/menu.html', { encoding: 'utf8' });
+export async function menuController(req: Request, res: Response) {
+  const rol = req.session.rol;
+  if(!rol){
+    return res.redirect('/app/seleccion-rol');
+  }
+  const HTML_MENU = await readFile(`views/menu-${rol.nombreRol}.html`, { encoding: "utf8" });
   res.send(HTML_MENU);
 }
 
@@ -23,10 +33,27 @@ export async function alumnosController(_: Request, res: Response) {
   res.status(200).send(plantillaTablaAlumnos);
 }
 
+// --- USUARIOS ---
+export async function usuariosController(_: Request, res: Response) {
+  const HTML = await readFile('views/tabla-usuarios.html', { encoding: 'utf8' });
+  res.status(200).send(HTML);
+}
+
 // --- CURSADAS ---
 export async function cursadasController(_: Request, res: Response) {
   const plantillaTablaCursadas = await readFile('views/plantilla-tabla-cursadas.html', { encoding: 'utf8' });
   res.status(200).send(plantillaTablaCursadas);
+}
+
+export async function cursadasProfesorController(_: Request, res: Response) {
+  const plantillaTablaCursadasProfesor = await readFile('views/tabla-cursadas-profesor.html', { encoding: 'utf8' });
+  res.status(200).send(plantillaTablaCursadasProfesor);
+}
+
+// --- DICTA ---
+export async function dictaController(_: Request, res: Response) {
+  const plantillaTablaDicta = await readFile('views/tabla-dicta.html', { encoding: 'utf8' });
+  res.status(200).send(plantillaTablaDicta);
 }
 
 // --- ARCHIVO ---
@@ -45,4 +72,10 @@ export async function certificadosLUController(_: Request, res: Response) {
 export async function certificadosFechaController(_: Request, res: Response) {
   const HTML_FECHA = await readFile('views/obtener-certificado-fecha.html', { encoding: 'utf8' });
   res.send(HTML_FECHA);
+}
+
+// --- CAMBIO DE PASSWORD ---
+export async function cambiarPasswordsController(_: Request, res: Response) {
+  const HTML = await readFile('views/cambiar-passwords.html', { encoding: 'utf8' });
+  res.send(HTML);
 }

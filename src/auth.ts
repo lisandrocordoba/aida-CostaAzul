@@ -3,10 +3,12 @@ import { Client } from 'pg';
 
 const SALT_ROUNDS = 10;
 
+//UNIFICAR ESTA INTERFACE CON LA DE LA BASE DE DATOS
 export interface Usuario {
     id: number;
     username: string;
     nombre: string | null;
+    apellido: string | null;
     email: string | null;
     activo: boolean;
 }
@@ -36,7 +38,7 @@ export async function autenticarUsuario(
 ): Promise<Usuario | null> {
     try {
         const result = await client.query(
-            'SELECT id, username, password_hash, nombre, email, activo FROM aida.usuarios WHERE username = $1',
+            'SELECT id_usuario, username, password_hash, nombre_usuario, apellido, email, activo FROM aida.usuarios WHERE username = $1',
             [username]
         );
 
@@ -63,9 +65,10 @@ export async function autenticarUsuario(
         );*/
 
         return {
-            id: user.id,
+            id: user.id_usuario,
             username: user.username,
-            nombre: user.nombre,
+            nombre: user.nombre_usuario,
+            apellido: user.apellido,
             email: user.email,
             activo: user.activo
         };
@@ -83,22 +86,25 @@ export async function crearUsuario(
     username: string,
     password: string,
     nombre?: string,
+    apellido?: string,
     email?: string
 ): Promise<Usuario | null> {
     try {
         const passwordHash = await hashPassword(password);
 
+        //Revisar si esto va con el esquema de nuestra base
         const result = await client.query(
-            `INSERT INTO aida.usuarios (username, password_hash, nombre, email)
-             VALUES ($1, $2, $3, $4)
-             RETURNING id, username, nombre, email, activo`,
-            [username, passwordHash, nombre || null, email || null]
+            `INSERT INTO aida.usuarios (username, password_hash, nombre_usuario, apellido, email)
+             VALUES ($1, $2, $3, $4, $5)
+             RETURNING id_usuario, username, nombre_usuario, apellido, email, activo`,
+            [username, passwordHash, nombre || null, apellido || null, email || null]
         );
 
         return result.rows[0];
     } catch (error) {
         console.error('Error al crear usuario:', error);
-        return null;
+        // tiramos excepción para que la levante el controller
+        throw new Error('Fallo en la operación de base de datos para crear el usuario.');
     }
 }
 
@@ -114,7 +120,7 @@ export async function cambiarPassword(
         const passwordHash = await hashPassword(newPassword);
 
         await client.query(
-            'UPDATE aida.usuarios SET password_hash = $1 WHERE id = $2',
+            'UPDATE aida.usuarios SET password_hash = $1 WHERE id_usuario = $2',
             [passwordHash, userId]
         );
 

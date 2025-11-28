@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Gestión de Cursadas</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&family=Merriweather:wght@700&display=swap');
+
+    body {
+        font-family: 'Roboto', sans-serif;
+        margin: 0;
+        background-color: #f4f6f8;
+        color: #333;
+    }
+
+    /* --- HEADER --- */
+    header {
+        background: #2E7D32;
+        color: white;
+        padding: 28px 20px;
+        text-align: center;
+        position: relative;
+        box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+    }
+
+    header h1 {
+        font-family: 'Merriweather', serif;
+        margin: 0;
+        font-size: 2.4em;
+    }
+
+    #datos-usuario {
+        position: absolute;
+        top: 18px;
+        left: 48px;
+        font-size: 0.9em;
+        opacity: 0.9;
+        font-weight: 700;
+    }
+
+    #header-right {
+        position: absolute;
+        top: 18px;
+        right: 20px;
+        display: flex;
+        gap: 12px;
+        align-items: center;
+    }
+
+    #role-selector {
+        background: white;
+        color: #2E7D32;
+        border: none;
+        padding: 8px 10px;
+        border-radius: 6px;
+        font-size: 0.95em;
+        cursor: pointer;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+        opacity: 0;
+        transition: opacity .2s;
+    }
+
+    #logoutForm button {
+        background: #66BB6A;
+        color: white;
+        border: none;
+        padding: 10px 16px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 0.95em;
+        font-weight: 500;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+
+    #logoutForm button:hover {
+        background: #81C784;
+    }
+
+    /* --- CONTENIDO --- */
+    main {
+        max-width: 1000px;
+        margin: 40px auto;
+        padding: 0 20px;
+        opacity: 0;
+        transition: opacity .2s;
+    }
+
+    h2 {
+        color: #2E7D32;
+        border-bottom: 2px solid #2E7D32;
+        padding-bottom: 10px;
+        margin-bottom: 25px;
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        margin-bottom: 20px;
+        color: #2E7D32;
+        text-decoration: none;
+        font-weight: 500;
+        cursor: pointer;
+    }
+    .back-link:hover { text-decoration: underline; }
+
+    /* Tablas */
+    .table-wrapper {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        overflow: hidden;
+    }
+
+    table {
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    th, td {
+        padding: 15px 20px;
+        text-align: left;
+        border-bottom: 1px solid #eee;
+    }
+
+    th {
+        background-color: #4CAF50;
+        color: white;
+        font-weight: 500;
+        text-transform: uppercase;
+        font-size: 0.85em;
+    }
+
+    tr:nth-child(even) { background-color: #fcfcfc; }
+    tr:hover { background-color: #f1f8e9; }
+
+    /* Inputs y Botones */
+    input {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        box-sizing: border-box;
+    }
+
+    button.action-btn {
+        padding: 6px 12px;
+        cursor: pointer;
+        border: none;
+        border-radius: 4px;
+        font-size: 0.9em;
+        transition: background 0.2s;
+    }
+
+    .btn-edit { background-color: #FFB74D; color: white; margin-right: 5px; }
+    .btn-edit:hover { background-color: #F57C00; }
+
+    .btn-del { background-color: #E57373; color: white; }
+    .btn-del:hover { background-color: #D32F2F; }
+
+    .btn-add { background-color: #66BB6A; color: white; }
+    .btn-add:hover { background-color: #388E3C; }
+
+    /* Links de materias */
+    a.materia-link {
+        text-decoration: none;
+        color: #2E7D32;
+        font-weight: 600;
+        font-size: 1.1em;
+        display: block;
+    }
+    a.materia-link:hover {
+        text-decoration: underline;
+        color: #1B5E20;
+    }
+
+    .empty-msg {
+        padding: 40px;
+        text-align: center;
+        color: #777;
+        font-style: italic;
+    }
+
+    /* Utilidades de vista */
+    .hidden { display: none; }
+
+    footer {
+        text-align: center;
+        margin: 80px 0 20px;
+        color: #777;
+        font-size: 0.9em;
+    }
+
+    #password-left {
+    position: absolute;
+    top: 8px;
+    left: 15px;
+    width: 34px;          /* tamaño real clickable */
+    height: 34px;
+    display: inline-flex; /* evita expandirse */
+    align-items: center;
+    justify-content: center;
+    z-index: 20;          /* por si algo lo tapa */
+    text-decoration: none;
+}
+
+#password-left .password-icon {
+    width: 26px;
+    height: 26px;
+    display: block;
+}
+  </style>
+</head>
+<body>
+
+<header>
+    <a id="password-left" href="/app/cambiar-passwords" title="Cambiar contraseña">
+        <svg class="password-icon" viewBox="0 0 24 24" fill="#FFD54F">
+          <path d="M12 17a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm6-7h-1V7a5 5 0 0 0-10 0v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2ZM9 7a3 3 0 0 1 6 0v3H9V7Z"/>
+        </svg>
+      </a>
+
+
+  <div id="datos-usuario">Cargando...</div>
+  <h1>AIDA</h1>
+
+  <div id="header-right">
+    <select id="role-selector" onchange="cambiarRol(this.value)">
+      <option value="alumno">Alumno</option>
+      <option value="profesor">Profesor</option>
+      <option value="secretario">Secretario</option>
+    </select>
+
+    <form id="logoutForm" action="/api/v0/auth/logout" method="POST">
+      <button type="submit">Cerrar sesión</button>
+    </form>
+  </div>
+</header>
+
+<main>
+  <!-- VISTA 1: LISTA DE MATERIAS -->
+  <div id="vista-materias" class="hidden">
+      <h2>Materias a Cargo</h2>
+      <div class="table-wrapper">
+          <table id="tabla-materias">
+            <thead>
+                <tr>
+                    <th>Nombre de la Materia</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+      </div>
+  </div>
+
+  <!-- VISTA 2: TABLA DE CURSADAS -->
+  <div id="vista-cursadas" class="hidden">
+      <!-- Usamos URL sin query params para volver al estado inicial -->
+      <a href="?" class="back-link">← Volver a Materias</a>
+
+      <h2 id="page-title">Cursadas</h2>
+
+      <div class="table-wrapper">
+          <table id="tabla-cursadas">
+            <thead>
+              <tr id="thead-cursadas"></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+      </div>
+  </div>
+</main>
+
+<footer>
+  &copy; 2025 AIDA - Universidad
+</footer>
+
+<script>
+    // Definición de tabla Cursadas
+    const tableDef = {"name":"cursadas","columns":[{"name":"lu_CURS","type":"text","title":"L.U","description":""},{"name":"id_materia_CURS","type":"int","title":"Materia","description":""},{"name":"anio","type":"int","title":"Año","description":""},{"name":"cuatrimestre","type":"int","title":"Cuatrimestre","description":""},{"name":"nota","type":"int","title":"Nota","description":""}],"pk":["lu_CURS","id_materia_CURS","anio","cuatrimestre"]};
+
+    const displayColumns = [
+        {"field":"lu","title":"L.U"},
+        {"field":"apellido","title":"Apellido"},
+        {"field":"nombre_usuario","title":"Nombre"},
+        {"field":"anio","title":"Año"},
+        {"field":"cuatrimestre","title":"Cuatrimestre"},
+        {"field":"nota","title":"Nota"}
+    ];
+
+    const pkValueFields = ["lu","id_materia","anio","cuatrimestre"];
+
+
+    // Endpoints
+    const API_MATERIAS = "/api/v0/materias/profesor";
+    const API_CURSADAS = "/api/v0/cursadas/profesor";
+    // --- INICIALIZACIÓN ---
+    async function initPage() {
+        try {
+            // 1. Obtenemos usuario y legajo
+            const userData = await cargarHeaderUsuario();
+
+            // 2. Decidimos qué vista mostrar
+            const paramsURL = new URLSearchParams(window.location.search);
+            const idMateria = paramsURL.get('materia');
+
+            if (idMateria) {
+                // Flujo B: Mostrar Cursadas de una materia específica
+                mostrarVista('cursadas');
+                await cargarTablaCursadas(idMateria);
+            } else {
+                // Flujo A: Mostrar lista de Materias del profesor
+                mostrarVista('materias');
+                if (userData.legajo) {
+                    await cargarMateriasDictadas(userData.legajo);
+                } else {
+                    console.warn("Usuario profesor sin legajo detectado.");
+                }
+            }
+
+            document.querySelector("main").style.opacity = "1";
+
+        } catch (e) {
+            console.error("Error inicializando:", e);
+        }
+    }
+
+    function mostrarVista(nombre) {
+        document.getElementById('vista-materias').classList.add('hidden');
+        document.getElementById('vista-cursadas').classList.add('hidden');
+        document.getElementById(`vista-${nombre}`).classList.remove('hidden');
+    }
+
+    // --- DATOS DE USUARIO ---
+    async function cargarHeaderUsuario() {
+        const resp = await fetch("/api/v0/roles/get", { credentials: "include" });
+        if (!resp.ok) throw new Error("No se pudo obtener rol");
+
+        const data = await resp.json();
+        const { nombreRol, nombre, apellido, legajo } = data;
+
+        const info = document.getElementById("datos-usuario");
+        const selector = document.getElementById("role-selector");
+
+        if (nombreRol === "profesor") {
+            info.innerText = `Legajo: ${legajo} — Profesor: ${apellido}, ${nombre}`;
+        } else {
+            info.innerText = `Usuario: ${apellido}, ${nombre} (${nombreRol})`;
+        }
+
+        selector.value = nombreRol;
+        selector.style.opacity = "1";
+
+        return data; // Retornamos datos para usarlos en initPage
+    }
+
+    // --- FLUJO A: LISTA DE MATERIAS ---
+    async function cargarMateriasDictadas(legajo) {
+        try {
+            const res = await fetch(`${API_MATERIAS}?legajo=${encodeURIComponent(legajo)}`);
+            if (!res.ok) throw new Error("Error al cargar materias");
+
+            const materias = await res.json();
+            const tbody = document.querySelector("#tabla-materias tbody");
+            tbody.innerHTML = "";
+
+            if (materias.length === 0) {
+                tbody.innerHTML = `<tr><td><div class="empty-msg">No tienes materias asignadas.</div></td></tr>`;
+                return;
+            }
+
+            materias.forEach(m => {
+                const tr = document.createElement("tr");
+                // El link recarga la página añadiendo ?materia=ID
+                // Usamos id_materia_dicta según el JSON de ejemplo que pasaste
+                const linkUrl = `?materia=${encodeURIComponent(m.id_materia_dicta)}`;
+
+                tr.innerHTML = `
+                    <td>
+                        <a href="${linkUrl}" class="materia-link">
+                            ${m.nombre_materia}
+                        </a>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+        } catch (e) {
+            console.error(e);
+            document.querySelector("#tabla-materias tbody").innerHTML = `<tr><td style="color:red;">Error cargando materias.</td></tr>`;
+        }
+    }
+
+    // --- FLUJO B: TABLA DE CURSADAS ---
+    function buildPkPath(row) {
+      return pkValueFields.map(f => encodeURIComponent(row[f])).join("/");
+    }
+
+    async function cargarTablaCursadas(idMateria) {
+    try {
+        const url = `${API_CURSADAS}?id_materia=${encodeURIComponent(idMateria)}`;
+        const res = await fetch(url, { headers: { "Content-Type": "application/json" }});
+
+        if (!res.ok) {
+            console.error("Error al cargar cursadas:", res.status);
+            return;
+        }
+
+        const data = await res.json();
+
+        const titulo = document.getElementById("page-title");
+
+        if (!data || data.length === 0) {
+            // 🧠 No hay alumnos, pero mantenemos la tabla para poder AGREGAR
+            titulo.innerText = "Sin alumnos en la materia seleccionada";
+
+            // Igual renderizamos la tabla genérica con lista vacía
+            // para que dibuje los headers + fila "new-..."
+            renderTablaGenerica([], idMateria);
+            return;
+        }
+
+        // 🧠 Caso normal: sí hay alumnos
+        if (data[0].nombre_materia) {
+            titulo.innerText = "Cursadas de: " + data[0].nombre_materia;
+        } else {
+            titulo.innerText = "Cursadas de la materia seleccionada";
+        }
+
+        renderTablaGenerica(data, idMateria);
+
+    } catch (e) {
+        console.error("Fallo al cargar tabla cursadas:", e);
+    }
+    }
+
+
+
+    function renderTablaGenerica(data, idMateria) {
+        const theadRow = document.getElementById("thead-cursadas");
+        const tbody = document.querySelector("#tabla-cursadas tbody");
+
+        // 1. Encabezados
+        theadRow.innerHTML = "";
+        displayColumns.forEach(col => {
+            const th = document.createElement("th");
+            th.textContent = col.title;
+            theadRow.appendChild(th);
+        });
+        const thAcc = document.createElement("th");
+        thAcc.textContent = "Acción";
+        theadRow.appendChild(thAcc);
+
+        // 2. Filas
+        tbody.innerHTML = "";
+        data.forEach(row => {
+            const tr = document.createElement("tr");
+            const pkPath = buildPkPath(row);
+
+            // Guardamos datos para edición
+            tr.dataset.pk = pkPath;
+            tr.dataset.row = JSON.stringify(row);
+
+            displayColumns.forEach(col => {
+                const td = document.createElement("td");
+
+                // 👇 SOLO acá usamos el id especial para la celda de NOTA
+                if (col.field === "nota") {
+                    td.id = "nota-" + pkPath;
+                }
+
+                td.textContent = row[col.field] ?? "";
+                tr.appendChild(td);
+            });
+
+            // Botones
+            const tdAcc = document.createElement("td");
+
+            const btnEdit = document.createElement("button");
+            btnEdit.textContent = "Editar";
+            btnEdit.className = "action-btn btn-edit";
+            btnEdit.id = "btn-editar-" + pkPath;   // id para usar en confirmarEditar
+            btnEdit.onclick = function () { confirmarEditar(pkPath, idMateria); };
+            tdAcc.appendChild(btnEdit);
+
+            const btnDel = document.createElement("button");
+            btnDel.textContent = "Eliminar";
+            btnDel.className = "action-btn btn-del";
+            btnDel.onclick = function () { eliminarRegistro(pkPath, idMateria); };
+            tdAcc.appendChild(btnDel);
+
+            tr.appendChild(tdAcc);
+            tbody.appendChild(tr);
+        });
+
+        // 3. Fila de Alta
+        agregarFilaAlta(tbody, idMateria);
+    }
+
+
+    function agregarFilaAlta(tbody, idMateriaPreseleccionada) {
+        const tr = document.createElement("tr");
+
+        tableDef.columns.forEach(col => {
+            const td = document.createElement("td");
+            if (col.name === 'id_materia_CURS') {
+                // Campo oculto/fijo
+                const input = document.createElement("input");
+                input.id = "new-" + col.name;
+                input.value = idMateriaPreseleccionada;
+                input.disabled = true;
+                td.appendChild(input);
+            } else {
+                const input = document.createElement("input");
+                input.id = "new-" + col.name;
+                input.placeholder = col.title || col.name;
+                td.appendChild(input);
+            }
+            tr.appendChild(td);
+        });
+
+        const tdAcc = document.createElement("td");
+        const btn = document.createElement("button");
+        btn.textContent = "Agregar";
+        btn.className = "action-btn btn-add";
+        btn.onclick = () => crearRegistro(idMateriaPreseleccionada);
+        tdAcc.appendChild(btn);
+        tr.appendChild(tdAcc);
+
+        tbody.appendChild(tr);
+    }
+
+    // --- ACCIONES (CREAR / ELIMINAR) ---
+
+    async function crearRegistro(idMateriaActual) {
+
+        if (!confirm("¿Crear nuevo registro?")) return;
+
+        // Armamos el body igual que antes
+        const body = {};
+        tableDef.columns.forEach(col => {
+            const el = document.getElementById("new-" + col.name);
+            body[col.name] = el.value || null;
+        });
+
+        const res = await fetch("/api/v0/cursada-profesor", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body)
+        });
+
+        if (!res.ok) {
+            const text = await res.text();
+            alert("Error al crear: " + res.status + "\n" + text);
+            return;
+        }
+
+        cargarTablaCursadas(idMateriaActual);
+    }
+
+    async function eliminarRegistro(pkPath, idMateriaActual) {
+        if (!confirm("¿Eliminar registro?")) return;
+        const res = await fetch("/api/v0/cursada-profesor/" + pkPath, { method: "DELETE" });
+        if (!res.ok) { alert("Error al eliminar: " + res.status); return; }
+        cargarTablaCursadas(idMateriaActual);
+    }
+
+
+    async function confirmarEditar(pkPath, idMateria) {
+        const notaCell = document.getElementById("nota-" + pkPath);
+        const btnEditar = document.getElementById("btn-editar-" + pkPath);
+
+        if (!notaCell || !btnEditar) return;
+
+        // 🧠 PRIMER CLICK: entrar en modo edición
+        if (!notaCell.dataset.editing) {
+            const valorActual = (notaCell.textContent || "").trim();
+
+            notaCell.innerHTML = `
+                <input type="number"
+                    id="edit-nota-${pkPath}"
+                    value="${valorActual}"
+                    class="form-control form-control-sm" />
+            `;
+
+            notaCell.dataset.editing = "1";
+            btnEditar.textContent = "Guardar";
+            return; // todavía no mandamos nada al backend
+        }
+
+        // 🧠 SEGUNDO CLICK: guardar
+        if (!confirm("¿Guardar cambios de la cursada?")) return;
+
+        const notaInput = document.getElementById("edit-nota-" + pkPath);
+        const body = {
+            nota: notaInput.value || null
+        };
+
+        const res = await fetch("/api/v0/cursada-profesor/" + pkPath, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body)
+        });
+
+        if (!res.ok) {
+            const text = await res.text();
+            alert("Error al editar: " + res.status + "\n" + text);
+            return;
+        }
+
+        // Recargamos la tabla para ver el cambio
+        cargarTablaCursadas(idMateria);
+    }
+
+
+
+
+    async function cambiarRol(rol) {
+        try {
+            await fetch("/api/v0/roles/select", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({ rol })
+            });
+            window.location.href = "/app/menu";
+        } catch (e) { console.error(e); }
+    }
+
+    window.onload = initPage;
+</script>
+
+</body>
+</html>
