@@ -20,11 +20,10 @@ VALUES
 ('alumno3', '$2b$10$Wytauy1a1IzcmlaRVxjKnO9/jpPFCmKyTwjneDuvgnBEzM5K3l2TO', 'María', 'López', 'maria@example.com'),
 -- ID 4: Profesor estándar
 ('profesor1', '$2b$10$Wytauy1a1IzcmlaRVxjKnO9/jpPFCmKyTwjneDuvgnBEzM5K3l2TO', 'Luis', 'Martínez', 'luis@example.com'),
--- ID 6: El Híbrido (Profesor y Alumno a la vez)
+-- ID 5: El Híbrido (Profesor y Alumno a la vez)
 ('profesor2', '$2b$10$Wytauy1a1IzcmlaRVxjKnO9/jpPFCmKyTwjneDuvgnBEzM5K3l2TO', 'Pedro', 'Sánchez', 'pedro@example.com'),
--- ID 5: Secretario
+-- ID 6: Secretario - Antes era ID 5
 ('secretario1', '$2b$10$Wytauy1a1IzcmlaRVxjKnO9/jpPFCmKyTwjneDuvgnBEzM5K3l2TO', 'Rocío', 'García', 'rocio@example.com');
-
 
 -- ============================
 -- 2. CARRERAS
@@ -48,8 +47,8 @@ VALUES
 ('182/23',   2, 2, NULL, NULL),
 -- María (Recién arranca Matemática)
 ('1600/17',  3, 3, NULL, NULL),
--- Pedro (El profesor que también estudia Sistemas)
-('999/99',   6, 1, NULL, NULL);
+-- Pedro (El profesor que también estudia Sistemas) - Ahora usa ID 5
+('999/99',   5, 1, NULL, NULL);
 
 -- ============================
 -- 4. MATERIAS
@@ -89,14 +88,14 @@ VALUES
 INSERT INTO aida.profesores (id_usuario_PROF)
 VALUES
 (4), -- Luis Martínez (Profesor full time) -> Legajo se genera (1)
-(6); -- Pedro Sánchez (El híbrido) -> Legajo se genera (2)
+(5); -- Pedro Sánchez (El híbrido, ahora ID 5) -> Legajo se genera (2)
 
 -- ============================
 -- 7. SECRETARIO
 -- ============================
 
 INSERT INTO aida.secretario (id_usuario_SEC)
-VALUES (5);  -- Rocío García
+VALUES (6);  -- Rocío García (Ahora ID 6)
 
 -- ============================
 -- 8. DICTA
