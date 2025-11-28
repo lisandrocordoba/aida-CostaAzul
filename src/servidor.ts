@@ -29,7 +29,7 @@ app.use(session({
 generarPlantillasHTML();
 
 // Redirigir la raíz a /app/menu
-appRouter.get('/', (_: Request, res: Response) => {
+app.get('/', (_: Request, res: Response) => {
   res.redirect('/app/menu');
 });
 
