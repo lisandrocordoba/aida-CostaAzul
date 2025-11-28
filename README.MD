@@ -29,7 +29,11 @@ desean también generar los certificados de alumno regular y hacer estadísticas
 (alumnos activos, egresados, los que interrumpieron la carrera, el tiempo que lleva recibirse, etc...).
 
 ## Instrucciones para levantar el proyecto
+- Instalar dependencias node.
 
+
+- Correr Scripts Postgres: creacionDB, creacion Esquema, carga datos prueba.
+- Para correr.
 
 
 Se encuentran en [./back/README.md](./back/README.md) y [./aida-app/README.md](./aida-app/README.md). Todos los comandos, como `build` o `run dev` tienen un comando desde root para ejecutar el comando tanto back como front a la vez con un solo comando, para eso revisar [./package.json](./package.json).
