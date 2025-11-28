@@ -42,11 +42,12 @@ Luego de loguearse, el usuario accede a un menú de selección de roles. Si sele
 
 ## Características del Desarrollo
 
-Cuando fue posible, generamos las tablas usando CRUD generico con un framework provisto por la cátedra, extendido para manejar tablas con JOIN y para generar automáticamente los .html cada vez que carga el servidor.
-En casos especiales, implementamos controllers, rutas y vistas particulares. Una prioridad futura para el proyecto sería abstraer el framework para manejar algunos casos particulares, que tienen características comunes entre sí.
+Cuando fue posible, generamos las tablas usando CRUD generico con un framework provisto por la cátedra, extendido para manejar tablas con JOIN y WHERE genéricos y para generar automáticamente los .html cada vez que carga el servidor.
+En casos especiales, implementamos controllers, rutas y vistas particulares. Una prioridad futura para el proyecto sería abstraer el framework para manejar algunos casos particulares que tienen características comunes entre sí.
 Para manejar los permisos de los distintos roles generamos middleware con dos enfoques:
-    - RequireRolApi en roles.ts y RequireRol en appRouter.ts permiten definir los roles que pueden acceder a un endpoint. Es posible combinar roles, aunque no terminamos haciéndolo.
-    - RequireOwnershipAPI permite que un profesor o estudiante accedan a un endpoint por el método GET usando query parameters y chequea que sólo puedan ver los datos permitidos para ese usuario y rol.
+
+- RequireRolApi en roles.ts y RequireRol en appRouter.ts permiten definir los roles que pueden acceder a un endpoint.
+- RequireOwnershipAPI permite que un profesor o estudiante accedan a un endpoint por el método GET usando query parameters y chequea que sólo puedan ver los datos permitidos para ese usuario y rol.
 
 ## Instrucciones para levantar el proyecto
 
