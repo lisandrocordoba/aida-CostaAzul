@@ -22,8 +22,23 @@ VALUES
 ('profesor1', '$2b$10$Wytauy1a1IzcmlaRVxjKnO9/jpPFCmKyTwjneDuvgnBEzM5K3l2TO', 'Luis', 'Martínez', 'luis@example.com'),
 -- ID 5: El Híbrido (Profesor y Alumno a la vez)
 ('profesor2', '$2b$10$Wytauy1a1IzcmlaRVxjKnO9/jpPFCmKyTwjneDuvgnBEzM5K3l2TO', 'Pedro', 'Sánchez', 'pedro@example.com'),
--- ID 6: Secretario - Antes era ID 5
+-- ID 6: Secretario
 ('secretario1', '$2b$10$Wytauy1a1IzcmlaRVxjKnO9/jpPFCmKyTwjneDuvgnBEzM5K3l2TO', 'Rocío', 'García', 'rocio@example.com');
+
+-- ============================
+-- 1.b USUARIOS ADICIONALES PARA ALUMNOS CSV
+-- ============================
+-- Estos usuarios se crean para que la carga de alumnos vía CSV no rompa
+-- constraints de foreign key (id_usuario_ALU debe existir en usuarios).
+-- En un entorno real, la creación de usuarios debería implementarse en la funcionalidad de carga CSV.
+
+INSERT INTO aida.usuarios (username, password_hash, nombre_usuario, apellido, email)
+VALUES
+-- ID 7
+('alumno_csv1', '$2b$10$Wytauy1a1IzcmlaRVxjKnO9/jpPFCmKyTwjneDuvgnBEzM5K3l2TO', 'Martín', 'González', 'martin.gonzalez@example.com'),
+-- ID 8
+('alumno_csv2', '$2b$10$Wytauy1a1IzcmlaRVxjKnO9/jpPFCmKyTwjneDuvgnBEzM5K3l2TO', 'Lucía', 'Fernández', 'lucia.fernandez@example.com');
+
 
 -- ============================
 -- 2. CARRERAS

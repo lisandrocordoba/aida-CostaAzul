@@ -5,7 +5,6 @@ import { DatoAtomico, sqlLiteral } from "./tipos-atomicos.js"
 
 //QUEREMOS MANTENER LA FUNCIONALIDAD DE BORRAR ALUMNOS?
 export async function refrescarTablaAlumnos(clientDb: Client, listaDeAlumnosCompleta:string[][], columnas:string[]){
-    await clientDb.query("DELETE FROM aida.alumnos");
     for (const values of listaDeAlumnosCompleta) {
         await agregarAlumno(columnas, values, clientDb);
     }
