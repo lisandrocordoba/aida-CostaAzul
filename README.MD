@@ -63,6 +63,15 @@ Este proyecto es una API web desarrollada en TypeScript, usando NPM para la gest
 2. **Configurar variables de entorno**
    Copiar el archivo de ejemplo `.env.example` a `.env` y completar las variables según tu entorno.
 
+
+   Si la base de datos fue creada con nuestros scripts .sql, usar las siguientes variables:
+   ```
+   PGUSER=aida_admin
+   PGPASSWORD=cambiar_esta_clave
+   PGHOST=localhost
+   PGPORT=5432
+   PGDATABASE=aida_db
+   ```
 3. **Inicializar la base de datos**
    Ejecutar los scripts necesarios en el siguiente orden:
    - `creacion-db.sql`
