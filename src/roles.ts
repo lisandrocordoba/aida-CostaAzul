@@ -1,4 +1,4 @@
-import { Usuario } from 'auth.js';
+import { Usuario } from './auth.js';
 import { Client } from 'pg';
 import { Request, Response, NextFunction } from "express";
 

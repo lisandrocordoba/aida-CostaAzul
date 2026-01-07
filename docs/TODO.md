@@ -1,22 +1,19 @@
 ## Funcionalidad
-- hacer menu desplegable para cuando secretaria quiere agregar alumnos y que le aparezcan las carrreras disponibles(es un ejemplo)
-- menu desplegable para materias, es decir, cuando el profesor quiere ver cursadas o alumnos, que previamente elija materia que quiere consultar.
-- sacar codigo usuarios activos / no activos (si no lo implementamos)
-- hacer app route factory generico (no vamos a llegar)
-- implementar funcionalidad agregar generica con autocomplete (por ahora es con FK)
+- En la seleccion de rol, mostrar solo los disponibles
+- Menu desplegable para los agregar/editar. Sino dependes de que el usuario escriba bien el campo (ej: nombre de carrera).
+- Pensar si agregar funconalidad de usuarios activos / no activos
+- hacer app route factory generico
+- Editar con formulario. No queremos editar con FK, sino con las columnas de la tabla base
 - certificados por fecha devuelve el primer alumno que encuentra de dicha fecha
 - pensar si el trigger se mantiene funcionando con los cambios
 - FALTA VER QUE FUNCIONAN TODOS LOS BOTONES DE LAS TABLAS (EJ EDITAR/BORRAR EN CURSADAS DE PROFESOR)
 - Secretario debería poder ver planes de estudio.
+- En logout el json deberia devolver que se deslogueo con exito (revisar los demas returns tmb)
 
 ## Deuda tecnica
-- SQL INJECTIONS!!!!!!!!!!!
-- tema de manejo de fechas, IMPORTANTE!!!
-- borrar codigo en aida
-- borrar codigo en controllers
-- borrar codigo en routers
+- SQL INJECTIONS
+- tema de manejo de fechas
+- TEST (Postman-Integracion continua)
 
 ## Documentacion
-- README
 - borrar comentarios y comentar bien
-- borrar console logs

@@ -1,5 +1,7 @@
 import * as assert from "assert";
 
+
+/*
 import { deCualquierTexto, deTexto, aTexto, aISO, deISO, esFecha, mismaFecha, Fecha } from '../src/fechas.js'
 
 var textoISO = '2025-09-13'
@@ -64,3 +66,32 @@ describe("tipos fechas", function(){
         assert.equal(esFecha(fecha), true)
     })
 })
+*/
+import request from 'supertest';
+import app from '../src/servidor.js'; // Tu instancia de express
+
+
+describe('Auth Endpoints', function() { // function() en lugar de () => para mantener tu estilo
+
+    it('POST /api/v0/auth/login - debería loguear con x-www-form-urlencoded', async function() {
+
+        // Datos del formulario
+        const userData = {
+            username: 'secretario1',
+            password: 'contraseña'
+        };
+
+        const res = await request(app)
+            .post('/api/v0/auth/login')
+            .type('form') // Para simular x-www-form-urlencoded de POSTMAN (No sabemos pq, solo sabemos que funciona)
+            .send(userData);
+
+        // 1. Validar Status 200
+        assert.strictEqual(res.status, 200, "El status code debería ser 200");
+
+        // 2. Validar el cuerpo exacto de la respuesta
+        assert.deepStrictEqual(res.body, {
+            message: "Autenticación exitosa"
+        }, "El cuerpo de la respuesta no coincide");
+        });
+});

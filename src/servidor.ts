@@ -40,3 +40,5 @@ app.use('/app', appRouter);
 app.listen(port, () => {
     console.log(`Example app listening on port http://localhost:${port}/app/menu`)
 })
+
+export default app;

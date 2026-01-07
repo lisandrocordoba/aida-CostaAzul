@@ -39,7 +39,7 @@ export function logoutAPIController(req: Request, res: Response) {
     if (err) return res.status(500).json({ error: 'Error al cerrar sesión' });
     res.clearCookie('connect.sid', { path: '/' });
     res.redirect('/app/login');
-    return;
+    return null;
   });
 }
 
@@ -48,6 +48,7 @@ export async function registerAPIController(req: Request, res: Response) {
   const { username, password, nombre, email } = req.body;
   await crearUsuario(clientDb, username, password, nombre, email);
   res.status(201).send('Usuario creado');
+  return null;
 }
 
 // --- ROLES ---
