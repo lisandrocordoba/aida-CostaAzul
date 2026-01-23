@@ -65,4 +65,5 @@ jobs:
         DB_NAME: aida
         DB_PORT: 5432
         IS_DEVELOPMENT: true
+        PGSSLMODE: disable
 
