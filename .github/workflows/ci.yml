@@ -1,0 +1,53 @@
+name: CI - Tests Automatizados
+
+on:
+  push:
+    branches: [ "ci" ]
+  pull_request:
+    branches: [ "ci" ]
+
+jobs:
+  test-api:
+    runs-on: ubuntu-latest
+
+    # SERVICIOS: Esto levanta un Postgres temporal solo para el test
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: aida_admin
+          POSTGRES_PASSWORD: cambiar_esta_clave
+          POSTGRES_DB: aida_db
+        ports:
+          - 5432:5432
+        # Health check para esperar a que la DB esté lista antes de seguir
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - name: Descargar el repositorio
+      uses: actions/checkout@v4
+
+    - name: Instalar Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+        cache: 'npm'
+
+    - name: Instalar dependencias
+      run: npm ci
+
+    - name: Ejecutar Tests
+      run: npm run test
+      env:
+        # Las variables de entorno necesarias para los tests
+        DB_HOST: localhost
+        DB_USER: aida_admin
+        DB_PASSWORD: cambiar_esta_clave
+        DB_NAME: aida_db
+        DB_PORT: 5432
+        IS_DEVELOPMENT: true
+
