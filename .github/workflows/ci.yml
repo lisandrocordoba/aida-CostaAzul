@@ -41,10 +41,11 @@ jobs:
       run: npm ci
 
     - name: Inicializar base de Datos
+    # Si no creamos el usuario aida_owner, "creacion-esquema.sql" falla ya que lo utilizas
       run: |
-        psql -h localhost -U aida_admin -d aida_db -c "CREATE ROLE aida_owner;" -- Si no lo creamos, "creacion-esquema.sql" falla
+        psql -h localhost -U aida_admin -d aida -c "CREATE ROLE aida_owner;"
 
-        psql -h localhost -U aida_admin -d aida_db \
+        psql -h localhost -U aida_admin -d aida \
           -f recursos/archivos-sql/creacion-esquema.sql \
           -f recursos/archivos-sql/trigger-titulo.sql \
           -f recursos/archivos-sql/carga-datos-prueba.sql
@@ -58,7 +59,7 @@ jobs:
         DB_HOST: localhost
         DB_USER: aida_admin
         DB_PASSWORD: pruebaci123
-        DB_NAME: aida_db
+        DB_NAME: aida
         DB_PORT: 5432
         IS_DEVELOPMENT: true
 
