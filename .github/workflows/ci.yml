@@ -17,7 +17,7 @@ jobs:
         env:
           POSTGRES_USER: aida_admin
           POSTGRES_PASSWORD: pruebaci123
-          POSTGRES_DB: aida_db
+          POSTGRES_DB: aida
         ports:
           - 5432:5432
         # Health check para esperar a que la DB esté lista antes de seguir
@@ -42,7 +42,7 @@ jobs:
 
     - name: Inicializar base de Datos
       run: |
-        psql -h localhost -U aida_admin -d aida_db -c "CREATE ROLE aida_owner;" // Si no lo creamos, "creacion-esquema.sql" falla
+        psql -h localhost -U aida_admin -d aida_db -c "CREATE ROLE aida_owner;" -- Si no lo creamos, "creacion-esquema.sql" falla
 
         psql -h localhost -U aida_admin -d aida_db \
           -f recursos/archivos-sql/creacion-esquema.sql \
