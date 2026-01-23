@@ -42,9 +42,6 @@ jobs:
 
     - name: Inicializar base de Datos
       run: |
-        # Si no creamos el usuario aida_owner, "creacion-esquema.sql" falla ya que lo utilizas
-        psql -h localhost -U aida_admin -d aida -c "CREATE ROLE aida_owner;"
-
         # 1. PREPARACIÓN DEL ENTORNO (Si no creamos aida_owner, falla la creación del esquema. Se podria hacer un .sql especifico para los tests. No se que es mas prolijo)
         # - Creamos el rol 'aida_owner' (el dueño del esquema).
         # - 'GRANT aida_owner TO aida_admin': Permite que el admin haga "set role aida_owner".
