@@ -20,14 +20,17 @@
     "@types/node": "^24.3.1",
     "@types/pdfmake": "^0.2.12",
     "@types/pg": "^8.15.5",
+    "@types/supertest": "^6.0.3",
+    "dotenv": "^17.2.3",
     "mocha": "^11.7.2",
+    "supertest": "^7.2.2",
     "typescript": "^5.9.2"
   },
   "scripts": {
     "prepare": "tsc -p src/tsconfig.json",
-    "dev": "npm run prepare && node --env-file=.env dist/servidor.js",
-    "start": "npm run prepare && node dist/servidor.js",
-    "test": "tsc -p test/tsconfig.json && mocha -r ./test/setup.js --reporter spec --bail --check-leaks dist-test/test/test.js",
+    "dev": "npm run prepare && node --env-file=.env dist/server.js",
+    "start": "npm run prepare && node dist/server.js",
+    "test": "tsc -p test/tsconfig.json && mocha --enable-source-maps --reporter spec --bail --check-leaks dist-test/test/test.js",
     "x-test": "mocha --reporter spec --bail --check-leaks test/test.ts"
   }
 }
