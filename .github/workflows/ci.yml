@@ -42,6 +42,8 @@ jobs:
 
     - name: Inicializar base de Datos
       run: |
+        psql -h localhost -U aida_admin -d aida_db -c "CREATE ROLE aida_owner;" // Si no lo creamos, "creacion-esquema.sql" falla
+
         psql -h localhost -U aida_admin -d aida_db \
           -f recursos/archivos-sql/creacion-esquema.sql \
           -f recursos/archivos-sql/trigger-titulo.sql \
