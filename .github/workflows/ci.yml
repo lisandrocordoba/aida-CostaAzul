@@ -2,9 +2,9 @@ name: CI - Tests Automatizados
 
 on:
   push:
-    branches: [ "ci" ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ "ci" ]
+    branches: [ "main" ]
 
 jobs:
   test-api:
