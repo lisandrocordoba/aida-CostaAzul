@@ -23,13 +23,18 @@ clientDb.connect();
 
 // --- LOGIN ---
 export async function loginAPIController(req: Request, res: Response) {
-  const { username, password } = req.body;
-  const usuario = await autenticarUsuario(clientDb, username, password);
-  if (usuario) {
-      req.session.usuario = usuario;
-      res.json({ message: 'Autenticación exitosa' });
-  } else {
-      res.status(401).json({ error: 'Credenciales inválidas' });
+  try {
+    const { username, password } = req.body;
+    const usuario = await autenticarUsuario(clientDb, username, password);
+    if (usuario) {
+        req.session.usuario = usuario;
+        res.json({ message: 'Autenticación exitosa' });
+    } else {
+        res.status(401).json({ error: 'Credenciales inválidas' });
+    }
+  } catch (error) {
+    console.error("Error en loginAPIController:", error);
+    res.status(500).json({ error: 'Error interno del servidor' });
   }
 }
 
