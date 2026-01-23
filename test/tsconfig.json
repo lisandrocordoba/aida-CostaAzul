@@ -1,29 +1,41 @@
 {
     "compilerOptions": {
-        "declaration": true,
-        "baseUrl": "",
-        "strictNullChecks": false,
-        "outDir": "../dist-test",
-        "moduleResolution": "node",
-        "target": "esnext",
+        /* --- CONFIGURACIÓN DE RUTAS (AQUÍ ESTABA EL ERROR) --- */
+        "baseUrl": ".",  /* El ancla necesaria para que "paths" funcione */
 
-        "lib":["es2022"],
-        "inlineSourceMap": true,
-        "inlineSources": true,
-        "strict": true,
-        "strictBindCallApply": true,
-        "skipLibCheck": true, //para que no haga chequeo de tipos en los declaration files dentro de node-modules(pg-promise-strict, express, node)
-        // "typeRoots" : ["node_modules/@types", "node_modules/types.d.ts/modules"],
+        "paths": {
+            /* Apuntamos directamente al archivo de definiciones .d.ts */
+            "pdfmake/interfaces": ["../node_modules/@types/pdfmake/interfaces.d.ts"]
+        },
+
+        /* --- CONFIGURACIÓN DE SALIDA --- */
+        "outDir": "../dist-test",
+        "declaration": true,
         "declarationMap": true,
+        "sourceMap": true,
+
+        /* --- MÓDULOS Y COMPATIBILIDAD --- */
+        "target": "ES2022",
+        "module": "NodeNext",
+        "moduleResolution": "NodeNext",
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
+        "skipLibCheck": true,
+
+        /* --- REGLAS ESTRICTAS --- */
+        "strict": true,
         "noImplicitAny": true,
+        "strictNullChecks": false,
+        "strictBindCallApply": true,
         "alwaysStrict": true,
         "noUnusedLocals": true,
         "noUnusedParameters": true,
-        "noImplicitReturns": true, /* Report error when not all code paths in function return a value. */
+        "noImplicitReturns": true,
         "noFallthroughCasesInSwitch": true,
         "noImplicitOverride": true
     },
-    "include":[
-        "."
-    ],
+    "include": [
+        ".",
+        "../src/**/*"
+    ]
 }
