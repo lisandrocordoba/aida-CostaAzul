@@ -41,9 +41,15 @@ jobs:
       run: npm ci
 
     - name: Inicializar base de Datos
-    # Si no creamos el usuario aida_owner, "creacion-esquema.sql" falla ya que lo utilizas
       run: |
+        # Si no creamos el usuario aida_owner, "creacion-esquema.sql" falla ya que lo utilizas
         psql -h localhost -U aida_admin -d aida -c "CREATE ROLE aida_owner;"
+
+        # 1. PREPARACIÓN DEL ENTORNO (Si no creamos aida_owner, falla la creación del esquema. Se podria hacer un .sql especifico para los tests. No se que es mas prolijo)
+        # - Creamos el rol 'aida_owner' (el dueño del esquema).
+        # - 'GRANT aida_owner TO aida_admin': Permite que el admin haga "set role aida_owner".
+        # - 'GRANT CREATE ON DATABASE': Permite que aida_owner pueda crear el esquema dentro de la DB.
+        psql -h localhost -U aida_admin -d aida -c "CREATE ROLE aida_owner NOLOGIN; GRANT aida_owner TO aida_admin; GRANT CREATE ON DATABASE aida TO aida_owner;"
 
         psql -h localhost -U aida_admin -d aida \
           -f recursos/archivos-sql/creacion-esquema.sql \
