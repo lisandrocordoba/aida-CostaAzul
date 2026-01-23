@@ -59,11 +59,10 @@ jobs:
       run: npm run test
       env:
         # Las variables de entorno necesarias para los tests
-        DB_HOST: localhost
-        DB_USER: aida_admin
-        DB_PASSWORD: pruebaci123
-        DB_NAME: aida
-        DB_PORT: 5432
+        PGHOST: localhost
+        PGUSER: aida_admin
+        PGPASSWORD: pruebaci123
+        PGDATABASE: aida
+        PGPORT: 5432
         IS_DEVELOPMENT: true
-        PGSSLMODE: disable
 
