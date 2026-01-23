@@ -16,7 +16,7 @@ jobs:
         image: postgres:15
         env:
           POSTGRES_USER: aida_admin
-          POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD_TEST }}
+          POSTGRES_PASSWORD: pruebaci123
           POSTGRES_DB: aida_db
         ports:
           - 5432:5432
@@ -47,7 +47,7 @@ jobs:
           -f recursos/archivos-sql/trigger-titulo.sql \
           -f recursos/archivos-sql/carga-datos-prueba.sql
       env:
-        PGPASSWORD: ${{ secrets.DB_PASSWORD_TEST }}
+        PGPASSWORD: pruebaci123
 
     - name: Ejecutar Tests
       run: npm run test
@@ -55,7 +55,7 @@ jobs:
         # Las variables de entorno necesarias para los tests
         DB_HOST: localhost
         DB_USER: aida_admin
-        DB_PASSWORD: ${{ secrets.DB_PASSWORD_TEST }}
+        DB_PASSWORD: pruebaci123
         DB_NAME: aida_db
         DB_PORT: 5432
         IS_DEVELOPMENT: true
