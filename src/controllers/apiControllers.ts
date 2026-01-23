@@ -44,11 +44,10 @@ export function logoutAPIController(req: Request, res: Response) {
 }
 
 // --- REGISTER ---
-export async function registerAPIController(req: Request, res: Response) {
+export async function registerAPIController(req: Request, res: Response): Promise<void> {
   const { username, password, nombre, email } = req.body;
   await crearUsuario(clientDb, username, password, nombre, email);
   res.status(201).send('Usuario creado');
-  return null;
 }
 
 // --- ROLES ---
