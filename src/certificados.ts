@@ -21,7 +21,7 @@ export function generarPdfCertificado(alumno: Record<string, DatoAtomico>, res: 
     pageMargins: [60, 60, 60, 60],
 
     // El borde dorado
-    background: function (_, pageSize) {
+    background: function (_: any, pageSize: { width: number; height: number }) {
       return {
         canvas: [
           {
