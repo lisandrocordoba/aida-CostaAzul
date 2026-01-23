@@ -33,7 +33,7 @@ export async function loginAPIController(req: Request, res: Response) {
         res.status(401).json({ error: 'Credenciales inválidas' });
     }
   } catch (error) {
-    console.error("Error en loginAPIController:", error);
+    console.error('Error en loginAPIController:', error);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 }
