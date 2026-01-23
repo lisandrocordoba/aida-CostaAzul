@@ -16,7 +16,7 @@ jobs:
         image: postgres:15
         env:
           POSTGRES_USER: aida_admin
-          POSTGRES_PASSWORD: cambiar_esta_clave
+          POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD_TEST }}
           POSTGRES_DB: aida_db
         ports:
           - 5432:5432
@@ -40,13 +40,22 @@ jobs:
     - name: Instalar dependencias
       run: npm ci
 
+    - name: Inicializar base de Datos
+      run: |
+        psql -h localhost -U aida_admin -d aida_db \
+          -f recursos/archivos-sql/creacion-esquema.sql \
+          -f recursos/archivos-sql/trigger-titulo.sql \
+          -f recursos/archivos-sql/carga-datos-prueba.sql
+      env:
+        PGPASSWORD: ${{ secrets.DB_PASSWORD_TEST }}
+
     - name: Ejecutar Tests
       run: npm run test
       env:
         # Las variables de entorno necesarias para los tests
         DB_HOST: localhost
         DB_USER: aida_admin
-        DB_PASSWORD: cambiar_esta_clave
+        DB_PASSWORD: ${{ secrets.DB_PASSWORD_TEST }}
         DB_NAME: aida_db
         DB_PORT: 5432
         IS_DEVELOPMENT: true
