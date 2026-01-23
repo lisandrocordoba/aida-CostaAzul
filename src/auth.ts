@@ -36,46 +36,41 @@ export async function autenticarUsuario(
     username: string,
     password: string
 ): Promise<Usuario | null> {
-    try {
-        const result = await client.query(
-            'SELECT id_usuario, username, password_hash, nombre_usuario, apellido, email, activo FROM aida.usuarios WHERE username = $1',
-            [username]
-        );
+    const result = await client.query(
+        'SELECT id_usuario, username, password_hash, nombre_usuario, apellido, email, activo FROM aida.usuarios WHERE username = $1',
+        [username]
+    );
 
-        if (result.rows.length === 0) {
-            return null;
-        }
-
-        const user = result.rows[0];
-
-        if (!user.activo) {
-            return null;
-        }
-
-        const passwordValida = await verifyPassword(password, user.password_hash);
-
-        if (!passwordValida) {
-            return null;
-        }
-
-        /* Actualizar último acceso
-        await client.query(
-            'UPDATE aida.usuarios SET ultimo_acceso = CURRENT_TIMESTAMP WHERE id = $1',
-            [user.id]
-        );*/
-
-        return {
-            id: user.id_usuario,
-            username: user.username,
-            nombre: user.nombre_usuario,
-            apellido: user.apellido,
-            email: user.email,
-            activo: user.activo
-        };
-    } catch (error) {
-        console.error('Error al autenticar usuario:', error);
+    if (result.rows.length === 0) {
         return null;
     }
+
+    const user = result.rows[0];
+
+    if (!user.activo) {
+        return null;
+    }
+
+    const passwordValida = await verifyPassword(password, user.password_hash);
+
+    if (!passwordValida) {
+        return null;
+    }
+
+    /* Actualizar último acceso
+    await client.query(
+        'UPDATE aida.usuarios SET ultimo_acceso = CURRENT_TIMESTAMP WHERE id = $1',
+        [user.id]
+    );*/
+
+    return {
+        id: user.id_usuario,
+        username: user.username,
+        nombre: user.nombre_usuario,
+        apellido: user.apellido,
+        email: user.email,
+        activo: user.activo
+    };
 }
 
 /**
