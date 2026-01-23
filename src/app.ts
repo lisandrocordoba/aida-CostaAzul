@@ -1,13 +1,11 @@
 import express from "express";
-import session/*, { SessionData }*/ from 'express-session';
+import session from 'express-session';
 import { Request, Response } from "express";
 
 import appRouter from './routes/appRouter.js';
 import APIRouter from "./routes/APIRouter.js";
-import generarPlantillasHTML from "./generarPlantillas.js"
 
 const app = express()
-const port = 3000
 
 app.use(express.json({ limit: '10mb' })); // para poder leer el body
 app.use(express.urlencoded({ extended: true, limit: '10mb'  })); // para poder leer el body
@@ -25,20 +23,14 @@ app.use(session({
     }
   }));
 
-// Generamos plantillas cuando arranca el servidor
-generarPlantillasHTML();
+// --- Rutas ---
 
-// Redirigir la raíz a /app/menu
+// Redirigir la raíz
 app.get('/', (_: Request, res: Response) => {
   res.redirect('/app/menu');
 });
 
-// Routes
 app.use('/api/v0', APIRouter);
 app.use('/app', appRouter);
-
-app.listen(port, () => {
-    console.log(`Example app listening on port http://localhost:${port}/app/menu`)
-})
 
 export default app;
