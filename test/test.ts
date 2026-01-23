@@ -5,6 +5,7 @@ import app from '../src/app.js'; // Tu instancia de express
 
 
 describe('Auth Endpoints', function() {
+    this.timeout(10000);
 
     it('POST /api/v0/auth/login - debería loguear con credenciales correctas', async function() {
 

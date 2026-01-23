@@ -1,0 +1,68 @@
+name: CI - Tests Automatizados
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  test-api:
+    runs-on: ubuntu-latest
+
+    # SERVICIOS: Esto levanta un Postgres temporal solo para el test
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: aida_admin
+          POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD_TEST }}
+          POSTGRES_DB: aida
+        ports:
+          - 5432:5432
+        # Health check para esperar a que la DB esté lista antes de seguir
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - name: Descargar el repositorio
+      uses: actions/checkout@v4
+
+    - name: Instalar Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+        cache: 'npm'
+
+    - name: Instalar dependencias
+      run: npm ci
+
+    - name: Inicializar base de Datos
+      run: |
+        # 1. PREPARACIÓN DEL ENTORNO (Si no creamos aida_owner, falla la creación del esquema. Se podria hacer un .sql especifico para los tests. No se que es mas prolijo)
+        # - Creamos el rol 'aida_owner' (el dueño del esquema).
+        # - 'GRANT aida_owner TO aida_admin': Permite que el admin haga "set role aida_owner".
+        # - 'GRANT CREATE ON DATABASE': Permite que aida_owner pueda crear el esquema dentro de la DB.
+        psql -h localhost -U aida_admin -d aida -c "CREATE ROLE aida_owner NOLOGIN; GRANT aida_owner TO aida_admin; GRANT CREATE ON DATABASE aida TO aida_owner;"
+
+        psql -h localhost -U aida_admin -d aida \
+          -f recursos/archivos-sql/creacion-esquema.sql \
+          -f recursos/archivos-sql/trigger-titulo.sql \
+          -f recursos/archivos-sql/carga-datos-prueba.sql
+      env:
+        PGPASSWORD: ${{ secrets.DB_PASSWORD_TEST }}
+
+    - name: Ejecutar Tests
+      run: npm run test
+      env:
+        # Las variables de entorno necesarias para los tests
+        PGHOST: localhost
+        PGUSER: aida_admin
+        PGPASSWORD: ${{ secrets.DB_PASSWORD_TEST }}
+        PGDATABASE: aida
+        PGPORT: 5432
+        IS_DEVELOPMENT: true
+
