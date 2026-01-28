@@ -18,22 +18,22 @@ function requireAuthAPI(req: Request, res: Response, next: NextFunction) {
 
 
 
-// --- RUTAS DE AUTENTICACIÓN ---
+// --- RUTAS DE AUTENTICACIÓN --- LICHA
 APIRouter.post('/auth/login', express.json(), apiControllers.loginAPIController);
 APIRouter.post('/auth/register', apiControllers.registerAPIController);
 APIRouter.post('/auth/cambiar-passwords', express.json(), apiControllers.cambioPasswordAPIController);
 APIRouter.use((requireAuthAPI));
 APIRouter.post('/auth/logout', apiControllers.logoutAPIController);
 
-// --- RUTA DE SELECCIÓN DE ROL ---
+// --- RUTA DE SELECCIÓN DE ROL --- CARLOS
 APIRouter.post('/roles/select', apiControllers.selectRolAPIController);
 APIRouter.get('/roles/get', apiControllers.getRolAPIController);
 
-// --- RUTAS DE ALUMNOS NO GENERICAS ---
+// --- RUTAS DE ALUMNOS NO GENERICAS --- CARLOS
 APIRouter.patch('/alumnos', requireRolAPI("secretario"), apiControllers.patchAlumnosController);
 
 
-// --- RUTAS DE CURSADAS NO GENERICAS ---
+// --- RUTAS DE CURSADAS NO GENERICAS --- CARLOS
 APIRouter.get('/materias/profesor', requireRolAPI("profesor"), apiControllers.getMateriasDeProfesorAPIController);
 APIRouter.get('/cursadas/profesor', requireRolAPI("profesor"), apiControllers.getCursadasDeProfesorAPIController);
 APIRouter.patch('/cursadas', apiControllers.patchCursadasController);
@@ -41,29 +41,28 @@ APIRouter.delete('/cursada-profesor/:lu/:id_materia/:anio/:cuatrimestre', apiCon
 APIRouter.post('/cursada-profesor', apiControllers.createCursadaProfesorController);
 APIRouter.put('/cursada-profesor/:lu/:id_materia/:anio/:cuatrimestre', apiControllers.updateCursadaProfesorController);
 
-// -- RUTAS DE DICTA (SECRETARIO) --
+// -- RUTAS DE DICTA (SECRETARIO) -- LICHA
 APIRouter.get('/dicta', requireRolAPI("secretario"), apiControllers.getDictaController);
 APIRouter.post('/dicta', requireRolAPI("secretario"),apiControllers.createDictaController);
 APIRouter.delete('/dicta/:legajo_DICTA/:id_materia_DICTA', requireRolAPI("secretario"),apiControllers.deleteDictaController);
 
 
 
-// -- RUTAS DE USUARIOS NO GENERICAS ---
+// -- RUTAS DE USUARIOS NO GENERICAS --- LICHA
 APIRouter.get('/usuarios', requireRolAPI("secretario"), apiControllers.getUsuariosController);
 APIRouter.post('/usuarios', requireRolAPI("secretario"), express.json(), apiControllers.agregarUsuarioController);
 APIRouter.delete('/usuarios/:id_usuario', requireRolAPI("secretario"), apiControllers.eliminarUsuarioController);
 APIRouter.put('/usuarios/:id_usuario', requireRolAPI("secretario"), apiControllers.modificarUsuarioController);
 
 
-// --- PLAN DE ESTUDIOS ---
+// --- PLAN DE ESTUDIOS --- CARLOS
 APIRouter.patch('/plan_estudios', apiControllers.patchPlanEstudiosController);
 
-// --- RUTAS DE CERTIFICADOS ---
+// --- RUTAS DE CERTIFICADOS --- LICHA
 APIRouter.get('/certificados', apiControllers.getCertificadosController);
 
 
-
-// --- RUTAS GENERICAS PARA CADA ENTIDAD ---
+// --- RUTAS GENERICAS PARA CADA ENTIDAD --- CARLOS (tests para alumnos, casos para cada rol)
 for (const tableDef of tableDefs) {
   // Saltar la tabla 'usuarios' ya que tiene su propia ruta personalizada
   if (tableDef.name === 'usuarios') {
