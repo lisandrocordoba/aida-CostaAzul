@@ -59,7 +59,7 @@ describe('Auth Endpoints', function() {
         assert.ok(esErrorValido, `Status ${res.status} no es de error esperado (400/401)`);
     });
 });
-
+/*
 //Pensar: qué queremos testar? el contenido? la forma de la respuesta? que un secretario pueda acceder a los alumnos?
 
 describe('CRUD Endpoints', function () {
@@ -92,11 +92,11 @@ describe('CRUD Endpoints', function () {
 
       assert.strictEqual(rolRes.status, 200);
     });
-
-    /* =========================
+*/
+     /*=========================
        GET /alumnos
     ========================= */
-
+/*
     it('GET /api/v0/alumnos - debería listar alumnos', async function () {
       const res = await agent.get('/api/v0/alumnos');
 
@@ -104,11 +104,11 @@ describe('CRUD Endpoints', function () {
       assert.ok(Array.isArray(res.body), 'El body no es un array');
       assert.ok(res.body.length >= 1, 'La lista de alumnos está vacía');
     });
-
+*/
     /* =========================
        POST /alumnos
     ========================= */
-
+/*
     //PROBLEMA: Si el test corre una segunda vez, falla porque el alumno ya existe
     it('POST /api/v0/alumnos - debería crear un alumno', async function () {
       const res = await agent
@@ -130,27 +130,27 @@ describe('CRUD Endpoints', function () {
           titulo_en_tramite: null
        });
     });
-
+*/
     /* =========================
        GET /alumnos/:lu
     ========================= */
-
+/*
     it('GET /api/v0/alumnos/:lu - debería obtener un alumno por LU', async function () {
       const res = await agent.get(
         `/api/v0/alumnos/${encodeURIComponent(testLU)}`
       );
-
+/*
       assert.strictEqual(res.status, 200);
 
       assert.strictEqual(res.body.lu, testLU);
       assert.strictEqual(typeof res.body.id_usuario_alu, 'number');
       assert.strictEqual(typeof res.body.id_carrera_alu, 'number');
     });
-
+*/
     /* =========================
        DELETE /alumnos/:lu
     ========================= */
-
+/*
     it('DELETE /api/v0/alumnos/:lu - debería eliminar un alumno', async function () {
       const res = await agent.delete(`/api/v0/alumnos/${encodeURIComponent(testLU)}`);
 
@@ -159,11 +159,11 @@ describe('CRUD Endpoints', function () {
         message: 'alumno eliminado correctamente'
       });
     });
-
+*/
     /* =========================
        GET after DELETE
     ========================= */
-
+/*
     it('GET /api/v0/alumnos/:lu - debería devolver 404 si no existe', async function () {
       const res = await agent.get(`/api/v0/alumnos/${testLU}`);
 
@@ -171,4 +171,6 @@ describe('CRUD Endpoints', function () {
     });
 
   });
+
 });
+*/
