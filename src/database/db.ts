@@ -1,14 +1,19 @@
 import { Pool } from 'pg';
+import { config } from '../config.js';
 
-// Cliente DB para el modulo
 export let pool: Pool;
-if (process.env.IS_DEVELOPMENT === 'true') {
-    pool = new Pool();
+
+if (config.env === 'production' && config.db.url) {
+    pool = new Pool({
+        connectionString: config.db.url,
+        ssl: { rejectUnauthorized: false }
+    });
 } else {
     pool = new Pool({
-        connectionString: process.env.DATABASE_URL
+        user: config.db.user,
+        host: config.db.host,
+        database: config.db.database,   // 'aida_test' si es test, 'aida' si es development
+        password: config.db.password,
+        port: config.db.port,
     });
 }
-
-
-
