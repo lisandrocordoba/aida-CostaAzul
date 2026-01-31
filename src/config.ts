@@ -10,7 +10,7 @@ export const config = {
     host: process.env.PGHOST,
     password: process.env.PGPASSWORD,
     port: Number(process.env.PGPORT) || 5432,
-    database: env === 'test' ? 'aida_test' : process.env.PGDATABASE,
+    database: process.env.PGDATABASE,
     url: process.env.DATABASE_URL   // Para producción
   }
 };
