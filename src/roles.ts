@@ -1,5 +1,5 @@
 import { Usuario } from './auth.js';
-import { Client } from 'pg';
+import { pool } from './database/db.js';
 import { Request, Response, NextFunction } from "express";
 
 export type Rol = { nombreRol: string;
@@ -8,12 +8,12 @@ export type Rol = { nombreRol: string;
                     carrera?: string;
                   }
 
-export async function obtenerDatosRol(usuario: Usuario, nombreRol: string, clientDb: Client) {
+export async function obtenerDatosRol(usuario: Usuario, nombreRol: string) {
 
     if (nombreRol === "alumno") {
       //obtengo LU y carrera del alumno
         try {
-          const result = await clientDb.query(
+          const result = await pool.query(
               'SELECT lu, nombre_carrera FROM aida.alumnos ' +
                   'JOIN aida.carreras ON aida.alumnos.id_carrera_ALU = aida.carreras.id_carrera WHERE id_usuario_ALU = $1',
               [usuario.id]
@@ -40,7 +40,7 @@ export async function obtenerDatosRol(usuario: Usuario, nombreRol: string, clien
 
       //obtengo legajo del profesor
         try {
-          const result = await clientDb.query(
+          const result = await pool.query(
               'SELECT legajo FROM aida.profesores WHERE id_usuario_PROF = $1',
               [usuario.id]
           );
@@ -64,7 +64,7 @@ export async function obtenerDatosRol(usuario: Usuario, nombreRol: string, clien
     if (nombreRol === "secretario") {
       //obtengo LU y carrera del alumno
         try {
-          const result = await clientDb.query(
+          const result = await pool.query(
               'SELECT * FROM aida.secretario WHERE id_usuario_SEC = $1',
               [usuario.id]
           );

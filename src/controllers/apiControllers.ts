@@ -4,28 +4,15 @@ import * as csv from '../csv.js';
 import * as fechas from '../fechas.js';
 import { autenticarUsuario, crearUsuario, cambiarPassword } from '../auth.js';
 import { Rol, obtenerDatosRol } from '../roles.js';
-import { Client } from 'pg';
 import { generarPdfCertificado } from '../certificados.js';
 import { DatoAtomico } from '../tipos-atomicos.js';
 import { pool } from '../database/db.js';
-
-
-// Cliente DB para el modulo
-let clientDb: Client;
-if (process.env.IS_DEVELOPMENT === 'true') {
-    clientDb = new Client();
-} else {
-    clientDb = new Client({
-        connectionString: process.env.DATABASE_URL
-    });
-}
-clientDb.connect();
 
 // --- LOGIN ---
 export async function loginAPIController(req: Request, res: Response) {
   try {
     const { username, password } = req.body;
-    const usuario = await autenticarUsuario(clientDb, username, password);
+    const usuario = await autenticarUsuario(username, password);
     if (usuario) {
         req.session.usuario = usuario;
         res.json({ message: 'Autenticación exitosa' });
@@ -51,7 +38,7 @@ export function logoutAPIController(req: Request, res: Response) {
 // --- REGISTER ---
 export async function registerAPIController(req: Request, res: Response): Promise<void> {
   const { username, password, nombre, email } = req.body;
-  await crearUsuario(clientDb, username, password, nombre, email);
+  await crearUsuario(username, password, nombre, email);
   res.status(201).send('Usuario creado');
 }
 
@@ -59,7 +46,7 @@ export async function registerAPIController(req: Request, res: Response): Promis
 export async function selectRolAPIController(req: Request, res: Response) {
   const usuario = req.session.usuario;
   const { rol } = req.body;
-  req.session.rol = await obtenerDatosRol(usuario!, rol, clientDb) as Rol | null;
+  req.session.rol = await obtenerDatosRol(usuario!, rol) as Rol | null;
   if(!req.session.rol) {
       return res.redirect('/app/seleccion-rol');
   } else {
@@ -273,18 +260,16 @@ export async function createCursadaProfesorController(req: Request, res: Respons
   }
 }
 
-
-
 // --- ALUMNOS ---
 export async function patchAlumnosController(req: Request, res: Response) {
   const { dataLines: listaDeAlumnosCompleta, columns: columnas } = await csv.parsearCSV(req.body.csvText);
-  await aida.refrescarTablaAlumnos(clientDb, listaDeAlumnosCompleta, columnas);
+  await aida.refrescarTablaAlumnos(listaDeAlumnosCompleta, columnas);
   res.status(200).send('Tabla de alumnos actualizada');
 }
 
 export async function patchCursadasController(req: Request, res: Response) {
   const { dataLines: listaDeCursadasCompleta, columns: columnas } = await csv.parsearCSV(req.body.csvText);
-  await aida.refrescarTablaCursadas(clientDb, listaDeCursadasCompleta, columnas);
+  await aida.refrescarTablaCursadas(listaDeCursadasCompleta, columnas);
   res.status(200).send('Tabla de cursadas actualizada');
 }
 
@@ -296,7 +281,7 @@ export async function patchPlanEstudiosController(req: Request, res: Response) {
       res.status(400).send('Faltan csvText o careerName');
       return;
     }
-    const carreraId = await aida.agregarCarrera(careerName.trim(), clientDb);
+    const carreraId = await aida.agregarCarrera(careerName.trim());
     const { dataLines, columns } = csv.parsearCSV(csvText);
 
     if (columns.length !== 1 || columns[0]!.toLowerCase() !== 'materias') {
@@ -308,8 +293,8 @@ export async function patchPlanEstudiosController(req: Request, res: Response) {
       const materiaNombre = line[0]!.trim();
       if (!materiaNombre) continue;
 
-      const materiaId = await aida.agregarMateria(materiaNombre, clientDb);
-      await aida.agregarMateriaACarrera(carreraId, materiaId, clientDb);
+      const materiaId = await aida.agregarMateria(materiaNombre);
+      await aida.agregarMateriaACarrera(carreraId, materiaId);
     }
 
     res.status(200).send(`Carrera "${careerName}" y materias asociadas procesadas correctamente.`);
@@ -325,9 +310,9 @@ export async function getCertificadosController(req: Request, res: Response) {
   var alumnos: Record<string, DatoAtomico>[] = [];
   try {
     if (lu) {
-      alumnos = await aida.obtenerAlumnoQueNecesitaCertificado(clientDb, { lu: lu as string });
+      alumnos = await aida.obtenerAlumnoQueNecesitaCertificado({ lu: lu as string });
     } else if (fecha) {
-      alumnos = await aida.obtenerAlumnoQueNecesitaCertificado(clientDb, { fecha: fechas.deISO(fecha as string) });
+      alumnos = await aida.obtenerAlumnoQueNecesitaCertificado({ fecha: fechas.deISO(fecha as string) });
     } else {
         res.status(400).send("Falta parámetro LU o Fecha");
         return;
@@ -347,7 +332,7 @@ export async function cambioPasswordAPIController(req: Request, res: Response) {
 
     const { password } = req.body;
 
-    if (await cambiarPassword(clientDb, req.session.usuario!.id, password)) {
+    if (await cambiarPassword(req.session.usuario!.id, password)) {
       return res.status(200).json({ ok: true, message: 'Contraseña actualizada' });
     } else {
       return res.status(500).json({ ok: false, error: 'Error al actualizar la contraseña' });
@@ -364,7 +349,7 @@ export async function cambioPasswordAPIController(req: Request, res: Response) {
   export async function agregarUsuarioController(req: Request, res: Response) {
     const { username, password, nombre_usuario, apellido, email } = req.body;
     try {
-        await crearUsuario(clientDb, username, password, nombre_usuario, apellido, email);
+        await crearUsuario(username, password, nombre_usuario, apellido, email);
         return res.status(201).send('Usuario creado');
     } catch (error) {
       console.error('Error al crear usuario:', error);
