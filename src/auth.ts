@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt';
-import { Client } from 'pg';
+import { pool } from './database/db.js';
 
 const SALT_ROUNDS = 10;
 
@@ -32,11 +32,10 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
  * Retorna el usuario si las credenciales son correctas, null en caso contrario
  */
 export async function autenticarUsuario(
-    client: Client,
     username: string,
     password: string
 ): Promise<Usuario | null> {
-    const result = await client.query(
+    const result = await pool.query(
         'SELECT id_usuario, username, password_hash, nombre_usuario, apellido, email, activo FROM aida.usuarios WHERE username = $1',
         [username]
     );
@@ -77,7 +76,6 @@ export async function autenticarUsuario(
  * Crea un nuevo usuario
  */
 export async function crearUsuario(
-    client: Client,
     username: string,
     password: string,
     nombre?: string,
@@ -88,7 +86,7 @@ export async function crearUsuario(
         const passwordHash = await hashPassword(password);
 
         //Revisar si esto va con el esquema de nuestra base
-        const result = await client.query(
+        const result = await pool.query(
             `INSERT INTO aida.usuarios (username, password_hash, nombre_usuario, apellido, email)
              VALUES ($1, $2, $3, $4, $5)
              RETURNING id_usuario, username, nombre_usuario, apellido, email, activo`,
@@ -107,14 +105,13 @@ export async function crearUsuario(
  * Cambia la contraseña de un usuario
  */
 export async function cambiarPassword(
-    client: Client,
     userId: number,
     newPassword: string
 ): Promise<boolean> {
     try {
         const passwordHash = await hashPassword(newPassword);
 
-        await client.query(
+        await pool.query(
             'UPDATE aida.usuarios SET password_hash = $1 WHERE id_usuario = $2',
             [passwordHash, userId]
         );

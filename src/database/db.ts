@@ -16,4 +16,6 @@ if (config.env === 'production' && config.db.url) {
         password: config.db.password,
         port: config.db.port,
     });
+
+    console.log(`Conectando a la base de datos en ${config.db.host}:${config.db.port}/${config.db.database}`);
 }

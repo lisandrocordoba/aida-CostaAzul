@@ -1,17 +1,16 @@
-import { Client } from "pg"
 import { Fecha } from "./fechas.js"
 import { DatoAtomico, sqlLiteral } from "./tipos-atomicos.js"
+import { pool } from './database/db.js';
 
 
 //QUEREMOS MANTENER LA FUNCIONALIDAD DE BORRAR ALUMNOS?
-export async function refrescarTablaAlumnos(clientDb: Client, listaDeAlumnosCompleta:string[][], columnas:string[]){
+export async function refrescarTablaAlumnos(listaDeAlumnosCompleta:string[][], columnas:string[]){
     for (const values of listaDeAlumnosCompleta) {
-        await agregarAlumno(columnas, values, clientDb);
+        await agregarAlumno(columnas, values);
     }
 }
 
 export async function refrescarTablaCursadas(
-    clientDb: Client,
     listaDeCursadasCompleta: string[][],
     columnas: string[]
 ): Promise<void> {
@@ -21,23 +20,22 @@ export async function refrescarTablaCursadas(
             INSERT INTO aida.cursadas (${columnas.join(', ')}) VALUES
                 (${values.map((value) => value == '' ? 'null' : sqlLiteral(value))})
         `;
-        await clientDb.query(query);
+        await pool.query(query);
     }
 
 }
 
-export async function agregarAlumno(columnas: string[], values: string[], clientDb: Client) {
+export async function agregarAlumno(columnas: string[], values: string[]) {
     const query = `
             INSERT INTO aida.alumnos (${columnas.join(', ')}) VALUES
                 (${values.map((value) => value == '' ? 'null' : sqlLiteral(value))})
         `;
-    await clientDb.query(query);
+    await pool.query(query);
 }
 
 export type FiltroAlumnos = {fecha: Fecha} | {lu: string} | {uno: true} | {todos: true}
 
 export async function obtenerAlumnoQueNecesitaCertificado(
-    clientDb: Client,
     filtro: FiltroAlumnos
   ): Promise<Record<string, DatoAtomico>[]> {
 
@@ -60,13 +58,13 @@ export async function obtenerAlumnoQueNecesitaCertificado(
           ${"uno" in filtro ? `LIMIT 1` : ""}
       `;
 
-      const res = await clientDb.query(sql);
+      const res = await pool.query(sql);
 
       return res.rows;
   }
 
-export async function agregarCarrera(nombre: string, clientDb: Client): Promise<number> {
-    const existing = await clientDb.query<{ id_carrera: number }>(`
+export async function agregarCarrera(nombre: string): Promise<number> {
+    const existing = await pool.query<{ id_carrera: number }>(`
         SELECT id_carrera FROM aida.carreras WHERE nombre_carrera = ${sqlLiteral(nombre)}
     `);
 
@@ -74,7 +72,7 @@ export async function agregarCarrera(nombre: string, clientDb: Client): Promise<
         throw new Error(`La carrera "${nombre}" ya existe en la base de datos`);
     }
 
-    const res = await clientDb.query<{ id_carrera: number }>(`
+    const res = await pool.query<{ id_carrera: number }>(`
         INSERT INTO aida.carreras (nombre_carrera)
         VALUES (${sqlLiteral(nombre)})
         RETURNING id_carrera
@@ -83,9 +81,9 @@ export async function agregarCarrera(nombre: string, clientDb: Client): Promise<
     return res.rows[0]!.id_carrera;
 }
 
-export async function agregarMateria(nombre: string, clientDb: Client): Promise<number> {
+export async function agregarMateria(nombre: string): Promise<number> {
 
-    const existing = await clientDb.query<{ id_materia: number }>(`
+    const existing = await pool.query<{ id_materia: number }>(`
         SELECT id_materia FROM aida.materias WHERE nombre_materia = ${sqlLiteral(nombre)}
     `);
 
@@ -93,7 +91,7 @@ export async function agregarMateria(nombre: string, clientDb: Client): Promise<
         throw new Error(`La materia "${nombre}" ya existe en la base de datos`);
     }
 
-    const res = await clientDb.query<{ id_materia: number }>(`
+    const res = await pool.query<{ id_materia: number }>(`
         INSERT INTO aida.materias (nombre_materia)
         VALUES (${sqlLiteral(nombre)})
         RETURNING id_materia
@@ -105,11 +103,10 @@ export async function agregarMateria(nombre: string, clientDb: Client): Promise<
 
 export async function agregarMateriaACarrera(
     carreraId: number,
-    materiaId: number,
-    clientDb: Client
+    materiaId: number
 ): Promise<void> {
 
-    const existing = await clientDb.query<{ exists: boolean }>(`
+    const existing = await pool.query<{ exists: boolean }>(`
         SELECT 1 FROM aida.materiasEnCarrera
         WHERE id_carrera_MEC = $1
           AND id_materia_MEC = $2
@@ -119,7 +116,7 @@ export async function agregarMateriaACarrera(
         throw new Error(`La materia con ID ${materiaId} ya está asociada a la carrera con ID ${carreraId}`);
     }
 
-    await clientDb.query(`
+    await pool.query(`
         INSERT INTO aida.materiasEnCarrera (id_carrera_MEC, id_materia_MEC)
         VALUES ($1, $2)
     `, [carreraId, materiaId]);
