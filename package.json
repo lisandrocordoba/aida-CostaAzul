@@ -30,6 +30,7 @@
     "dev": "npm run prepare && node --env-file=.env.development dist/server.js",
     "start": "npm run prepare && node dist/server.js",
     "test": "tsc -p test/tsconfig.json && node --env-file=.env.test node_modules/.bin/mocha --enable-source-maps --reporter spec --bail --check-leaks dist-test/test/test.js --exit",
+    "ci_test": "tsc -p test/tsconfig.json && node_modules/.bin/mocha --enable-source-maps --reporter spec --bail --check-leaks dist-test/test/test.js --exit",
     "x-test": "mocha --reporter spec --bail --check-leaks test/test.ts"
   }
 }
