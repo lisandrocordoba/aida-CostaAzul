@@ -64,5 +64,5 @@ jobs:
         PGPASSWORD: ${{ secrets.DB_PASSWORD_TEST }}
         PGDATABASE: aida
         PGPORT: 5432
-        IS_DEVELOPMENT: true
+        NODE_ENV: test
 
