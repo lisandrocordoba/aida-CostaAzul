@@ -8,6 +8,7 @@ views/plantilla-tabla*.html
 local-*
 *-local.*
 *-local
-.env
+.env.development
+.env.test
 certificado-para-imprimir.html
 certificado-de-*-para-imprimir.html

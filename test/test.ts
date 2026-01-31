@@ -1,4 +1,3 @@
-import 'dotenv/config';
 import * as assert from "assert";
 import request from 'supertest';
 import app from '../src/app.js'; // Tu instancia de express
